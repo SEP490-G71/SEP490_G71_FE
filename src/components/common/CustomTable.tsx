@@ -90,7 +90,7 @@ function CustomTable<T>({
                   </div>
                 </th>
               ))}
-              <th className="px-5 py-3 whitespace-nowrap">Action</th>
+              <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">

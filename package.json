@@ -16,7 +16,6 @@
     "@fullcalendar/list": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
-    "@mantine/core": "^8.0.2",
     "@mantine/dates": "^8.0.2",
     "@mantine/form": "^8.0.2",
     "@mantine/hooks": "^8.0.2",
