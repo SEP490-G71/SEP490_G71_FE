@@ -49,20 +49,18 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     } as CreateMedicalServiceRequest,
 
     validate: {
-      /*************  ✨ Windsurf Command ⭐  *************/
-      /*******  d73cc53d-623a-4af9-8229-d0c61183ea2b  *******/
       name: (value) =>
         value.length < 3 || value.length > 100
-          ? "Name must be between 3 and 100 characters"
+          ? "Tên phải nằm trong khoảng từ 3 đến 100 ký tự"
           : null,
       description: (value) =>
-        value.length > 500
-          ? "Description must be at most 500 characters"
-          : null,
-      departmentId: (value) => (!value ? "Department is required" : null),
-      price: (value) => (value < 0 ? "Price must be >= 0" : null),
+        value.length > 500 ? "Mô tả có tối đa 500 ký tự" : null,
+      departmentId: (value) => (!value ? "Phòng ban là bắt buộc" : null),
+      price: (value) => (value < 0 ? "Giá tiền phải> = 0" : null),
       vat: (value) =>
-        ![0, 8, 10].includes(value) ? "VAT must be one of 0, 8, or 10" : null,
+        ![0, 8, 10].includes(value)
+          ? "VAT phải là một trong 0, 8 hoặc 10"
+          : null,
     },
   });
 
@@ -131,6 +129,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
             }
           }}
           required
+          error={form.errors.departmentId}
           mt="sm"
           disabled={isViewMode}
         />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Select, Button } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/MedicalService/CreateEditModal";
 import {
   CreateMedicalServiceRequest,
+  Department,
   MedicalService,
 } from "../../../types/MedicalService";
 
@@ -66,42 +67,39 @@ const MedicalServicePage = () => {
   ]);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axiosInstance.get("/departments/all");
-        const options = res.data.result.map((d: any) => ({
-          label: d.name,
-          value: d.id,
-        }));
-        setDepartments(options);
-      } catch (error) {
-        console.error("Failed to fetch departments:", error);
-      }
-    };
+        // Fetch departments
+        const departmentsRes = await axiosInstance.get("/departments/all");
+        const departmentsOptions: { label: string; value: string }[] =
+          departmentsRes.data.result.map((d: Department) => ({
+            label: d.name,
+            value: d.id,
+          }));
+        setDepartments(departmentsOptions);
 
-    fetchDepartments();
-  }, []);
-
-  useEffect(() => {
-    const fetchServiceNames = async () => {
-      try {
-        const res = await axiosInstance.get("/medical-service", {
+        // Fetch medical service names
+        const servicesRes = await axiosInstance.get("/medical-service", {
           params: { page: 0, size: 1000 },
         });
-        const options = Array.from(
-          new Set(res.data.result.content.map((s: any) => s.name))
-        ).map((name) => ({
-          label: name as string,
-          value: name as string,
-        }));
-
-        setServiceNameOptions(options);
+        const serviceNameOptions: { label: string; value: string }[] =
+          Array.from(
+            new Set(
+              (servicesRes.data.result.content as MedicalService[]).map(
+                (s: MedicalService) => s.name
+              )
+            )
+          ).map((name) => ({
+            label: name,
+            value: name,
+          }));
+        setServiceNameOptions(serviceNameOptions);
       } catch (error) {
-        console.error("Failed to fetch service names:", error);
+        console.error("Failed to fetch data:", error);
       }
     };
 
-    fetchServiceNames();
+    fetchData();
   }, []);
 
   const handleAdd = () => {
@@ -205,11 +203,11 @@ const MedicalServicePage = () => {
 
       <div className="flex flex-wrap gap-2 my-4">
         <Select
-          placeholder="Chọn tên dịch vụ"
-          data={serviceNameOptions}
-          value={searchName}
+          placeholder="Chọn phòng ban"
+          data={departments}
+          value={selectedDepartmentId}
           onChange={(value) => {
-            setSearchName(value || "");
+            setSelectedDepartmentId(value || undefined);
             setPage(1);
           }}
           clearable
@@ -218,13 +216,18 @@ const MedicalServicePage = () => {
         />
 
         <Select
-          placeholder="Chọn phòng ban"
-          data={departments}
-          value={selectedDepartmentId}
+          placeholder="Chọn tên dịch vụ"
+          data={serviceNameOptions}
+          value={searchName}
           onChange={(value) => {
-            setSelectedDepartmentId(value || undefined);
+            setSearchName(value || "");
             setPage(1);
           }}
+          onSearchChange={(value) => {
+            setSearchName(value);
+            setPage(1);
+          }}
+          searchValue={searchName}
           clearable
           searchable
           className="flex-1 min-w-[150px]"
