@@ -1,20 +1,18 @@
 import { Modal, TextInput, NumberInput, Button, Select } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React, { useEffect, useState } from "react";
-import { Department, MedicalService } from "../../../types/MedicalService";
+import {
+  CreateMedicalServiceRequest,
+  Department,
+  MedicalService,
+} from "../../../types/MedicalService";
 import axiosInstance from "../../../services/axiosInstance";
 
 interface CreateEditModalProps {
   opened: boolean;
   onClose: () => void;
   initialData?: MedicalService | null;
-  onSubmit: (data: {
-    name: string;
-    description: string;
-    departmentName: string;
-    price: number;
-    vat: number;
-  }) => void;
+  onSubmit: (formData: CreateMedicalServiceRequest) => void;
   isViewMode?: boolean;
 }
 
@@ -26,15 +24,17 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
   isViewMode = false,
 }) => {
   const [departments, setDepartments] = useState<Department[]>([]);
-
-  console.log("initialData", initialData);
+  //Bắn log để debug
+  // if (initialData) {
+  //   console.log("initialData", initialData);
+  // }
 
   const getAllDepartments = async () => {
     try {
       const res = await axiosInstance.get("departments/all");
       setDepartments(res.data.result);
     } catch (error) {
-      console.error("Failed to fetch medical service by id:", error);
+      console.error("Failed to fetch departments", error);
       return null;
     }
   };
@@ -43,12 +43,14 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     initialValues: {
       name: "",
       description: "",
-      departmentName: "",
+      departmentId: "",
       price: 0,
       vat: 0,
-    },
+    } as CreateMedicalServiceRequest,
 
     validate: {
+      /*************  ✨ Windsurf Command ⭐  *************/
+      /*******  d73cc53d-623a-4af9-8229-d0c61183ea2b  *******/
       name: (value) =>
         value.length < 3 || value.length > 100
           ? "Name must be between 3 and 100 characters"
@@ -57,7 +59,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
         value.length > 500
           ? "Description must be at most 500 characters"
           : null,
-      departmentName: (value) => (!value ? "Department is required" : null),
+      departmentId: (value) => (!value ? "Department is required" : null),
       price: (value) => (value < 0 ? "Price must be >= 0" : null),
       vat: (value) =>
         ![0, 8, 10].includes(value) ? "VAT must be one of 0, 8, or 10" : null,
@@ -69,7 +71,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
       form.setValues({
         name: initialData.name ?? "",
         description: initialData.description ?? "",
-        departmentName: initialData?.department.name ?? "",
+        departmentId: initialData?.department.id ?? "",
         price: initialData.price ?? 0,
         vat: initialData.vat ?? 0,
       });
@@ -88,37 +90,44 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={initialData ? "Update Medical Service" : "Create Medical Service"}
+      title={
+        <div>
+          <h2 className="text-xl font-bold">
+            {initialData ? "Cập nhật dịch vụ khám" : "Tạo dịch vụ khám"}
+          </h2>
+          <div className="mt-2 border-b border-gray-300"></div>
+        </div>
+      }
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
-          label="Name"
-          placeholder="Enter name"
+          label="Tên dịch vụ"
+          placeholder="Tên dịch vụ"
           {...form.getInputProps("name")}
           required
           disabled={isViewMode}
         />
 
         <TextInput
-          label="Description"
-          placeholder="Enter description"
+          label="Mô tả"
+          placeholder="Mô tả"
           {...form.getInputProps("description")}
           mt="sm"
           disabled={isViewMode}
         />
 
         <Select
-          label="Department"
-          placeholder="Please select department"
+          label="Phòng ban"
+          placeholder="Phòng ban"
           {...form.getInputProps("departmentName")}
           data={departments.map((department) => ({
-            value: department.name,
+            value: department.id,
             label: department.name,
           }))}
-          value={form.values.departmentName}
+          value={form.values.departmentId}
           onChange={(value) => {
             if (value !== null) {
-              form.setFieldValue("departmentName", value);
+              form.setFieldValue("departmentId", value);
             }
           }}
           required
@@ -127,19 +136,18 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
         />
 
         <NumberInput
-          label="Price"
-          placeholder="Enter price"
+          label="Giá tiền"
+          placeholder="Giá tiền"
           {...form.getInputProps("price")}
           required
           mt="sm"
           min={0}
-          step={0.001}
           disabled={isViewMode}
         />
 
         <Select
           label="VAT (%)"
-          placeholder="Select VAT"
+          placeholder="Chọn VAT"
           data={[
             { value: "0", label: "0%" },
             { value: "8", label: "8%" },
@@ -157,9 +165,12 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
           disabled={isViewMode}
         />
         {!isViewMode && (
-          <Button type="submit" fullWidth mt="md">
-            {initialData ? "Update" : "Create"}
-          </Button>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={onClose}>
+              Đóng
+            </Button>
+            <Button type="submit">{initialData ? "Cập nhật" : "Tạo"}</Button>
+          </div>
         )}
       </form>
     </Modal>
