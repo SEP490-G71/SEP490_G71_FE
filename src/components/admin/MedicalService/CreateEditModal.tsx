@@ -134,7 +134,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
           disabled={isViewMode}
         />
 
-        <NumberInput
+        <TextInput
           label="Giá tiền"
           placeholder="Giá tiền"
           {...form.getInputProps("price")}
