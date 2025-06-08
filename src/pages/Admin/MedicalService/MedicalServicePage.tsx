@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select, Button } from "@mantine/core";
+import { Select, Button, TextInput } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
@@ -215,21 +215,13 @@ const MedicalServicePage = () => {
           className="flex-1 min-w-[150px]"
         />
 
-        <Select
-          placeholder="Chọn tên dịch vụ"
-          data={serviceNameOptions}
+        <TextInput
+          placeholder="Nhập tên dịch vụ"
           value={searchName}
-          onChange={(value) => {
-            setSearchName(value || "");
+          onChange={(event) => {
+            setSearchName(event.currentTarget.value);
             setPage(1);
           }}
-          onSearchChange={(value) => {
-            setSearchName(value);
-            setPage(1);
-          }}
-          searchValue={searchName}
-          clearable
-          searchable
           className="flex-1 min-w-[150px]"
         />
       </div>
