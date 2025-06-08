@@ -9,7 +9,7 @@ import {
   FaChevronLeft,
 } from "react-icons/fa";
 import { Column } from "../../types/table";
-import { Modal, Button } from "@mantine/core";
+import { Modal, Button, Loader } from "@mantine/core";
 
 interface CustomTableProps<T> {
   data: T[];
@@ -99,8 +99,8 @@ function CustomTable<T>({
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
             {loading ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-6">
-                  Đang tải dữ liệu...
+                <td colSpan={columns.length + 1} className="text-center py-12">
+                  <Loader size="lg" variant="dots" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
@@ -129,17 +129,19 @@ function CustomTable<T>({
                     {onView && (
                       <button
                         onClick={() => onView(row)}
-                        className="flex items-center justify-center gap-1 text-sm px-2 py-1 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition"
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition duration-200"
+                        title="Xem chi tiết"
                       >
-                        <FaEye />
+                        <FaEye size={16} />
                       </button>
                     )}
                     {onEdit && (
                       <button
                         onClick={() => onEdit(row)}
-                        className="flex items-center justify-center gap-1 text-sm px-2 py-1 border border-green-500 text-green-500 rounded hover:bg-green-500 hover:text-white transition"
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-green-500 hover:text-white transition duration-200"
+                        title="Chỉnh sửa"
                       >
-                        <FaPencilAlt />
+                        <FaPencilAlt size={16} />
                       </button>
                     )}
                     {onDelete && (
@@ -148,9 +150,10 @@ function CustomTable<T>({
                           setRowToDelete(row);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="flex items-center justify-center gap-1 text-sm px-2 py-1 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition"
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-red-500 hover:text-white transition duration-200"
+                        title="Xóa"
                       >
-                        <FaTrash />
+                        <FaTrash size={16} />
                       </button>
                     )}
                   </td>
