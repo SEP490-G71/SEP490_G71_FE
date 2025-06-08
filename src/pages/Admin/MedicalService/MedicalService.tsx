@@ -3,8 +3,8 @@ import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import BasicTableOne from "../../../components/tables/BasicTables/BasicTableOne";
+import MedicalServicePage from "./MedicalServicePage";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
-import CustomTableDemo from "./CustomTableDemo";
 
 export default function MecicalService() {
   const {
@@ -31,7 +31,7 @@ export default function MecicalService() {
           <BasicTableOne />
         </ComponentCard>
       </div> */}
-      <CustomTableDemo />
+      <MedicalServicePage />
     </>
   );
 }

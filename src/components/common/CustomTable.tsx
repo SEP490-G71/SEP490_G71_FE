@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FaCaretUp,
   FaCaretDown,
@@ -9,6 +9,7 @@ import {
   FaChevronLeft,
 } from "react-icons/fa";
 import { Column } from "../../types/table";
+import { Modal, Button } from "@mantine/core";
 
 interface CustomTableProps<T> {
   data: T[];
@@ -59,9 +60,11 @@ function CustomTable<T>({
     onSortChange(key, newDirection);
   };
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState<T | null>(null);
+
   return (
     <div className="w-full border rounded-lg overflow-hidden shadow-sm">
-      {/* Table Wrapper */}
       <div className="overflow-x-auto">
         <table className="min-w-[700px] w-full text-sm text-left text-gray-700 dark:text-gray-300">
           <thead className="bg-gray-100 dark:bg-gray-700 text-xs font-semibold uppercase">
@@ -90,7 +93,7 @@ function CustomTable<T>({
                   </div>
                 </th>
               ))}
-              <th className="px-5 py-3 whitespace-nowrap">Action</th>
+              <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
@@ -141,7 +144,10 @@ function CustomTable<T>({
                     )}
                     {onDelete && (
                       <button
-                        onClick={() => onDelete(row)}
+                        onClick={() => {
+                          setRowToDelete(row);
+                          setIsDeleteModalOpen(true);
+                        }}
                         className="flex items-center justify-center gap-1 text-sm px-2 py-1 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition"
                       >
                         <FaTrash />
@@ -208,6 +214,37 @@ function CustomTable<T>({
           </button>
         </div>
       </div>
+
+      <Modal
+        opened={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title={
+          <div>
+            <h2 className="text-xl font-bold">Xác nhận xoá</h2>
+            <div className="mt-2 border-b border-gray-300"></div>
+          </div>
+        }
+      >
+        <div className="text-sm mb-4">
+          Bạn có chắc chắn muốn xoá dịch vụ này không?
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button color="blue" onClick={() => setIsDeleteModalOpen(false)}>
+            Huỷ
+          </Button>
+          <Button
+            color="red"
+            onClick={() => {
+              if (rowToDelete && onDelete) {
+                onDelete(rowToDelete);
+              }
+              setIsDeleteModalOpen(false);
+            }}
+          >
+            xoá
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
