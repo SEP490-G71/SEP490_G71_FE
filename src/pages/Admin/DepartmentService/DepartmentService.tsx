@@ -4,9 +4,9 @@ import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import PageMeta from "../../../components/common/PageMeta";
 import BasicTableOne from "../../../components/tables/BasicTables/BasicTableOne";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
-import MedicalServicePage from "./MedicalServicePage";
+import DepartmentServicePage from "./DepartmentServicePage";
 
-export default function MecicalService() {
+export default function DepartmentService() {
   const {
     fetchAllMedicalServices,
     loading,
@@ -31,7 +31,7 @@ export default function MecicalService() {
           <BasicTableOne />
         </ComponentCard>
       </div> */}
-      <MedicalServicePage />
+      <DepartmentServicePage />
     </>
   );
 }

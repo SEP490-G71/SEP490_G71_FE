@@ -54,6 +54,17 @@ const allNavItems: NavItem[] = [
     icon: <TableIcon />,
     path: "/admin/medical-service",
   },
+  {
+    name: "Quản lý nhân viên",
+    icon: <TableIcon />,
+    path: "/admin/employee-service",
+  },
+  {
+    name: "Quản lý phòng ban",
+    icon: <TableIcon />,
+    path: "/admin/department-service",
+  },
+
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
