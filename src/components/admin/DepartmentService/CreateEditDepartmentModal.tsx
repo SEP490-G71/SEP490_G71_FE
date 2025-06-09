@@ -24,19 +24,41 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       name: "",
       description: "",
       roomNumber: "",
-      type: DepartmentType.CONSULTATION, // Default value
+      type: DepartmentType.CONSULTATION,
     },
     validate: {
-      name: (value) => (value?.length ? null : "Tên phòng không được bỏ trống"),
+      name: (value) =>
+        !value || value.trim() === ""
+          ? "Tên phòng không được bỏ trống"
+          : value.length < 3 || value.length > 100
+          ? "Tên phòng phải từ 3 đến 100 ký tự"
+          : null,
+
+      description: (value) =>
+        value && (value.length < 3 || value.length > 500)
+          ? "Mô tả phải từ 3 đến 500 ký tự"
+          : null,
+
       roomNumber: (value) =>
-        value?.length ? null : "Số phòng không được bỏ trống",
+        !value || value.trim() === ""
+          ? "Số phòng không được bỏ trống"
+          : !/^[A-Za-z0-9]{2,5}$/.test(value)
+          ? "Số phòng phải từ 2-5 ký tự, không dấu và không khoảng trắng"
+          : null,
+
       type: (value) => (!value ? "Loại phòng không được để trống" : null),
     },
   });
 
+  // Cập nhật dữ liệu khi mở modal hoặc dữ liệu thay đổi
   useEffect(() => {
     if (initialData) {
-      form.setValues(initialData);
+      form.setValues({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        roomNumber: initialData.roomNumber || "",
+        type: initialData.type || DepartmentType.CONSULTATION,
+      });
     } else {
       form.reset();
     }
@@ -52,15 +74,20 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       yOffset={90}
     >
       <form
-        onSubmit={form.onSubmit((values) => {
-          onSubmit(values);
-          onClose();
-        })}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const validation = form.validate();
+          if (!validation.hasErrors) {
+            onSubmit(form.values);
+            onClose();
+          }
+        }}
       >
         <TextInput
           label="Tên phòng ban"
           placeholder="Nhập tên"
           {...form.getInputProps("name")}
+          error={form.errors.name}
           required
           disabled={isViewMode}
         />
@@ -69,6 +96,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           label="Mô tả"
           placeholder="Nhập mô tả"
           {...form.getInputProps("description")}
+          error={form.errors.description}
           mt="sm"
           disabled={isViewMode}
         />
@@ -77,6 +105,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           label="Số phòng"
           placeholder="Nhập số phòng"
           {...form.getInputProps("roomNumber")}
+          error={form.errors.roomNumber}
           mt="sm"
           required
           disabled={isViewMode}
@@ -89,7 +118,11 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             value,
             label,
           }))}
-          {...form.getInputProps("type")}
+          value={form.values.type || ""}
+          onChange={(val) => {
+            if (val) form.setFieldValue("type", val as DepartmentType);
+          }}
+          error={form.errors.type}
           mt="sm"
           required
           disabled={isViewMode}

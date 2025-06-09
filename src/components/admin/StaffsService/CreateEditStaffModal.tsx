@@ -2,14 +2,14 @@ import { Modal, TextInput, Button, Select } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
-import { Gender, Level, Specialty } from "../../../enums/Admin/EmployeeEnums";
-import { EmployeeRequest } from "../../../types/Admin/Employee/EmployeeTypeRequest";
+import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
+import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
 
 interface CreateEditStaffModalProps {
   opened: boolean;
   onClose: () => void;
-  initialData?: EmployeeRequest | null;
-  onSubmit: (data: EmployeeRequest) => void;
+  initialData?: StaffsRequest | null;
+  onSubmit: (data: StaffsRequest) => void;
   isViewMode?: boolean;
 }
 
@@ -20,7 +20,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
   onSubmit,
   isViewMode = false,
 }) => {
-  const form = useForm<EmployeeRequest>({
+  const form = useForm<StaffsRequest>({
     initialValues: {
       name: "",
       specialty: Specialty.OTHER,
@@ -38,7 +38,24 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         !/^\d{10,15}$/.test(value) ? "Số điện thoại không hợp lệ" : null,
       email: (value) =>
         !/^\S+@\S+\.\S+$/.test(value) ? "Email không hợp lệ" : null,
-      dob: (value) => (!value ? "Ngày sinh không được để trống" : null),
+      dob: (value) => {
+        if (!value) return "Ngày sinh không được để trống";
+
+        const selectedDate = new Date(value);
+        const now = new Date();
+        const age = now.getFullYear() - selectedDate.getFullYear();
+        const monthDiff = now.getMonth() - selectedDate.getMonth();
+        const dayDiff = now.getDate() - selectedDate.getDate();
+
+        const isBirthdayPassedThisYear =
+          monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0);
+        const actualAge = isBirthdayPassedThisYear ? age : age - 1;
+
+        if (selectedDate > now) return "Ngày sinh không được là tương lai";
+        if (actualAge < 17) return "Nhân viên phải từ 17 tuổi trở lên";
+
+        return null;
+      },
     },
   });
 
@@ -60,10 +77,14 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       yOffset={90}
     >
       <form
-        onSubmit={form.onSubmit((values) => {
-          onSubmit(values);
-          onClose();
-        })}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const isValid = form.validate();
+          if (!isValid.hasErrors) {
+            onSubmit(form.values);
+            onClose();
+          }
+        }}
       >
         <TextInput
           label="Họ và tên"
@@ -133,14 +154,8 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           valueFormat="YYYY-MM-DD"
           {...form.getInputProps("dob")}
           required
+          mt="sm"
           disabled={isViewMode}
-          size="md"
-          styles={{
-            icon: {
-              width: 20,
-              height: 20,
-            },
-          }}
         />
 
         {!isViewMode && (

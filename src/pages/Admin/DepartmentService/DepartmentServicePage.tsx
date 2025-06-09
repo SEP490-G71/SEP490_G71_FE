@@ -8,6 +8,12 @@ import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
 import CreateEditDepartmentModal from "../../../components/admin/DepartmentService/CreateEditDepartmentModal";
 
+function getEnumLabel<T extends Record<string, string>>(
+  enumObj: T,
+  key: string
+): string {
+  return enumObj[key as keyof T] ?? key;
+}
 const DepartmentServicePage = () => {
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,8 +46,8 @@ const DepartmentServicePage = () => {
           type: filterType || undefined,
         },
       });
-      setDepartments(res.data.items || []);
-      setTotalItems(res.data.total || 0);
+      setDepartments(res.data.result?.content || []);
+      setTotalItems(res.data.result?.totalElements || 0);
     } catch (error) {
       toast.error("Failed to load departments");
     } finally {
@@ -62,7 +68,7 @@ const DepartmentServicePage = () => {
   const handleEdit = async (row: DepartmentResponse) => {
     try {
       const res = await axiosInstance.get(`/departments/${row.id}`);
-      setSelectedDepartment(res.data);
+      setSelectedDepartment(res.data.result);
       setEditingId(row.id);
       setModalOpened(true);
     } catch {
@@ -108,8 +114,8 @@ const DepartmentServicePage = () => {
     createColumn<DepartmentResponse>({ key: "roomNumber", label: "Số phòng" }),
     createColumn<DepartmentResponse>({
       key: "type",
-      label: "Loại",
-      render: (row) => row.type || "",
+      label: "Loại phòng",
+      render: (row) => getEnumLabel(DepartmentType, row.type),
     }),
   ];
 
@@ -145,10 +151,13 @@ const DepartmentServicePage = () => {
             setPage(1);
             setFilterType(val || "");
           }}
-          data={Object.entries(DepartmentType).map(([value, label]) => ({
-            value,
-            label,
-          }))}
+          data={[
+            { value: "", label: "Tất cả" },
+            ...Object.entries(DepartmentType).map(([value, label]) => ({
+              value,
+              label,
+            })),
+          ]}
         />
       </div>
 
