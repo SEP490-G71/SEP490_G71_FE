@@ -55,7 +55,7 @@ const HoverMenuProblems = () => {
         style={{
           textAlign: "center",
           fontWeight: 700,
-          fontSize: "3.2rem",
+          fontSize: "2.25rem",
           lineHeight: 1.2,
           color: "#1f2937",
           letterSpacing: "0.05em",
@@ -93,7 +93,7 @@ const HoverMenuProblems = () => {
                       ? "#f04438"
                       : hoverIndex === index
                       ? "#f04438"
-                      : index % 2 === 0
+                      : index % 0 === 0
                       ? "#fff5f5"
                       : "#fff",
                   transition: "all 0.3s ease",
