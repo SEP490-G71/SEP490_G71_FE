@@ -157,7 +157,7 @@ const HoverMenuSolutions = () => {
                       alignSelf: "flex-start",
                     }}
                   >
-                    Tư vấn ngay
+                    Đăng kí ngay
                   </Button>
                 </Grid.Col>
 

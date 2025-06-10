@@ -24,7 +24,7 @@ const feedbacks = [
 
 const FeedBack = () => {
   return (
-    <div className="py-12 px-4 max-w-7xl mx-auto">
+    <div className="py-30 px-4 max-w-7xl mx-auto">
       <h2
         className="text-center font-bold mb-10"
         style={{
