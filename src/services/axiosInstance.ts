@@ -11,7 +11,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // const token = localStorage.getItem('authToken');
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ2bi5lZHUuZnB0Lm1lZGljYWxkaWFnbm9zaXMiLCJzdWIiOiJhZG1pbiIsImV4cCI6MTc0OTI4OTM4NywiaWF0IjoxNzQ5Mjg1Nzg3LCJqdGkiOiJmYzQ4Y2JkYi1jNmRkLTQ3ZGItYTgxMi00YTFiZjIwNzg2ZTMiLCJzY29wZSI6IlJPTEVfQURNSU4ifQ.M68_IhUyNm8toqGX36dRymH9L2weEQZ5-WPns_PwYY1OJZhR8vKVG-MTpZOKn-2meTaFsiZM28vFwiAXjA04fw";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ2bi5lZHUuZnB0Lm1lZGljYWxkaWFnbm9zaXMiLCJzdWIiOiJhZG1pbiIsImV4cCI6MTc0OTQ2OTQ0NywiaWF0IjoxNzQ5NDY1ODQ3LCJqdGkiOiI3Y2JhNjhjYy1jMTg0LTRmNjMtOWI2Ni02NjEwNzcwNTBmYWQiLCJzY29wZSI6IlJPTEVfQURNSU4ifQ.m6FEja57S94-MhoGfZ-nfJ2KxSdS1j_NffB_iZ-fD_Jh1dirNQz3AUbSTUS_5aB9-xK2P-j9UedqdcrAgyFcJQ";
     // const hostname = window.location.hostname;
     // const subdomain = hostname.split('.')[0];  // Lấy phần subdomain (ví dụ: hospital_abc)
     const subdomain = "hadong";

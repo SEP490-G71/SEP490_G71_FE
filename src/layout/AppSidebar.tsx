@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
+import { FaBriefcaseMedical } from "react-icons/fa6";
 import {
   // BoxCubeIcon,
   // CalenderIcon,
@@ -51,7 +51,7 @@ const allNavItems: NavItem[] = [
   },
   {
     name: "Quản lý dịch vụ khám",
-    icon: <TableIcon />,
+    icon: <FaBriefcaseMedical />,
     path: "/admin/medical-service",
   },
   {

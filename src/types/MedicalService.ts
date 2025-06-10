@@ -14,3 +14,11 @@ export interface Department {
   roomNumber: string;
   type: string;
 }
+
+export interface CreateMedicalServiceRequest {
+  name: string;
+  description: string;
+  departmentId: string;
+  price: number;
+  vat: number;
+}
