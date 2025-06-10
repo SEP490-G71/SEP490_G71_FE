@@ -22,6 +22,7 @@ import MecicalService from "./pages/Admin/MedicalService/MedicalService";
 import { ToastContainer } from "react-toastify";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
+import EmployeeServicePage from "./pages/Admin/EmployeeService/EmployeeServicePage";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
 
 const theme = createTheme({
@@ -40,6 +41,14 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
+            <Route
+              path="/admin/employee-service"
+              element={<EmployeeServicePage />}
+            />
+            <Route
+              path="/admin/department-service"
+              element={<MecicalService />}
+            />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
