@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import {
@@ -59,6 +60,16 @@ const allNavItems: NavItem[] = [
     name: "Quản lý role",
     icon: <MdManageAccounts />,
     path: "/admin/role",
+  },
+  {
+    name: "Quản lý nhân viên",
+    icon: <AiOutlineAudit />,
+    path: "/admin/staffs",
+  },
+  {
+    name: "Quản lý phòng ban",
+    icon: <AiOutlineApartment />,
+    path: "/admin/departments",
   },
   // {
   //   name: "Pages",
