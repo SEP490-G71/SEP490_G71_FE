@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { FaBriefcaseMedical } from "react-icons/fa6";
+import { MdManageAccounts } from "react-icons/md";
 import {
   // BoxCubeIcon,
   // CalenderIcon,
@@ -53,6 +54,11 @@ const allNavItems: NavItem[] = [
     name: "Quản lý dịch vụ khám",
     icon: <FaBriefcaseMedical />,
     path: "/admin/medical-service",
+  },
+  {
+    name: "Quản lý role",
+    icon: <MdManageAccounts />,
+    path: "/admin/role",
   },
   // {
   //   name: "Pages",

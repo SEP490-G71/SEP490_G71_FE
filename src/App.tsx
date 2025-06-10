@@ -23,6 +23,7 @@ import { ToastContainer } from "react-toastify";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
+import RolePage from "./pages/Admin/Role/RolePage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -40,6 +41,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
+            <Route path="/admin/role" element={<RolePage />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
