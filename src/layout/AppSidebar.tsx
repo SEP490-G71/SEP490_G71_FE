@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
 import { FaBriefcaseMedical } from "react-icons/fa6";
+import { MdManageAccounts } from "react-icons/md";
 import {
   // BoxCubeIcon,
   // CalenderIcon,
@@ -56,6 +57,11 @@ const allNavItems: NavItem[] = [
     path: "/admin/medical-service",
   },
   {
+    name: "Quản lý role",
+    icon: <MdManageAccounts />,
+    path: "/admin/role",
+  },
+  {
     name: "Quản lý nhân viên",
     icon: <AiOutlineAudit />,
     path: "/admin/staffs",
@@ -65,7 +71,6 @@ const allNavItems: NavItem[] = [
     icon: <AiOutlineApartment />,
     path: "/admin/departments",
   },
-
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,

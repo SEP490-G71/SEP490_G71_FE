@@ -12,8 +12,8 @@ import { Column } from "../../types/table";
 import { Modal, Button, Loader } from "@mantine/core";
 
 interface CustomTableProps<T> {
-  data: T[];
-  columns: Column<T>[];
+  data?: T[];
+  columns?: Column<T>[];
   page: number;
   pageSize: number;
   totalItems: number;
@@ -31,8 +31,8 @@ interface CustomTableProps<T> {
 }
 
 function CustomTable<T>({
-  data,
-  columns,
+  data = [],
+  columns = [],
   page,
   pageSize,
   totalItems,
@@ -244,7 +244,7 @@ function CustomTable<T>({
               setIsDeleteModalOpen(false);
             }}
           >
-            xoá
+            Xoá
           </Button>
         </div>
       </Modal>

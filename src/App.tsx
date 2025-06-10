@@ -25,6 +25,7 @@ import "@mantine/core/styles.css";
 import DepartmentServicePage from "./pages/Admin/DepartmentService/DepartmentServicePage";
 import StaffsServicePage from "./pages/Admin/StaffsService/StaffsServicePage";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
+import RolePage from "./pages/Admin/Role/RolePage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -41,6 +42,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
+            <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/staffs" element={<StaffsServicePage />} />
             <Route
               path="/admin/departments"
