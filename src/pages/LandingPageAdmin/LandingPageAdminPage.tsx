@@ -23,7 +23,7 @@ export const LandingPageAdminPage = () => {
 
     try {
       const response = await axios.post(
-        "http://14.225.254.152:8080/medical-diagnosis/auth/register-tenant",
+        "https://api.datnd.id.vn/medical-diagnosis/auth/register-tenant",
         {
           name: values.name,
           code: values.code,
