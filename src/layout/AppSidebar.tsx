@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import {
   // BoxCubeIcon,
@@ -56,13 +57,13 @@ const allNavItems: NavItem[] = [
   },
   {
     name: "Quản lý nhân viên",
-    icon: <TableIcon />,
-    path: "/admin/employee-service",
+    icon: <AiOutlineAudit />,
+    path: "/admin/staffs",
   },
   {
     name: "Quản lý phòng ban",
-    icon: <TableIcon />,
-    path: "/admin/department-service",
+    icon: <AiOutlineApartment />,
+    path: "/admin/departments",
   },
 
   // {

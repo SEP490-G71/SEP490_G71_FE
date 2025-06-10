@@ -1,6 +1,6 @@
-import { Gender, Level, Specialty } from "../../../enums/Admin/EmployeeEnums";
+import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
 
-export interface EmployeeResponse {
+export interface StaffsResponse {
   id: string;
   name: string;
   specialty: Specialty; //enum
