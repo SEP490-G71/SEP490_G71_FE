@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Select, Button, TextInput } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
 import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/MedicalService/CreateEditModal";
-import { MedicalService } from "../../../types/MedicalService";
+import {
+  CreateMedicalServiceRequest,
+  Department,
+  MedicalService,
+} from "../../../types/MedicalService";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -30,9 +35,72 @@ const MedicalServicePage = () => {
     null
   );
 
+  const [searchName, setSearchName] = useState<string>("");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    string | undefined
+  >(undefined);
+  const [departments, setDepartments] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [serviceNameOptions, setServiceNameOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
+
   useEffect(() => {
-    fetchAllMedicalServices(page - 1, pageSize); // page -1 vì BE của bạn page bắt đầu từ 0
-  }, [page, pageSize]);
+    fetchAllMedicalServices(
+      page - 1,
+      pageSize,
+      sortKey || "name",
+      sortDirection,
+      {
+        name: searchName,
+        departmentId: selectedDepartmentId,
+      }
+    );
+  }, [
+    page,
+    pageSize,
+    sortKey,
+    sortDirection,
+    searchName,
+    selectedDepartmentId,
+  ]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch departments
+        const departmentsRes = await axiosInstance.get("/departments/all");
+        const departmentsOptions: { label: string; value: string }[] =
+          departmentsRes.data.result.map((d: Department) => ({
+            label: d.name,
+            value: d.id,
+          }));
+        setDepartments(departmentsOptions);
+
+        // Fetch medical service names
+        const servicesRes = await axiosInstance.get("/medical-service", {
+          params: { page: 0, size: 1000 },
+        });
+        const serviceNameOptions: { label: string; value: string }[] =
+          Array.from(
+            new Set(
+              (servicesRes.data.result.content as MedicalService[]).map(
+                (s: MedicalService) => s.name
+              )
+            )
+          ).map((name) => ({
+            label: name,
+            value: name,
+          }));
+        setServiceNameOptions(serviceNameOptions);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleAdd = () => {
     setSelectedService(null);
@@ -64,24 +132,28 @@ const MedicalServicePage = () => {
     await handleDeleteMedicalServiceById(row.id);
   };
 
-  const handleSubmit = async (data: {
-    name: string;
-    description: string;
-    departmentName: string;
-    price: number;
-    vat: number;
-  }) => {
+  const handleSubmit = async (formData: CreateMedicalServiceRequest) => {
     try {
       if (selectedService) {
-        // Update
-        await axiosInstance.put(`/medical-service/${selectedService.id}`, data);
+        await axiosInstance.put(
+          `/medical-service/${selectedService.id}`,
+          formData
+        );
         toast.success("Updated successfully");
       } else {
-        // Create
-        await axiosInstance.post(`/medical-service`, data);
+        await axiosInstance.post(`/medical-service`, formData);
         toast.success("Created successfully");
       }
-      fetchAllMedicalServices(page - 1, pageSize); // reload table
+      fetchAllMedicalServices(
+        page - 1,
+        pageSize,
+        sortKey || "name",
+        sortDirection,
+        {
+          name: searchName,
+          departmentId: selectedDepartmentId,
+        }
+      );
     } catch (error) {
       console.error("Error saving medical service", error);
       toast.error("An error occurred");
@@ -107,7 +179,6 @@ const MedicalServicePage = () => {
       sortable: false,
       render: (row) => row.department.name,
     }),
-
     createColumn<MedicalService>({
       key: "price",
       label: "Giá",
@@ -121,39 +192,37 @@ const MedicalServicePage = () => {
     }),
   ];
 
-  console.log("medicalServices", medicalServices);
-
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">Medical Services</h1>
-        <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-        >
-          + Add
-        </button>
+        <h1 className="text-xl font-bold">Dịch Vụ Khám</h1>
+        <Button onClick={handleAdd} color="blue">
+          Tạo
+        </Button>
       </div>
 
-      {/* Search bar */}
       <div className="flex flex-wrap gap-2 my-4">
-        <input
-          type="text"
-          placeholder="Search by Name"
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[150px]"
-          onChange={(e) => console.log("Search 1:", e.target.value)}
+        <Select
+          placeholder="Chọn phòng ban"
+          data={departments}
+          value={selectedDepartmentId}
+          onChange={(value) => {
+            setSelectedDepartmentId(value || undefined);
+            setPage(1);
+          }}
+          clearable
+          searchable
+          className="flex-1 min-w-[150px]"
         />
-        <input
-          type="text"
-          placeholder="Search by Status"
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[150px]"
-          onChange={(e) => console.log("Search 2:", e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Search by Project"
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[150px]"
-          onChange={(e) => console.log("Search 3:", e.target.value)}
+
+        <TextInput
+          placeholder="Nhập tên dịch vụ"
+          value={searchName}
+          onChange={(event) => {
+            setSearchName(event.currentTarget.value);
+            setPage(1);
+          }}
+          className="flex-1 min-w-[150px]"
         />
       </div>
 
@@ -175,12 +244,10 @@ const MedicalServicePage = () => {
         sortKey={sortKey}
         sortDirection={sortDirection}
         loading={loading}
-        onView={(row) => handleView(row)}
-        onEdit={(row) => handleEdit(row)}
-        onDelete={(row) => handleDelete(row)}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
-
-      {/* <AntdTable medicalServices={medicalServices} /> */}
 
       <CreateEditModal
         isViewMode={isViewMode}
