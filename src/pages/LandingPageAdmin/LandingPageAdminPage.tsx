@@ -17,9 +17,8 @@ export const LandingPageAdminPage = () => {
   return (
     <>
       <Navbar />
-
-      <div className="bg-white w-screen h-screen" id="intro-section">
-        <div className="w-full h-full">
+      <div className="bg-white" id="intro-section">
+        <div className="max-w-7xl mx-auto px-6 pt-1">
           <IntroSection onRegisterClick={showModal} />
           <RegisterModal
             visible={isModalVisible}

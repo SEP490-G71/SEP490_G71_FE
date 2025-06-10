@@ -2,16 +2,7 @@ import { Button, Grid, Image, Text, Title } from "@mantine/core";
 import HeroImage from "../../../public/images/AdminPage/hero.jpg";
 
 const IntroSection = ({ onRegisterClick }: { onRegisterClick: () => void }) => (
-  <div
-    style={{
-      width: "100vw",
-      height: "100vh",
-      display: "flex",
-      alignItems: "center",
-      backgroundColor: "#fff",
-      padding: "0 64px",
-    }}
-  >
+  <div className="min-h-screen flex items-center ">
     <Grid
       gutter={48}
       style={{
@@ -62,7 +53,7 @@ const IntroSection = ({ onRegisterClick }: { onRegisterClick: () => void }) => (
               color: "rgba(0, 0, 0, 0.7)",
               lineHeight: 1.6,
               marginBottom: 24,
-              maxWidth: 520,
+              maxWidth: 525,
             }}
           >
             Medsoft giúp quản lý hồ sơ bệnh nhân khoa học, kiểm soát lịch khám
