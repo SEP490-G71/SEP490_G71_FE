@@ -1,7 +1,26 @@
-import { Modal, TextInput, Textarea, Button, Checkbox } from "@mantine/core";
+import { useEffect, useState, useCallback } from "react";
+import {
+  Checkbox,
+  Modal,
+  TextInput,
+  Textarea,
+  Button,
+  Loader,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import React, { useEffect } from "react";
-import { Role, CreateRoleRequest } from "../../../types/RolePage";
+import usePermissionService from "../../../hooks/permisson/usePermissionService";
+import {
+  Role,
+  GroupedPermissionResponse,
+  PermissionResponse,
+  RoleRequest as CreateRoleRequest,
+} from "../../../types/RolePage";
+
+interface RoleRequest {
+  name: string;
+  description: string;
+  permissions: string[];
+}
 
 interface CreateEditModalProps {
   opened: boolean;
@@ -11,26 +30,6 @@ interface CreateEditModalProps {
   isViewMode?: boolean;
 }
 
-const RESOURCES = [
-  "Cơ sở",
-  "Dịch vụ",
-  "Lớp học",
-  "Học sinh",
-  "Hóa đơn",
-  "Biên lai thu tiền",
-  "Nhóm tài khoản",
-  "Quản lý người dùng",
-  "Tiền thừa",
-];
-
-const ACTIONS = [
-  { key: "view", label: "Xem" },
-  { key: "create", label: "Thêm" },
-  { key: "update", label: "Sửa" },
-  { key: "delete", label: "Xóa" },
-  { key: "custom", label: "Quyền khác" }, // để minh họa, bạn có thể làm nhiều quyền khác tùy logic
-];
-
 const CreateEditModal: React.FC<CreateEditModalProps> = ({
   opened,
   onClose,
@@ -38,64 +37,88 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
   onSubmit,
   isViewMode = false,
 }) => {
+  const { fetchGroupedPermissions } = usePermissionService();
+  const [groupedPermissions, setGroupedPermissions] = useState<
+    GroupedPermissionResponse[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
   const form = useForm({
     initialValues: {
       name: "",
       description: "",
-      permissions: RESOURCES.map((resource) => ({
-        resource,
-        actions: [],
-      })),
-    } as CreateRoleRequest,
-
+      permissions: [] as { name: string }[],
+    },
     validate: {
       name: (value) =>
-        value.length < 3 || value.length > 100
-          ? "Tên phải nằm trong khoảng từ 3 đến 100 ký tự"
+        value.trim().length < 3 || value.length > 100
+          ? "Tên phải từ 3 đến 100 ký tự"
           : null,
       description: (value) =>
-        value.length > 500 ? "Mô tả có tối đa 500 ký tự" : null,
+        value.length > 500 ? "Mô tả không quá 500 ký tự" : null,
     },
   });
 
   useEffect(() => {
+    const loadPermissions = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchGroupedPermissions();
+        setGroupedPermissions(result);
+        console.log("✅ Fetched permissions:", result);
+      } catch (err) {
+        console.error("❌ Failed to fetch permissions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (opened) {
+      loadPermissions();
+    }
+  }, [opened]);
+
+  useEffect(() => {
     if (initialData) {
       form.setValues({
-        name: initialData.name ?? "",
-        description: initialData.description ?? "",
-        permissions: RESOURCES.map((resource) => {
-          const existing = initialData.permissions.find(
-            (p) => p.resource === resource
-          );
-          return {
-            resource,
-            actions: existing ? existing.actions : [],
-          };
-        }),
+        name: initialData.name || "",
+        description: initialData.description || "",
+        permissions: initialData.permissions.map((p) => ({ name: p.name })),
       });
     } else {
       form.reset();
     }
   }, [initialData, opened]);
 
-  const toggleAction = (resource: string, action: string) => {
-    const updatedPermissions = form.values.permissions.map((perm) => {
-      if (perm.resource !== resource) return perm;
+  const togglePermission = useCallback(
+    (permission: PermissionResponse) => {
+      const exists = form.values.permissions.some(
+        (p) => p.name === permission.name
+      );
+      const updated = exists
+        ? form.values.permissions.filter((p) => p.name !== permission.name)
+        : [...form.values.permissions, { name: permission.name }];
 
-      const hasAction = perm.actions.includes(action);
-      return {
-        ...perm,
-        actions: hasAction
-          ? perm.actions.filter((a) => a !== action)
-          : [...perm.actions, action],
-      };
-    });
+      console.log(
+        `[TOGGLE] ${exists ? "Unchecked" : "Checked"} permission:`,
+        permission.name
+      );
+      console.log("🔄 Updated permissions:", updated);
 
-    form.setFieldValue("permissions", updatedPermissions);
-  };
+      form.setFieldValue("permissions", updated);
+    },
+    [form]
+  );
 
   const handleSubmit = (values: typeof form.values) => {
-    onSubmit(values);
+    const payload: RoleRequest = {
+      name: values.name,
+      description: values.description,
+      permissions: [...new Set(values.permissions.map((p) => p.name))],
+    };
+
+    console.log("🚀 Submitting RoleRequest:", payload);
+    onSubmit(payload);
     onClose();
   };
 
@@ -107,75 +130,91 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
       title={
         <div>
           <h2 className="text-xl font-bold">
-            {initialData ? "Cập nhật loại tài khoản" : "Tạo loại tài khoản"}
+            {initialData ? "Cập nhật vai trò" : "Tạo vai trò"}
           </h2>
-          <div className="mt-2 border-b border-gray-300"></div>
+          <div className="mt-2 border-b border-gray-300" />
         </div>
       }
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <TextInput
-          label="Tên loại tài khoản"
-          placeholder="Tên loại tài khoản"
-          {...form.getInputProps("name")}
-          required
-          disabled={isViewMode}
-        />
-
-        <Textarea
-          label="Mô tả"
-          placeholder="Mô tả"
-          {...form.getInputProps("description")}
-          mt="sm"
-          disabled={isViewMode}
-        />
-
-        <div className="mt-4 border-t pt-4">
-          <h3 className="font-semibold mb-2">Quyền hạn</h3>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full border text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2 text-left">Nhóm quyền</th>
-                  {ACTIONS.map((action) => (
-                    <th key={action.key} className="border p-2 text-center">
-                      {action.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {form.values.permissions.map((perm, index) => (
-                  <tr key={perm.resource}>
-                    <td className="border p-2">{perm.resource}</td>
-                    {ACTIONS.map((action) => (
-                      <td key={action.key} className="border p-2 text-center">
-                        <Checkbox
-                          checked={perm.actions.includes(action.key)}
-                          onChange={() =>
-                            toggleAction(perm.resource, action.key)
-                          }
-                          disabled={isViewMode}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <Loader />
         </div>
+      ) : (
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <TextInput
+            label="Tên vai trò"
+            placeholder="Tên vai trò"
+            {...form.getInputProps("name")}
+            required
+            disabled={isViewMode}
+          />
 
-        {!isViewMode && (
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={onClose}>
-              Hủy
-            </Button>
-            <Button type="submit">{initialData ? "Cập nhật" : "Lưu"}</Button>
+          <Textarea
+            label="Mô tả"
+            placeholder="Mô tả vai trò"
+            {...form.getInputProps("description")}
+            mt="sm"
+            disabled={isViewMode}
+          />
+
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Phân quyền</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300 text-sm">
+                <thead className="bg-gray-100 text-left">
+                  <tr>
+                    <th className="p-2">Nhóm quyền</th>
+                    <th className="p-2 text-center">Xem</th>
+                    <th className="p-2 text-center">Thêm</th>
+                    <th className="p-2 text-center">Sửa</th>
+                    <th className="p-2 text-center">Xóa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedPermissions.map((group) => (
+                    <tr
+                      key={group.groupName}
+                      className="border-t hover:bg-gray-50"
+                    >
+                      <td className="p-2 font-medium">{group.groupName}</td>
+                      {["view", "create", "update", "delete"].map((action) => {
+                        const perm = group.permissions.find((p) =>
+                          p.name.startsWith(`${action}:`)
+                        );
+                        return (
+                          <td key={action} className="p-2 text-center">
+                            {perm ? (
+                              <Checkbox
+                                checked={form.values.permissions.some(
+                                  (p) => p.name === perm.name
+                                )}
+                                onChange={() => togglePermission(perm)}
+                                disabled={isViewMode}
+                              />
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </form>
+
+          {!isViewMode && (
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={onClose}>
+                Hủy
+              </Button>
+              <Button type="submit">{initialData ? "Cập nhật" : "Lưu"}</Button>
+            </div>
+          )}
+        </form>
+      )}
     </Modal>
   );
 };

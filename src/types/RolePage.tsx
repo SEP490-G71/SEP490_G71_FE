@@ -1,17 +1,24 @@
+// types/RolePage.ts
+
+export interface PermissionResponse {
+  name: string;
+  description?: string;
+}
+
+export interface GroupedPermissionResponse {
+  groupName: string;
+  permissions: PermissionResponse[];
+}
+
+export interface RoleRequest {
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
 export interface Role {
   id: string;
   name: string;
   description: string;
-  permissions: Permission[];
-}
-
-export interface Permission {
-  resource: string; // ví dụ: 'Cơ sở', 'Dịch vụ'...
-  actions: string[]; // ['view', 'create', 'update', 'delete', 'custom']
-}
-
-export interface CreateRoleRequest {
-  name: string;
-  description: string;
-  permissions: Permission[];
+  permissions: PermissionResponse[];
 }

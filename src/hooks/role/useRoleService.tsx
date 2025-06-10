@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { Role } from "../../types/RolePage";
 import { toast } from "react-toastify";
@@ -27,7 +27,10 @@ const useRoleService = () => {
           name: filters?.name,
         },
       });
-      setRoles(res.data.result.content);
+
+      console.log("Fetched roles:", res.data.result);
+
+      setRoles(res.data.result);
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
@@ -38,6 +41,8 @@ const useRoleService = () => {
 
   const fetchRoleById = async (id: string) => {
     try {
+      console.log(`Fetching role by id: ${id}`);
+
       const res = await axiosInstance.get(`/roles/${id}`);
       return res.data.result as Role;
     } catch (error) {

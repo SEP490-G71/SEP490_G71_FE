@@ -5,7 +5,7 @@ import { createColumn } from "../../../components/utils/tableUtils";
 import useRoleService from "../../../hooks/role/useRoleService";
 import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/Role/CreateEditModal";
-import { Role, CreateRoleRequest } from "../../../types/RolePage";
+import { Role, RoleRequest } from "../../../types/RolePage";
 import axiosInstance from "../../../services/axiosInstance";
 
 const RolePage = () => {
@@ -41,7 +41,7 @@ const RolePage = () => {
   };
 
   const handleView = async (row: Role) => {
-    const data = await fetchRoleById(row.id);
+    const data = await fetchRoleById(row.name);
     if (data) {
       setSelectedRole(data);
       setIsViewMode(true);
@@ -52,7 +52,7 @@ const RolePage = () => {
   };
 
   const handleEdit = async (row: Role) => {
-    const data = await fetchRoleById(row.id);
+    const data = await fetchRoleById(row.name);
     if (data) {
       setSelectedRole(data);
       setModalOpened(true);
@@ -62,13 +62,13 @@ const RolePage = () => {
   };
 
   const handleDelete = async (row: Role) => {
-    await handleDeleteRoleById(row.id);
+    await handleDeleteRoleById(row.name);
   };
 
-  const handleSubmit = async (formData: CreateRoleRequest) => {
+  const handleSubmit = async (formData: RoleRequest) => {
     try {
       if (selectedRole) {
-        await axiosInstance.put(`/roles/${selectedRole.id}`, formData);
+        await axiosInstance.put(`/roles/${selectedRole.name}`, formData);
         toast.success("Updated successfully");
       } else {
         await axiosInstance.post("/roles", formData);
@@ -77,20 +77,15 @@ const RolePage = () => {
       fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
         name: searchName,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving role", error);
-      toast.error("An error occurred");
+      toast.error(error.response?.data?.message || "Failed to save role");
     } finally {
       setModalOpened(false);
     }
   };
 
   const columns = [
-    createColumn<Role>({
-      key: "id",
-      label: "Mã",
-      sortable: true,
-    }),
     createColumn<Role>({
       key: "name",
       label: "Vai trò",
