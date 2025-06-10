@@ -56,7 +56,25 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
       description: (value) =>
         value.length > 500 ? "Mô tả có tối đa 500 ký tự" : null,
       departmentId: (value) => (!value ? "Phòng ban là bắt buộc" : null),
-      price: (value) => (value < 0 ? "Giá tiền phải> = 0" : null),
+      price: (value) => {
+        const stringValue = String(value).trim();
+        const numberValue = Number(stringValue);
+
+        if (stringValue === "") {
+          return "Giá tiền là bắt buộc";
+        }
+
+        if (isNaN(numberValue)) {
+          return "Giá tiền phải là một số";
+        }
+
+        if (numberValue < 0) {
+          return "Giá tiền phải >= 0";
+        }
+
+        return null;
+      },
+
       vat: (value) =>
         ![0, 8, 10].includes(value)
           ? "VAT phải là một trong 0, 8 hoặc 10"
