@@ -2,12 +2,11 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router";
 import { Link as ScrollLink } from "react-scroll";
-import HomeLogo from "/images/logo/home.svg";
 
 export const Navbar = () => {
   const navItems = [
-    { label: "Trang Chủ", href: "#intro-section" },
-    { label: "Giới Thiệu", href: "#intro-section" },
+    { label: "Trang Chủ", href: "#about-section" },
+    { label: "Giới Thiệu", href: "#about-section" },
     { label: "Giải Pháp", href: "#solutions-section" },
     { label: "Bảng Giá", href: "#pricing-section" },
     { label: "Khách Hàng", href: "#feedback-section" },

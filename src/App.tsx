@@ -36,11 +36,11 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Landing Page Admin */}
-          <Route path="/sale" element={<LandingPageAdminPage />} />
+          <Route path="/" element={<LandingPageAdminPage />} />
 
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/admin/dashboard" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
             <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/staffs" element={<StaffsServicePage />} />

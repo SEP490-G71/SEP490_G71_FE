@@ -10,14 +10,16 @@ import IntroSection from "../../components/LandingPageAdmin/IntroSection";
 import axios from "axios";
 import type { Hospital } from "../../types/Hospital";
 import { toast } from "react-toastify";
+import About from "../../components/LandingPageAdmin/About";
 
 export const LandingPageAdminPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const showModal = () => setIsModalVisible(true);
+  const handleCancel = () => setIsModalVisible(false);
 
-  const handleOk = async (values: Hospital) => {
+  const handleOk = async (values: Hospital, resetForm: () => void) => {
     setLoading(true);
     console.log("Thông tin đăng ký: ", values);
 
@@ -35,6 +37,7 @@ export const LandingPageAdminPage = () => {
       if (response.status === 200) {
         toast.success("Đăng ký thành công! Vui lòng kiểm tra email!");
         setIsModalVisible(false);
+        resetForm(); // ✨ reset form chỉ khi thành công
       } else {
         toast.error(response.data.message || "Không thêm đăng ký thành công");
       }
@@ -46,11 +49,16 @@ export const LandingPageAdminPage = () => {
     }
   };
 
-  const handleCancel = () => setIsModalVisible(false);
-
   return (
     <>
       <Navbar />
+
+      <div className="bg-white" id="about-section">
+        <div className="max-w-7xl mx-auto px-6 py-14">
+          <About />
+        </div>
+      </div>
+
       <div className="bg-white" id="intro-section">
         <div className="max-w-7xl mx-auto px-6 pt-1">
           <IntroSection onRegisterClick={showModal} />
