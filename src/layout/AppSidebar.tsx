@@ -62,6 +62,11 @@ const allNavItems: NavItem[] = [
     path: "/admin/role",
   },
   {
+    name: "Quản lý permission",
+    icon: <MdManageAccounts />,
+    path: "/admin/permission",
+  },
+  {
     name: "Quản lý nhân viên",
     icon: <AiOutlineAudit />,
     path: "/admin/staffs",
