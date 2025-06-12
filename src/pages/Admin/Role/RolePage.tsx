@@ -5,7 +5,7 @@ import { createColumn } from "../../../components/utils/tableUtils";
 import useRoleService from "../../../hooks/role/useRoleService";
 import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/Role/CreateEditModal";
-import { Role, RoleRequest } from "../../../types/RolePage";
+import { Role, RoleRequest } from "../../../types/Admin/Role/RolePage";
 import axiosInstance from "../../../services/axiosInstance";
 
 const RolePage = () => {

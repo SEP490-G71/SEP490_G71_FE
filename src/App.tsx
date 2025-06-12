@@ -26,6 +26,7 @@ import DepartmentServicePage from "./pages/Admin/DepartmentService/DepartmentSer
 import StaffsServicePage from "./pages/Admin/StaffsService/StaffsServicePage";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
 import RolePage from "./pages/Admin/Role/RolePage";
+import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -36,13 +37,15 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Landing Page Admin */}
-          <Route path="/sale" element={<LandingPageAdminPage />} />
+          <Route path="/" element={<LandingPageAdminPage />} />
 
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/admin" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
             <Route path="/admin/role" element={<RolePage />} />
+            <Route path="/admin/permission" element={<PermissionPage />} />
+
             <Route path="/admin/staffs" element={<StaffsServicePage />} />
             <Route
               path="/admin/departments"

@@ -5,7 +5,7 @@ import {
   CreateMedicalServiceRequest,
   Department,
   MedicalService,
-} from "../../../types/MedicalService";
+} from "../../../types/Admin/MedicalService/MedicalService";
 import axiosInstance from "../../../services/axiosInstance";
 
 interface CreateEditModalProps {

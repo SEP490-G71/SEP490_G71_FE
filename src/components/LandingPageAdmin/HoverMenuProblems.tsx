@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Grid,
-  Card,
-  Text,
-  Button,
-  List,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
+import { Grid, Card, Text, List, ThemeIcon, Title } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 
 const problems = [
@@ -142,7 +134,7 @@ const HoverMenuProblems = () => {
                     )}
                   </List>
 
-                  <Button
+                  {/* <Button
                     mt="md"
                     color="red"
                     radius="md"
@@ -152,7 +144,7 @@ const HoverMenuProblems = () => {
                     }}
                   >
                     Đăng kí ngay
-                  </Button>
+                  </Button> */}
                 </Grid.Col>
 
                 <Grid.Col span={5}>

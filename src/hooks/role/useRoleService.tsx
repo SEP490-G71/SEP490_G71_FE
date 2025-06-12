@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { Role } from "../../types/RolePage";
+import { Role } from "../../types/Admin/Role/RolePage";
 import { toast } from "react-toastify";
 
 const useRoleService = () => {

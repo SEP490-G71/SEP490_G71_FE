@@ -28,8 +28,8 @@ type NavItem = {
 const allNavItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    name: "Thống kê",
+    path: "/admin/dashboard",
   },
   // {
   //   icon: <CalenderIcon />,
@@ -46,11 +46,11 @@ const allNavItems: NavItem[] = [
   //   icon: <ListIcon />,
   //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   // },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    path: "/basic-tables",
-  },
+  // {
+  //   name: "Tables",
+  //   icon: <TableIcon />,
+  //   path: "/basic-tables",
+  // },
   {
     name: "Quản lý dịch vụ khám",
     icon: <FaBriefcaseMedical />,
@@ -60,6 +60,11 @@ const allNavItems: NavItem[] = [
     name: "Quản lý role",
     icon: <MdManageAccounts />,
     path: "/admin/role",
+  },
+  {
+    name: "Quản lý permission",
+    icon: <MdManageAccounts />,
+    path: "/admin/permission",
   },
   {
     name: "Quản lý nhân viên",

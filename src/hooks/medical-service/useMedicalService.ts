@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { MedicalService } from "../../types/MedicalService";
+import { MedicalService } from "../../types/Admin/MedicalService/MedicalService";
 import { toast } from "react-toastify";
 
 const useMedicalService = () => {

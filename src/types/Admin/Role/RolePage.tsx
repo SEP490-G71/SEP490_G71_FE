@@ -4,6 +4,11 @@ export interface PermissionResponse {
   name: string;
   description?: string;
 }
+export interface PermissionWithGroup {
+  name: string;
+  description?: string;
+  groupName: string;
+}
 
 export interface GroupedPermissionResponse {
   groupName: string;
