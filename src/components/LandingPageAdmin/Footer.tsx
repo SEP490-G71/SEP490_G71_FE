@@ -1,49 +1,104 @@
-import { Container, Group, Text, Anchor } from "@mantine/core";
-import { Link } from "react-router";
+import {
+  Box,
+  Container,
+  Grid,
+  Group,
+  Text,
+  Title,
+  Stack,
+  Divider,
+  Center,
+} from "@mantine/core";
+import {
+  IconHome,
+  IconMail,
+  IconPhone,
+  IconPrinter,
+} from "@tabler/icons-react";
+import Logo from "../../../public/images/logo/home.svg";
 
 export const Footer = () => {
   return (
-    <footer
-      style={{
-        backgroundColor: "white",
-        borderRadius: "0.5rem",
-        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-        margin: "1rem",
-      }}
-    >
-      <Container
-        size="xl"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "1rem 1rem 0 1rem",
-        }}
-      >
-        <Text size="sm" c="dimmed">
-          © 2025{" "}
-          <Anchor component={Link} to="/sale" underline="hover">
-            MedSoft
-          </Anchor>
-          . All Rights Reserved.
-        </Text>
+    <Box pt="md" pb="md" mt="xl" style={{ backgroundColor: "white" }}>
+      <Container mt="md">
+        <Grid gutter="xl" align="center">
+          <Grid.Col
+            span={{ base: 12, sm: 6, md: 6 }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+            }}
+          >
+            <Stack
+              gap="sm"
+              align="flex-start"
+              style={{
+                width: "100%",
+              }}
+            >
+              <Box style={{ lineHeight: 0 }}>
+                <img
+                  src={Logo}
+                  alt="MedSoft Logo"
+                  style={{
+                    width: 150,
+                    height: "auto",
+                    display: "block",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                />
+              </Box>
+              <Text size="sm" color="dimmed" style={{ textAlign: "left" }}>
+                MedSoft cung cấp nền tảng web tối ưu hỗ trợ đặt lịch trực tuyến,
+                quản lý hồ sơ bệnh án điện tử, theo dõi điều trị và thanh toán.
+              </Text>
+            </Stack>
+          </Grid.Col>
 
-        <Group gap="lg" mt={{ base: "md", md: 0 }}>
-          <Anchor href="#" underline="hover" size="sm" c="dimmed">
-            About
-          </Anchor>
-          <Anchor href="#" underline="hover" size="sm" c="dimmed">
-            Privacy Policy
-          </Anchor>
-          <Anchor href="#" underline="hover" size="sm" c="dimmed">
-            Licensing
-          </Anchor>
-          <Anchor href="#" underline="hover" size="sm" c="dimmed">
-            Contact
-          </Anchor>
-        </Group>
+          <Grid.Col
+            span={{ base: 12, sm: 6, md: 6 }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Stack
+              gap="sm"
+              align="flex-start"
+              style={{
+                width: "fit-content",
+                textAlign: "left",
+              }}
+            >
+              <Title order={6}>Liên hệ</Title>
+              <Group gap="xs">
+                <IconHome size={24} />
+                <Text size="sm">New York, NY 10012, US</Text>
+              </Group>
+              <Group gap="xs">
+                <IconMail size={24} />
+                <Text size="sm">medsoft@gmail.com</Text>
+              </Group>
+              <Group gap="xs">
+                <IconPhone size={24} />
+                <Text size="sm">+ 01 234 567 88</Text>
+              </Group>
+              <Group gap="xs">
+                <IconPrinter size={24} />
+                <Text size="sm">+ 01 234 567 89</Text>
+              </Group>
+            </Stack>
+          </Grid.Col>
+        </Grid>
       </Container>
-    </footer>
+
+      <Divider my="md" />
+      <Box py="xs" style={{ textAlign: "center", backgroundColor: "white" }}>
+        <Text size="sm" fw={700}>
+          © 2025 Copyright MedSoft | Đã đăng ký bản quyền{" "}
+        </Text>
+      </Box>
+    </Box>
   );
 };

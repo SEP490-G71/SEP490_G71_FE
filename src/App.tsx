@@ -22,9 +22,12 @@ import MecicalService from "./pages/Admin/MedicalService/MedicalService";
 import { ToastContainer } from "react-toastify";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
+import DepartmentServicePage from "./pages/Admin/DepartmentService/DepartmentServicePage";
+import StaffsServicePage from "./pages/Admin/StaffsService/StaffsServicePage";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
 import LandingPageUser from "./pages/LadingPageUser/LandingPageUser";
-
+import RolePage from "./pages/Admin/Role/RolePage";
+import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -34,13 +37,20 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Landing Page Admin */}
-          <Route path="/sale" element={<LandingPageAdminPage />} />
           <Route path="/user" element={<LandingPageUser />} />
+          <Route path="/" element={<LandingPageAdminPage />} />
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/admin" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
+            <Route path="/admin/role" element={<RolePage />} />
+            <Route path="/admin/permission" element={<PermissionPage />} />
+
+            <Route path="/admin/staffs" element={<StaffsServicePage />} />
+            <Route
+              path="/admin/departments"
+              element={<DepartmentServicePage />}
+            />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />

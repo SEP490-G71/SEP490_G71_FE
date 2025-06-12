@@ -1,11 +1,11 @@
-import { Modal, TextInput, NumberInput, Button, Select } from "@mantine/core";
+import { Modal, TextInput, Button, Select } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React, { useEffect, useState } from "react";
 import {
   CreateMedicalServiceRequest,
   Department,
   MedicalService,
-} from "../../../types/MedicalService";
+} from "../../../types/Admin/MedicalService/MedicalService";
 import axiosInstance from "../../../services/axiosInstance";
 
 interface CreateEditModalProps {

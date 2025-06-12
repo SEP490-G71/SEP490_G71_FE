@@ -10,7 +10,7 @@ import {
   CreateMedicalServiceRequest,
   Department,
   MedicalService,
-} from "../../../types/MedicalService";
+} from "../../../types/Admin/MedicalService/MedicalService";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
