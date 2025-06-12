@@ -41,7 +41,7 @@ export default function App() {
 
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/admin" element={<Home />} />
+            <Route index path="/admin/dashboard" element={<Home />} />
             <Route path="/admin/medical-service" element={<MecicalService />} />
             <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/permission" element={<PermissionPage />} />
