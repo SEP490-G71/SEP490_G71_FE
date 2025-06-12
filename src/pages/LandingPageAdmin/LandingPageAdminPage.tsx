@@ -53,13 +53,13 @@ export const LandingPageAdminPage = () => {
     <>
       <Navbar />
 
-      <div className="bg-white" id="about-section">
+      <div className="bg-[#f0f4f8]" id="about-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <About />
         </div>
       </div>
 
-      <div className="bg-white" id="intro-section">
+      <div className="bg-[#f0f4f8]" id="intro-section">
         <div className="max-w-7xl mx-auto px-6 pt-1">
           <IntroSection onRegisterClick={showModal} />
           <RegisterModal
@@ -71,25 +71,25 @@ export const LandingPageAdminPage = () => {
         </div>
       </div>
 
-      <div className="bg-[#f0f4f8]" id="solutions-section">
+      <div className="bg-white" id="solutions-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <HoverMenuProblems />
         </div>
       </div>
 
-      <div className="bg-white" id="solutions-section">
+      <div className="bg-[#f0f4f8]" id="solutions-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <HoverMenuSolutions />
         </div>
       </div>
 
-      <div className="bg-[#f0f4f8]" id="pricing-section">
+      <div className="bg-white" id="pricing-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <Pricing />
         </div>
       </div>
 
-      <div className="bg-white" id="feedback-section">
+      <div className="bg-[#f0f4f8]" id="feedback-section">
         <div className="max-w-7xl mx-auto px-6 py-5">
           <FeedBack />
         </div>
