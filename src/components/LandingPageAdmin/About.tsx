@@ -4,7 +4,7 @@ export default function About() {
   return (
     <Container
       size="md"
-      className="flex flex-col items-center text-center py-16"
+      className="flex flex-col items-center text-center pt-16 py-28"
     >
       {/* Title */}
       <h2 className="text-[32px] md:text-[40px] text-blue-900 font-bold leading-relaxed mb-8">

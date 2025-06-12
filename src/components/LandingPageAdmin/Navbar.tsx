@@ -5,7 +5,7 @@ import { Link as ScrollLink } from "react-scroll";
 
 export const Navbar = () => {
   const navItems = [
-    { label: "Trang Chủ", href: "#about-section" },
+    { label: "Trang Chủ", href: "#intro-section" },
     { label: "Giới Thiệu", href: "#about-section" },
     { label: "Giải Pháp", href: "#solutions-section" },
     { label: "Bảng Giá", href: "#pricing-section" },

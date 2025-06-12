@@ -185,17 +185,6 @@ const StaffsServicePage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
-        <input
-          type="text"
-          placeholder="Tìm theo tên"
-          className="border rounded px-3 py-2 text-sm w-full h-[40px]"
-          value={filterName}
-          onChange={(e) => {
-            setPage(1);
-            setFilterName(e.target.value);
-          }}
-        />
-
         <Select
           placeholder="Chọn chuyên môn"
           className="w-full"
@@ -230,6 +219,16 @@ const StaffsServicePage = () => {
               label: value,
             })),
           ]}
+        />
+        <input
+          type="text"
+          placeholder="Tìm theo tên"
+          className="border rounded px-3 py-2 text-sm w-full h-[40px]"
+          value={filterName}
+          onChange={(e) => {
+            setPage(1);
+            setFilterName(e.target.value);
+          }}
         />
       </div>
 

@@ -37,7 +37,7 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-          <Route path="/user" element={<LandingPageUser />} />
+          <Route path="/home" element={<LandingPageUser />} />
           <Route path="/" element={<LandingPageAdminPage />} />
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
