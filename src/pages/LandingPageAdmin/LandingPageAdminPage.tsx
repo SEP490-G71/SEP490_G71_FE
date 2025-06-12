@@ -52,13 +52,6 @@ export const LandingPageAdminPage = () => {
   return (
     <>
       <Navbar />
-
-      <div className="bg-[#f0f4f8]" id="about-section">
-        <div className="max-w-7xl mx-auto px-6 py-14">
-          <About />
-        </div>
-      </div>
-
       <div className="bg-[#f0f4f8]" id="intro-section">
         <div className="max-w-7xl mx-auto px-6 pt-1">
           <IntroSection onRegisterClick={showModal} />
@@ -68,6 +61,12 @@ export const LandingPageAdminPage = () => {
             onCancel={handleCancel}
             loading={loading}
           />
+        </div>
+      </div>
+
+      <div className="bg-[#f0f4f8]" id="about-section">
+        <div className="max-w-7xl mx-auto px-6 py-14">
+          <About />
         </div>
       </div>
 

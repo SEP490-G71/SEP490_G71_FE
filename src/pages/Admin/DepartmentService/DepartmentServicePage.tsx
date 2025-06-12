@@ -131,34 +131,41 @@ const DepartmentServicePage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-4">
-        <input
-          type="text"
-          placeholder="Tìm theo tên"
-          className="border rounded px-3 py-2 text-sm w-full h-[40px]"
-          value={filterName}
-          onChange={(e) => {
-            setPage(1);
-            setFilterName(e.target.value);
-          }}
-        />
-        <Select
-          placeholder="Chọn loại phòng"
-          className="w-full"
-          styles={{ input: { height: 40 } }}
-          value={filterType}
-          onChange={(val) => {
-            setPage(1);
-            setFilterType(val || "");
-          }}
-          data={[
-            { value: "", label: "Tất cả" },
-            ...Object.entries(DepartmentType).map(([value, label]) => ({
-              value,
-              label,
-            })),
-          ]}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+        {/* Select loại phòng */}
+        <div>
+          <Select
+            placeholder="Chọn loại phòng"
+            className="w-full"
+            styles={{ input: { height: 40 } }}
+            value={filterType}
+            onChange={(val) => {
+              setPage(1);
+              setFilterType(val || "");
+            }}
+            data={[
+              { value: "", label: "Tất cả" },
+              ...Object.entries(DepartmentType).map(([value, label]) => ({
+                value,
+                label,
+              })),
+            ]}
+          />
+        </div>
+
+        {/* Input tìm theo tên */}
+        <div>
+          <input
+            type="text"
+            placeholder="Tìm theo tên"
+            className="border rounded px-3 py-2 text-sm w-full h-[40px]"
+            value={filterName}
+            onChange={(e) => {
+              setPage(1);
+              setFilterName(e.target.value);
+            }}
+          />
+        </div>
       </div>
 
       <CustomTable
