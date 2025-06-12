@@ -25,6 +25,7 @@ import "@mantine/core/styles.css";
 import DepartmentServicePage from "./pages/Admin/DepartmentService/DepartmentServicePage";
 import StaffsServicePage from "./pages/Admin/StaffsService/StaffsServicePage";
 import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminPage";
+import LandingPageUser from "./pages/LadingPageUser/LandingPageUser";
 import RolePage from "./pages/Admin/Role/RolePage";
 import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 const theme = createTheme({
@@ -36,9 +37,8 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Landing Page Admin */}
+          <Route path="/user" element={<LandingPageUser />} />
           <Route path="/" element={<LandingPageAdminPage />} />
-
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/admin/dashboard" element={<Home />} />
