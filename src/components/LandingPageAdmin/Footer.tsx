@@ -7,13 +7,13 @@ import {
   Title,
   Stack,
   Divider,
+  Center,
 } from "@mantine/core";
 import {
   IconHome,
   IconMail,
   IconPhone,
   IconPrinter,
-  IconDiamond,
 } from "@tabler/icons-react";
 import Logo from "../../../public/images/logo/home.svg";
 
@@ -21,15 +21,35 @@ export const Footer = () => {
   return (
     <Box pt="md" pb="md" mt="xl" style={{ backgroundColor: "white" }}>
       <Container mt="md">
-        <Grid gutter="xl">
-          <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
-            <Stack gap="sm">
-              <img
-                src={Logo}
-                alt="MedSoft Logo"
-                style={{ width: 150, height: "auto" }}
-              />
-              <Text size="sm" color="dimmed">
+        <Grid gutter="xl" align="center">
+          <Grid.Col
+            span={{ base: 12, sm: 6, md: 6 }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+            }}
+          >
+            <Stack
+              gap="sm"
+              align="flex-start"
+              style={{
+                width: "100%",
+              }}
+            >
+              <Box style={{ lineHeight: 0 }}>
+                <img
+                  src={Logo}
+                  alt="MedSoft Logo"
+                  style={{
+                    width: 150,
+                    height: "auto",
+                    display: "block",
+                    margin: 0,
+                    padding: 0,
+                  }}
+                />
+              </Box>
+              <Text size="sm" color="dimmed" style={{ textAlign: "left" }}>
                 MedSoft cung cấp nền tảng web tối ưu hỗ trợ đặt lịch trực tuyến,
                 quản lý hồ sơ bệnh án điện tử, theo dõi điều trị và thanh toán.
               </Text>
@@ -38,10 +58,19 @@ export const Footer = () => {
 
           <Grid.Col
             span={{ base: 12, sm: 6, md: 6 }}
-            style={{ display: "flex", justifyContent: "flex-end" }}
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
           >
-            <Stack gap="sm" style={{ width: "fit-content", textAlign: "left" }}>
-              {" "}
+            <Stack
+              gap="sm"
+              align="flex-start"
+              style={{
+                width: "fit-content",
+                textAlign: "left",
+              }}
+            >
               <Title order={6}>Liên hệ</Title>
               <Group gap="xs">
                 <IconHome size={24} />
