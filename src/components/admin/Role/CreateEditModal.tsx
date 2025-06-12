@@ -14,7 +14,7 @@ import {
   GroupedPermissionResponse,
   PermissionResponse,
   RoleRequest as CreateRoleRequest,
-} from "../../../types/RolePage";
+} from "../../../types/Admin/Role/RolePage";
 
 interface RoleRequest {
   name: string;

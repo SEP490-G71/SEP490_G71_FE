@@ -8,7 +8,7 @@ import HoverMenuSolutions from "../../components/LandingPageAdmin/HoverMenuSolut
 import FeedBack from "../../components/LandingPageAdmin/FeedBack";
 import IntroSection from "../../components/LandingPageAdmin/IntroSection";
 import axios from "axios";
-import type { Hospital } from "../../types/Hospital";
+import type { Hospital } from "../../types/Admin/LandingPageAdmin/Hospital";
 import { toast } from "react-toastify";
 import About from "../../components/LandingPageAdmin/About";
 
@@ -37,7 +37,7 @@ export const LandingPageAdminPage = () => {
       if (response.status === 200) {
         toast.success("Đăng ký thành công! Vui lòng kiểm tra email!");
         setIsModalVisible(false);
-        resetForm(); // ✨ reset form chỉ khi thành công
+        resetForm();
       } else {
         toast.error(response.data.message || "Không thêm đăng ký thành công");
       }

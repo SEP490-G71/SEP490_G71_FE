@@ -1,5 +1,6 @@
+// hooks/permission/usePermissionService.ts
 import axiosInstance from "../../services/axiosInstance";
-import { GroupedPermissionResponse } from "../../types/RolePage";
+import { GroupedPermissionResponse } from "../../types/Admin/Role/RolePage";
 
 export default function usePermissionService() {
   const fetchGroupedPermissions = async (): Promise<

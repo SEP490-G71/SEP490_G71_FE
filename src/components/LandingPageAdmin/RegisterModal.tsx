@@ -1,6 +1,6 @@
 import { Button, Modal, Text, TextInput, Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import type { Hospital } from "../../types/Hospital";
+import type { Hospital } from "../../types/Admin/LandingPageAdmin/Hospital";
 
 const RegisterModal = ({
   visible,
