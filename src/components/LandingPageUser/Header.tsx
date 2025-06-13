@@ -3,6 +3,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { MdEmail, MdPhone } from "react-icons/md";
 import { Menu, X } from "lucide-react";
 import HomeLogo from "/images/logo/home.svg";
+import { Link } from "react-router";
 
 export const Header = () => {
   const navItems = [
@@ -24,8 +25,6 @@ export const Header = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-
-      // Ẩn top bar khi cuộn xuống, hiện lại khi cuộn lên
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setShowTopBar(false);
       } else {
@@ -34,7 +33,6 @@ export const Header = () => {
 
       setLastScrollY(currentScrollY);
 
-      // Xác định section active
       const offsets = navItems.map((item) => {
         const id = item.href.replace("#", "");
         const el = document.getElementById(id);
@@ -66,7 +64,6 @@ export const Header = () => {
 
   return (
     <>
-      {/* Top bar - không chiếm chỗ khi ẩn */}
       <div
         className={`fixed top-0 left-0 w-full bg-sky-600 text-white text-sm lg:text-base z-40 transition-transform duration-300 ${
           showTopBar ? "translate-y-0" : "-translate-y-full"
@@ -136,16 +133,22 @@ export const Header = () => {
           </ul>
 
           {/* Appointment button (desktop) */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex overflow-hidden rounded-full border border-gray-300 shadow-md text-sm font-medium">
             <button
               onClick={() => {
                 const section = document.getElementById("appointment");
                 section?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition-all text-sm font-medium"
+              className="bg-blue-600 text-white px-5 py-2 hover:bg-blue-700 transition-all"
             >
               Đặt lịch hẹn
             </button>
+            <Link
+              to="/home/login"
+              className="bg-red-600 text-white px-5 py-2 hover:bg-red-700 transition-all"
+            >
+              Đăng nhập
+            </Link>
           </div>
 
           {/* Mobile toggle */}
@@ -176,8 +179,7 @@ export const Header = () => {
         )}
       </nav>
 
-      {/* Spacer to offset fixed header height */}
-      <div className="h-[130px]" />
+      <div className="h-[100px]" />
     </>
   );
 };
