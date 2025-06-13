@@ -28,6 +28,7 @@ import { LandingPageAdminPage } from "./pages/LandingPageAdmin/LandingPageAdminP
 import LandingPageUser from "./pages/LadingPageUser/LandingPageUser";
 import RolePage from "./pages/Admin/Role/RolePage";
 import PermissionPage from "./pages/Admin/Permission/PermissionPage";
+import SignInClient from "./components/auth/SignInClient";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -79,6 +80,7 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/home/login" element={<SignInClient />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
