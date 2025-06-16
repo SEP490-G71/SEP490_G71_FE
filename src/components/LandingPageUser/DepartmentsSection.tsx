@@ -8,7 +8,7 @@ const departments = [
       "Chẩn đoán và điều trị các bệnh lý về tim, mạch máu và hệ tuần hoàn",
     description:
       "Khoa Tim mạch cung cấp dịch vụ khám và điều trị cho các bệnh nhân mắc bệnh lý tim bẩm sinh, suy tim, rối loạn nhịp tim và các bệnh mạch vành. Đội ngũ bác sĩ nhiều kinh nghiệm cùng với trang thiết bị hiện đại giúp chẩn đoán chính xác và can thiệp hiệu quả.",
-    image: "/public/images/LandingPageUser/department/departments-1.jpg",
+    image: "/images/LandingPageUser/department/departments-1.jpg",
   },
   {
     id: "neurology",

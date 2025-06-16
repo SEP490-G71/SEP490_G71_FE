@@ -19,7 +19,7 @@ const AboutUs = () => {
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Box style={{ width: "100%", height: "100%" }}>
               <Image
-                src="/public/images/LandingPageUser/about.jpg"
+                src="/images/LandingPageUser/about.jpg"
                 alt="Dịch vụ khám đa khoa Medilab"
                 radius="md"
                 style={{

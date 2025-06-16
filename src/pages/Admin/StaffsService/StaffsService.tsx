@@ -1,16 +1,7 @@
-import { useEffect } from "react";
 import PageMeta from "../../../components/common/PageMeta";
 import StaffsServicePage from "./StaffsServicePage";
-import useStaffss from "../../../hooks/staffs-service/useStaffs";
 
 export default function StaffsService() {
-  const { fetchStaffs, loading, staffs, setStaffs, totalItems, setLoading } =
-    useStaffss();
-
-  useEffect(() => {
-    fetchStaffs();
-  }, []);
-
   return (
     <>
       <PageMeta

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Grid, Card, Text, List, ThemeIcon, Title } from "@mantine/core";
+import { Grid, Card, Text, List, ThemeIcon, Title, Image } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
-
 const problems = [
   "Quản lý hồ sơ bệnh nhân lộn xộn",
   "Không kiểm soát được lịch khám",
@@ -133,23 +132,11 @@ const HoverMenuProblems = () => {
                       )
                     )}
                   </List>
-
-                  {/* <Button
-                    mt="md"
-                    color="red"
-                    radius="md"
-                    size="sm"
-                    style={{
-                      alignSelf: "flex-start",
-                    }}
-                  >
-                    Đăng kí ngay
-                  </Button> */}
                 </Grid.Col>
 
                 <Grid.Col span={5}>
-                  <img
-                    src="/public/images/Hospital.png"
+                  <Image
+                    src={"/images/Hospital.png"}
                     alt="Ảnh minh họa"
                     style={{
                       width: "100%",

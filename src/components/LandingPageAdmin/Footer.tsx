@@ -7,7 +7,6 @@ import {
   Title,
   Stack,
   Divider,
-  Center,
 } from "@mantine/core";
 import {
   IconHome,

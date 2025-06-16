@@ -26,7 +26,6 @@ const DepartmentServicePage = () => {
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentResponse | null>(null);
-  const [isViewMode, setIsViewMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Filter state
