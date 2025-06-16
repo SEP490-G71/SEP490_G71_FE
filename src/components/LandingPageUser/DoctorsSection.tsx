@@ -32,7 +32,7 @@ const doctors = [
     position: "Tai mũi họng",
     description:
       "Chuyên khám và điều trị bệnh lý tai mũi họng trẻ em & người lớn.",
-    image: "/images/LandingPageUser/doctor/doctos-1.jpg",
+    image: "/images/LandingPageUser/doctor/doctors-1.jpg",
   },
   {
     name: "Trần Thị B",

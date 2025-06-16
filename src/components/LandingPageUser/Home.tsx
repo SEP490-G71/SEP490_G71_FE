@@ -19,7 +19,7 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ headerHeight }) => {
   return (
     <BackgroundImage
-      src="/public/images/LandingPageUser/hero-bg.jpg"
+      src="/images/LandingPageUser/hero-bg.jpg"
       style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}
     >
       <Container size="xl" py="xl">

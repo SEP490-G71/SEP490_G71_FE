@@ -3,19 +3,7 @@ import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
-import {
-  // BoxCubeIcon,
-  // CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  // ListIcon,
-  // PageIcon,
-  // PieChartIcon,
-  // PlugInIcon,
-  TableIcon,
-  // UserCircleIcon,
-} from "../icons";
+import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
 type NavItem = {

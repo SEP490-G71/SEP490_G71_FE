@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router";
 import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
 export default function AuthLayout({
   children,

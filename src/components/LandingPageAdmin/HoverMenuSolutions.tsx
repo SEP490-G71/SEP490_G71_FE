@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Grid, Card, Text, List, ThemeIcon, Title } from "@mantine/core";
+import { Grid, Card, Text, List, ThemeIcon, Title, Image } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 
 const solutions = [
@@ -154,8 +154,8 @@ const HoverMenuSolutions = () => {
                 </Grid.Col>
 
                 <Grid.Col span={5}>
-                  <img
-                    src="/public/images/Hospital.png"
+                  <Image
+                    src={"/images/Hospital.png"}
                     alt="Ảnh minh họa"
                     style={{
                       width: "100%",

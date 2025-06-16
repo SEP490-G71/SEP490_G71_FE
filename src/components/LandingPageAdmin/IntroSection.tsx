@@ -1,6 +1,5 @@
 import { Button, Grid, Image, Text, Title } from "@mantine/core";
 import HeroImage from "../../../public/images/AdminPage/hero.jpg";
-
 const IntroSection = ({ onRegisterClick }: { onRegisterClick: () => void }) => (
   <div className="min-h-screen flex items-center ">
     <Grid

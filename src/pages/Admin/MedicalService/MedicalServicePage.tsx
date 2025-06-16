@@ -42,7 +42,7 @@ const MedicalServicePage = () => {
   const [departments, setDepartments] = useState<
     { label: string; value: string }[]
   >([]);
-  const [serviceNameOptions, setServiceNameOptions] = useState<
+  const [, setServiceNameOptions] = useState<
     { label: string; value: string }[]
   >([]);
 

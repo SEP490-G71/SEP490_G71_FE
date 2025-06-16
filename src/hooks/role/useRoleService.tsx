@@ -29,8 +29,7 @@ const useRoleService = () => {
       });
 
       console.log("Fetched roles:", res.data.result);
-
-      setRoles(res.data.result);
+      setRoles(res.data.result.content);
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
       console.error("Failed to fetch roles:", error);
