@@ -50,7 +50,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token =
-"eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ2bi5lZHUuZnB0Lm1lZGljYWxkaWFnbm9zaXMiLCJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MDE3NjAwMiwiaWF0IjoxNzUwMTcyNDAyLCJqdGkiOiJkNjhkYTI4Yy0wNWYyLTQ0ZTQtOWEzZS1kODhkMmNiOGEzYmQiLCJzY29wZSI6IlJPTEVfQURNSU4ifQ._org16c7g-qSxf7JwdlJSfgLrpFZIcaIKKH3TGdN4K0ePO1dfNyZx3rcyZICLMRIVQCUbbq96ixNmnrTXDWv8Q";
+"eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJ2bi5lZHUuZnB0Lm1lZGljYWxkaWFnbm9zaXMiLCJzdWIiOiJhZG1pbiIsImV4cCI6MTc1MDE3OTczNywiaWF0IjoxNzUwMTc2MTM3LCJqdGkiOiIwYTc1OTRhMy1jYTdjLTQwYTctYjU1Yy04YjljNDc1OTExMDIiLCJzY29wZSI6IlJPTEVfQURNSU4ifQ.GuVSM7A8SdBdzzg_cNtHnK90qd6RpJO_oFnmEr4Yn_ap3YPLxH9CWcvpI81DTQgaCj_YlFM953e9JkTHQtnBOA";
     // const hostname = window.location.hostname;
     // const subdomain = hostname.split(".")[0];
 

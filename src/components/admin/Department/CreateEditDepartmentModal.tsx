@@ -19,7 +19,11 @@ import { Position } from "../../../enums/Admin/Position";
 import AssignStaffModal from "../Department-Staffs/AssignStaffModal";
 import { DepartmentStaffResponse } from "../../../types/Admin/Department-Staffs/DepartmentStaffResponse ";
 import useRemoveStaffFromDepartment from "../../../hooks/department-Staffs/useRemoveStaffFromDepartment";
-
+import {
+  validateName,
+  validateRoomNumber,
+  validateDescription,
+} from "../../utils/validation";
 interface CreateEditDepartmentModalProps {
   opened: boolean;
   onClose: () => void;
@@ -55,22 +59,9 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       type: DepartmentType.CONSULTATION,
     },
     validate: {
-      name: (value) =>
-        !value || value.trim() === ""
-          ? "Tên phòng không được bỏ trống"
-          : value.length < 3 || value.length > 100
-          ? "Tên phòng phải từ 3 đến 100 ký tự"
-          : null,
-      description: (value) =>
-        value && (value.length < 3 || value.length > 500)
-          ? "Mô tả phải từ 3 đến 500 ký tự"
-          : null,
-      roomNumber: (value) =>
-        !value || value.trim() === ""
-          ? "Số phòng không được bỏ trống"
-          : !/^[A-Za-z0-9]{2,5}$/.test(value)
-          ? "Số phòng phải từ 2-5 ký tự, không dấu và không khoảng trắng"
-          : null,
+      name: (value) => validateName(value ?? ""),
+      description: (value) => validateDescription(value ?? ""),
+      roomNumber: (value) => validateRoomNumber(value ?? ""),
       type: (value) => (!value ? "Loại phòng không được để trống" : null),
     },
   });
@@ -137,10 +128,25 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       <Modal
         opened={opened}
         onClose={onClose}
-        title={initialData ? "Cập nhật phòng ban" : "Tạo mới phòng ban"}
         size="lg"
         radius="md"
         yOffset={90}
+        title={initialData ? "Cập nhật phòng ban" : "Tạo mới phòng ban"}
+        styles={{
+          header: {
+            backgroundColor: "#3b82f6",
+            color: "white",
+            padding: "16px",
+          },
+          title: {
+            color: "white",
+            fontWeight: 600,
+            width: "100%",
+          },
+          close: {
+            color: "white",
+          },
+        }}
       >
         <form
           onSubmit={(e) => {

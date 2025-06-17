@@ -72,17 +72,17 @@ const DepartmentPage = () => {
       setEditingId(row.id);
       setModalOpened(true);
     } catch {
-      toast.error("Failed to fetch department details");
+      toast.error("Lỗi khi lấy thông tin phòng ban");
     }
   };
 
   const handleDelete = async (row: DepartmentResponse) => {
     try {
       await axiosInstance.delete(`/departments/${row.id}`);
-      toast.success("Deleted successfully");
+      toast.success("Xoá phòng ban thành công");
       fetchDepartments();
     } catch {
-      toast.error("Delete failed");
+      toast.error("Xoá phòng ban thất bại");
     }
   };
 
@@ -90,14 +90,14 @@ const DepartmentPage = () => {
     try {
       if (editingId) {
         await axiosInstance.put(`/departments/${editingId}`, data);
-        toast.success("Updated successfully");
+        toast.success("Sửa phòng ban thành công");
       } else {
         await axiosInstance.post(`/departments`, data);
-        toast.success("Created successfully");
+        toast.success("Tạo phòng ban thành công");
       }
       fetchDepartments();
     } catch {
-      toast.error("Error saving department");
+      toast.error("Lỗi khi lưu phòng ban");
     } finally {
       setModalOpened(false);
       setEditingId(null);
