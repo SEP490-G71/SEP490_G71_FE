@@ -1,9 +1,13 @@
 import { Modal, TextInput, Button, Select } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
+
+// Locale + styles cho date picker
+import "dayjs/locale/vi";
+import "@mantine/dates/styles.css";
 
 interface CreateEditStaffModalProps {
   opened: boolean;
@@ -77,7 +81,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       yOffset={90}
     >
       <form
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
           const isValid = form.validate();
           if (!isValid.hasErrors) {
@@ -148,10 +152,11 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           disabled={isViewMode}
         />
 
-        <DateInput
+        <DatePickerInput
           label="Ngày sinh"
           placeholder="Chọn ngày sinh"
           valueFormat="YYYY-MM-DD"
+          locale="vi"
           {...form.getInputProps("dob")}
           required
           mt="sm"
@@ -159,9 +164,14 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         />
 
         {!isViewMode && (
-          <Button type="submit" fullWidth mt="md">
-            {initialData ? "Cập nhật" : "Tạo mới"}
-          </Button>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={onClose}>
+              Huỷ
+            </Button>
+            <Button type="submit" color="blue">
+              {initialData ? "Cập nhật" : "Tạo mới"}
+            </Button>
+          </div>
         )}
       </form>
     </Modal>

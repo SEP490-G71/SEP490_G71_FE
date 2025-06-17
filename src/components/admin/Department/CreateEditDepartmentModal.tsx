@@ -50,7 +50,6 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     },
   });
 
-  // Cập nhật dữ liệu khi mở modal hoặc dữ liệu thay đổi
   useEffect(() => {
     if (initialData) {
       form.setValues({
@@ -129,9 +128,14 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         />
 
         {!isViewMode && (
-          <Button type="submit" fullWidth mt="md">
-            {initialData ? "Cập nhật" : "Tạo mới"}
-          </Button>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" color="blue" onClick={onClose}>
+              Huỷ
+            </Button>
+            <Button type="submit">
+              {initialData ? "Cập nhật" : "Tạo mới"}
+            </Button>
+          </div>
         )}
       </form>
     </Modal>
