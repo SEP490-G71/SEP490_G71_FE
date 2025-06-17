@@ -122,8 +122,8 @@ const DepartmentPage = () => {
   return (
     <>
       <PageMeta
-        title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Quản lý phòng ban | Admin Dashboard"
+        description="Trang quản lý phòng ban trong hệ thống"
       />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
