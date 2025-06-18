@@ -64,6 +64,11 @@ const allNavItems: NavItem[] = [
     icon: <AiOutlineApartment />,
     path: "/admin/departments",
   },
+  {
+    name: "Đăng ký khám",
+    icon: <AiOutlineApartment />,
+    path: "/admin/register-medical-examination",
+  },
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
