@@ -79,7 +79,10 @@ export default function App() {
             <Route path="/bar-chart" element={<BarChart />} />
 
             {/* Examination Process  Page */}
-            <Route path="/MediInfor" element={<MedicalExaminationPage />} />
+            <Route
+              path="/admin/medical-examination"
+              element={<MedicalExaminationPage />}
+            />
           </Route>
 
           {/* Auth Layout */}
