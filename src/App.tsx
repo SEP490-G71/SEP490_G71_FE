@@ -29,6 +29,7 @@ import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 import SignInClient from "./components/auth/SignInClient";
 import StaffsPage from "./pages/Admin/StaffsService/StaffsPage";
 import DepartmentPage from "./pages/Admin/DepartmentService/DepartmentPage";
+import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -46,9 +47,12 @@ export default function App() {
             <Route path="/admin/medical-service" element={<MecicalService />} />
             <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/permission" element={<PermissionPage />} />
-
             <Route path="/admin/staffs" element={<StaffsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
+            <Route
+              path="/admin/register-medical-examination"
+              element={<RegisterMedicalExaminationPage />}
+            />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
