@@ -22,9 +22,9 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    else {
-      window.location.href = "/home/login";
-    }
+    // else {
+    //   window.location.href = "/home/login";
+    // }
 
     if (subdomain && !config.url?.includes("/auth/register")) {
       config.headers["X-Tenant-ID"] = subdomain;
@@ -36,5 +36,3 @@ axiosInstance.interceptors.request.use(
 );
 
 export default axiosInstance;
-
-
