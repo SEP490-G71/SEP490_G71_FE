@@ -18,12 +18,8 @@ axiosInstance.interceptors.request.use(
     const subdomain = "hadong";
     console.log(subdomain);
 
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    else {
-      window.location.href = "/home/login";
     }
 
     if (subdomain && !config.url?.includes("/auth/register")) {

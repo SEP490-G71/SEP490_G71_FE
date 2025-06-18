@@ -29,6 +29,7 @@ import LandingPageUser from "./pages/LadingPageUser/LandingPageUser";
 import RolePage from "./pages/Admin/Role/RolePage";
 import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 import SignInClient from "./components/auth/SignInClient";
+import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -46,11 +47,14 @@ export default function App() {
             <Route path="/admin/medical-service" element={<MecicalService />} />
             <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/permission" element={<PermissionPage />} />
-
             <Route path="/admin/staffs" element={<StaffsServicePage />} />
             <Route
               path="/admin/departments"
               element={<DepartmentServicePage />}
+            />
+            <Route
+              path="/admin/register-medical-examination"
+              element={<RegisterMedicalExaminationPage />}
             />
 
             {/* Others Page */}
