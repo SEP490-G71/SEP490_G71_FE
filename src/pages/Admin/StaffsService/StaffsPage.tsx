@@ -7,9 +7,10 @@ import { toast } from "react-toastify";
 import { StaffsResponse } from "../../../types/Admin/Staffs/StaffsTypeResponse";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
 import { Gender, Specialty, Level } from "../../../enums/Admin/StaffsEnums";
-import CreateEditStaffModal from "../../../components/admin/StaffsService/CreateEditStaffModal";
+import PageMeta from "../../../components/common/PageMeta";
+import dayjs from "dayjs";
+import CreateEditStaffModal from "../../../components/admin/Staffs/CreateEditStaffModal";
 
-// 👉 Hàm chuyển enum key sang value an toàn
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
   key: string
@@ -17,7 +18,7 @@ function getEnumLabel<T extends Record<string, string>>(
   return enumObj[key as keyof T] ?? key;
 }
 
-const StaffsServicePage = () => {
+const StaffsPage = () => {
   const [staffs, setStaffs] = useState<StaffsResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
@@ -169,11 +170,19 @@ const StaffsServicePage = () => {
       label: "Giới tính",
       render: (row) => getEnumLabel(Gender, row.gender),
     }),
-    createColumn<StaffsResponse>({ key: "dob", label: "Ngày sinh" }),
+    createColumn<StaffsResponse>({
+      key: "dob",
+      label: "Ngày sinh",
+      render: (row) => (row.dob ? dayjs(row.dob).format("DD/MM/YYYY") : ""),
+    }),
   ];
 
   return (
     <>
+      <PageMeta
+        title="Quản lý nhân viên | Admin Dashboard"
+        description="Trang quản lý nhân viên trong hệ thống"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Nhân viên</h1>
         <button
@@ -270,4 +279,4 @@ const StaffsServicePage = () => {
   );
 };
 
-export default StaffsServicePage;
+export default StaffsPage;

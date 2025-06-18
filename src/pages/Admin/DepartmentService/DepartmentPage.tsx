@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Select } from "@mantine/core";
+import { toast } from "react-toastify";
+import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import axiosInstance from "../../../services/axiosInstance";
-import { toast } from "react-toastify";
 import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
-import CreateEditDepartmentModal from "../../../components/admin/DepartmentService/CreateEditDepartmentModal";
+import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -14,7 +15,8 @@ function getEnumLabel<T extends Record<string, string>>(
 ): string {
   return enumObj[key as keyof T] ?? key;
 }
-const DepartmentServicePage = () => {
+
+const DepartmentPage = () => {
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
@@ -28,7 +30,6 @@ const DepartmentServicePage = () => {
     useState<DepartmentResponse | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Filter state
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
 
@@ -120,6 +121,11 @@ const DepartmentServicePage = () => {
 
   return (
     <>
+      <PageMeta
+        title="Quản lý phòng ban | Admin Dashboard"
+        description="Trang quản lý phòng ban trong hệ thống"
+      />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Phòng ban</h1>
         <button
@@ -131,7 +137,6 @@ const DepartmentServicePage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-        {/* Select loại phòng */}
         <div>
           <Select
             placeholder="Chọn loại phòng"
@@ -152,7 +157,6 @@ const DepartmentServicePage = () => {
           />
         </div>
 
-        {/* Input tìm theo tên */}
         <div>
           <input
             type="text"
@@ -202,4 +206,4 @@ const DepartmentServicePage = () => {
   );
 };
 
-export default DepartmentServicePage;
+export default DepartmentPage;
