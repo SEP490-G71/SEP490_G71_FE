@@ -4,8 +4,13 @@ import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
+import {
+  validateName,
+  validatePhone,
+  validateEmail,
+  validateDob,
+} from "../../utils/validation";
 
-// Locale + styles cho date picker
 import "dayjs/locale/vi";
 import "@mantine/dates/styles.css";
 
@@ -36,30 +41,10 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       accountId: undefined,
     },
     validate: {
-      name: (value) =>
-        value.length < 3 ? "Tên phải có ít nhất 3 ký tự" : null,
-      phone: (value) =>
-        !/^\d{10,15}$/.test(value) ? "Số điện thoại không hợp lệ" : null,
-      email: (value) =>
-        !/^\S+@\S+\.\S+$/.test(value) ? "Email không hợp lệ" : null,
-      dob: (value) => {
-        if (!value) return "Ngày sinh không được để trống";
-
-        const selectedDate = new Date(value);
-        const now = new Date();
-        const age = now.getFullYear() - selectedDate.getFullYear();
-        const monthDiff = now.getMonth() - selectedDate.getMonth();
-        const dayDiff = now.getDate() - selectedDate.getDate();
-
-        const isBirthdayPassedThisYear =
-          monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0);
-        const actualAge = isBirthdayPassedThisYear ? age : age - 1;
-
-        if (selectedDate > now) return "Ngày sinh không được là tương lai";
-        if (actualAge < 17) return "Nhân viên phải từ 17 tuổi trở lên";
-
-        return null;
-      },
+      name: (value) => validateName(value ?? ""),
+      phone: (value) => validatePhone(value ?? ""),
+      email: (value) => validateEmail(value ?? ""),
+      dob: (value) => validateDob(value ?? ""),
     },
   });
 
@@ -79,6 +64,21 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       size="xl"
       radius="md"
       yOffset={90}
+      styles={{
+        header: {
+          backgroundColor: "#1e3a8a",
+          color: "white",
+          padding: "16px",
+        },
+        title: {
+          color: "white",
+          fontWeight: 600,
+          width: "100%",
+        },
+        close: {
+          color: "white",
+        },
+      }}
     >
       <form
         onSubmit={(e) => {

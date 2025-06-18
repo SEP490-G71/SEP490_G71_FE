@@ -29,6 +29,7 @@ import PermissionPage from "./pages/Admin/Permission/PermissionPage";
 import SignInClient from "./components/auth/SignInClient";
 import StaffsPage from "./pages/Admin/StaffsService/StaffsPage";
 import DepartmentPage from "./pages/Admin/DepartmentService/DepartmentPage";
+import MedicalExaminationPage from "./pages/Admin/Examination Process/MedicalExaminationPage";
 import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -76,6 +77,12 @@ export default function App() {
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
+
+            {/* Examination Process  Page */}
+            <Route
+              path="/admin/medical-examination"
+              element={<MedicalExaminationPage />}
+            />
           </Route>
 
           {/* Auth Layout */}
