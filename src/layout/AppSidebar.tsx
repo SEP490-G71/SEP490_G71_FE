@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
+import { FaUserPlus, FaFileMedical } from "react-icons/fa";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
@@ -66,12 +67,12 @@ const allNavItems: NavItem[] = [
   },
   {
     name: "Đăng ký khám",
-    icon: <AiOutlineApartment />,
+    icon: <FaUserPlus />,
     path: "/admin/register-medical-examination",
   },
   {
     name: "Bệnh án",
-    icon: <AiOutlineApartment />,
+    icon: <FaFileMedical />,
     path: "/admin/medical-examination",
   },
   // {

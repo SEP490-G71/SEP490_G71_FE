@@ -3,22 +3,21 @@ import {
   Container,
   Grid,
   Select,
-  Table,
   TextInput,
   Title,
   Group,
   Divider,
   Tabs,
-  Text,
-  Pagination,
   Paper,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
 import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
+import CustomTable from "../../../components/common/CustomTable";
+import { Column } from "../../../types/table";
 
 export default function RegisterMedicalExaminationPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -31,6 +30,42 @@ export default function RegisterMedicalExaminationPage() {
   const [modalOpened, setModalOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortKey, setSortKey] = useState<keyof Patient | undefined>();
+  const [sortDirection, setSortDirection] = useState<
+    "asc" | "desc" | undefined
+  >();
+
+  const columns: Column<Patient>[] = [
+    { key: "maBN", label: "Mã BN", sortable: true },
+    { key: "name", label: "Tên BN", sortable: true },
+    { key: "phone", label: "Điện thoại" },
+  ];
+
+  const sortedData = useMemo(() => {
+    if (!sortKey || !sortDirection) return patients;
+
+    return [...patients].sort((a, b) => {
+      const valA = a[sortKey];
+      const valB = b[sortKey];
+
+      // So sánh có kiểm tra null/undefined kỹ
+      if (valA == null && valB == null) return 0;
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (valA === valB) return 0;
+      if (sortDirection === "asc") return valA > valB ? 1 : -1;
+      return valA < valB ? 1 : -1;
+    });
+  }, [patients, sortKey, sortDirection]);
+
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedData.slice(start, start + pageSize);
+  }, [sortedData, page, pageSize]);
+
   const handleReset = () => {
     setConfirmedPatient(null);
     setSelectedDate(null);
@@ -39,12 +74,9 @@ export default function RegisterMedicalExaminationPage() {
   const handleSave = () => {
     if (!confirmedPatient) return;
 
-    // Lấy ngày mới từ selectedDate
-
     let isoSelected: string | null = null;
-
     if (selectedDate) {
-      const date = new Date(selectedDate); // xử lý cả khi là string
+      const date = new Date(selectedDate);
       if (!isNaN(date.getTime())) {
         isoSelected = date.toISOString().split("T")[0];
       }
@@ -54,15 +86,12 @@ export default function RegisterMedicalExaminationPage() {
       isoSelected && isoSelected !== confirmedPatient.ngayDangKy
         ? isoSelected
         : confirmedPatient.ngayDangKy;
-    const updatedPatient = {
-      ...confirmedPatient,
-      ngayDangKy: isoDate,
-    };
+    const updatedPatient = { ...confirmedPatient, ngayDangKy: isoDate };
 
     setPatients((prev) =>
       prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
     );
-    setConfirmedPatient(updatedPatient); // cập nhật lại ngay sau lưu
+    setConfirmedPatient(updatedPatient);
     alert("Lưu thông tin bệnh nhân thành công!");
   };
 
@@ -87,7 +116,6 @@ export default function RegisterMedicalExaminationPage() {
     resetForm();
   };
 
-  // Đồng bộ selectedDate mỗi khi confirmedPatient thay đổi
   useEffect(() => {
     if (
       confirmedPatient?.ngayDangKy &&
@@ -124,10 +152,8 @@ export default function RegisterMedicalExaminationPage() {
       />
 
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* Bên trái: Bộ lọc và danh sách đăng ký */}
         <div className="w-full lg:flex-[1.3] min-w-[350px]">
           <Paper p="md" shadow="sm" radius="md" withBorder>
-            {/* Bộ lọc */}
             <Grid gutter="xs" mb="sm">
               <Grid.Col span={6}>
                 <Select
@@ -153,37 +179,22 @@ export default function RegisterMedicalExaminationPage() {
               </Grid.Col>
             </Grid>
 
-            {/* Danh sách bệnh nhân */}
-            <Table highlightOnHover withColumnBorders>
-              <thead>
-                <tr>
-                  <th>TT</th>
-                  <th>STT</th>
-                  <th>Mã BN</th>
-                  <th>Tên BN</th>
-                  <th>Điện thoại</th>
-                </tr>
-              </thead>
-              <tbody>
-                {patients.map((patient, index) => (
-                  <tr key={patient.id}>
-                    <td>{index + 1}</td>
-                    <td>{index + 1}</td>
-                    <td>{patient.maBN}</td>
-                    <td>{patient.name}</td>
-                    <td>{patient.phone}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-
-            <Group justify="space-between" mt="sm">
-              <Text size="sm">1–10 của 10</Text>
-              <Group>
-                <Select data={["10", "20", "50"]} defaultValue="10" w={100} />
-                <Pagination total={1} value={1} />
-              </Group>
-            </Group>
+            <CustomTable
+              data={paginatedData}
+              columns={columns}
+              page={page}
+              pageSize={pageSize}
+              totalItems={patients.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onSortChange={(key, dir) => {
+                setSortKey(key);
+                setSortDirection(dir);
+              }}
+              showActions={false}
+            />
           </Paper>
         </div>
 
@@ -237,7 +248,7 @@ export default function RegisterMedicalExaminationPage() {
                   <Grid.Col span={4}>
                     <TextInput
                       label="Họ tên"
-                      placeholder="Họ tên"
+                      placeholder="Nhập họ và tên"
                       value={confirmedPatient?.name || ""}
                       disabled
                     />
@@ -263,6 +274,7 @@ export default function RegisterMedicalExaminationPage() {
                         { value: "Nữ", label: "Nữ" },
                       ]}
                       value={confirmedPatient?.gender || null}
+                      placeholder="Chọn giới tính"
                       disabled
                     />
                   </Grid.Col>
@@ -363,6 +375,7 @@ export default function RegisterMedicalExaminationPage() {
                         setSelectedDate(date);
                       }}
                       valueFormat="DD/MM/YYYY"
+                      placeholder="DD/MM/YYYY"
                     />
                   </Grid.Col>
                 </Grid>

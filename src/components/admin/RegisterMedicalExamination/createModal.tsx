@@ -87,6 +87,7 @@ export default function CreateModal({
               label="Họ và tên"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="Nhập họ và tên"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -99,6 +100,7 @@ export default function CreateModal({
               }
               onChange={(value) => handleChange("dob", value)}
               valueFormat="DD/MM/YYYY"
+              placeholder="DD/MM/YYYY"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -107,6 +109,7 @@ export default function CreateModal({
               data={["Nam", "Nữ", "Không xác định"]}
               value={formData.gender}
               onChange={(value) => handleChange("gender", value)}
+              placeholder="Chọn giới tính"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -114,6 +117,7 @@ export default function CreateModal({
               label="Số điện thoại"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
+              placeholder="Nhập số điện thoại"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -121,6 +125,7 @@ export default function CreateModal({
               label="CMT/CCCD"
               value={formData.cccd}
               onChange={(e) => handleChange("cccd", e.target.value)}
+              placeholder="Nhập CMT/CCCD"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -128,6 +133,7 @@ export default function CreateModal({
               label="Email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
+              placeholder="Nhập email"
             />
           </Grid.Col>
           <Grid.Col span={12}>
@@ -135,6 +141,7 @@ export default function CreateModal({
               label="Địa chỉ"
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
+              placeholder="Nhập địa chỉ"
             />
           </Grid.Col>
         </Grid>
@@ -146,6 +153,7 @@ export default function CreateModal({
               label="Tài khoản"
               value={formData.username}
               onChange={(e) => handleChange("username", e.target.value)}
+              placeholder="Nhập tên tài khoản"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -153,6 +161,7 @@ export default function CreateModal({
               label="Mật khẩu"
               value={formData.password}
               onChange={(e) => handleChange("password", e.target.value)}
+              placeholder="Nhập mật khẩu"
             />
           </Grid.Col>
           <Grid.Col span={6}>
@@ -160,6 +169,7 @@ export default function CreateModal({
               label="Nhập lại mật khẩu"
               value={formData.confirmPassword}
               onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              placeholder="Nhập lại mật khẩu"
             />
           </Grid.Col>
         </Grid>
