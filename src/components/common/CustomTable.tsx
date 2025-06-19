@@ -17,7 +17,6 @@ interface CustomTableProps<T> {
   page: number;
   pageSize: number;
   totalItems: number;
-  pageSizeOptions?: number[];
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onSortChange?: (key: keyof T, direction: "asc" | "desc") => void;
@@ -36,7 +35,6 @@ function CustomTable<T>({
   page,
   pageSize,
   totalItems,
-  pageSizeOptions = [5, 10, 20, 50],
   onPageChange,
   onPageSizeChange,
   onSortChange,
@@ -164,28 +162,37 @@ function CustomTable<T>({
         </table>
       </div>
 
+      {/* Pagination Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-gray-800 border-t text-sm text-gray-600 dark:text-gray-300">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <span>Hiển thị tối đa</span>
-            <select
-              value={pageSize}
-              onChange={(e) =>
-                onPageSizeChange && onPageSizeChange(Number(e.target.value))
+        {/* Page size input */}
+        <div className="flex items-center gap-2">
+          <span>Hiển thị</span>
+          <input
+            type="text"
+            placeholder="10"
+            inputMode="numeric"
+            defaultValue={pageSize !== 10 ? pageSize : ""}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const val = (e.target as HTMLInputElement).value.trim();
+                if (val === "") {
+                  onPageSizeChange?.(10);
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num) && num > 0) {
+                    onPageSizeChange?.(num);
+                  }
+                }
               }
-              className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span>trên {totalItems} kết quả</span>
-          </div>
+            }}
+            className="w-24 border px-2 py-1 rounded text-sm appearance-none"
+            title="Nhấn Enter để áp dụng"
+          />
+          <span>trên {totalItems} kết quả</span>
         </div>
 
-        <div className="flex items-center flex-wrap justify-start gap-1 sm:gap-2 text-sm text-gray-600 dark:text-gray-300">
+        {/* Page buttons */}
+        <div className="flex items-center flex-wrap gap-1 sm:gap-2">
           <button
             onClick={() => page > 1 && onPageChange(page - 1)}
             disabled={page === 1}
@@ -218,6 +225,7 @@ function CustomTable<T>({
         </div>
       </div>
 
+      {/* Modal confirm delete */}
       <Modal
         opened={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
