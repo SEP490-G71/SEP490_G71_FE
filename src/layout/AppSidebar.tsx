@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
-import { FaUserPlus, FaFileMedical } from "react-icons/fa";
+import { FaUserPlus, FaFileMedical, FaUsers } from "react-icons/fa";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import { parseJwt } from "../../src/components/utils/jwt"; // ✅ Thêm dòng này
+import { parseJwt } from "../../src/components/utils/jwt";
 
-// ✅ Xác định NavItem type
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -18,7 +17,6 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-// ✅ Phân quyền theo role
 const navItemsByRole: Record<string, NavItem[]> = {
   admin: [
     { icon: <GridIcon />, name: "Thống kê", path: "/admin/dashboard" },
@@ -42,6 +40,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Quản lý phòng ban",
       icon: <AiOutlineApartment />,
       path: "/admin/departments",
+    },
+    {
+      name: "Quản lý bệnh nhân",
+      icon: <FaUsers />,
+      path: "/admin/patients",
     },
   ],
   staff: [
