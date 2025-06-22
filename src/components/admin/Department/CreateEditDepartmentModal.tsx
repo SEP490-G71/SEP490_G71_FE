@@ -264,7 +264,14 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                           if (!acc[curr.staffId]) {
                             acc[curr.staffId] = {
                               staffId: curr.staffId,
-                              staffName: curr.staffName,
+                              staffName: [
+                                curr.firstName,
+                                curr.middleName,
+                                curr.lastName,
+                              ]
+                                .filter(Boolean)
+                                .join(" "),
+
                               positions: [Position[curr.position]],
                             };
                           } else {

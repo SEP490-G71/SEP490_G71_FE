@@ -1,10 +1,12 @@
 import { Position } from "../../../enums/Admin/Position";
 
 export interface DepartmentStaffResponse {
-  id: string; 
+  id: string;
   departmentId: string;
   staffId: string;
   departmentName: string;
-  staffName: string;
+  firstName: string;
+  middleName: string | null;
+  lastName: string;
   position: keyof typeof Position;
 }

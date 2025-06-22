@@ -17,6 +17,7 @@ interface CustomTableProps<T> {
   page: number;
   pageSize: number;
   totalItems: number;
+  pageSizeOptions?: number[];
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   onSortChange?: (key: keyof T, direction: "asc" | "desc") => void;
@@ -27,6 +28,7 @@ interface CustomTableProps<T> {
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  showActions?: boolean;
 }
 
 function CustomTable<T>({
@@ -35,6 +37,7 @@ function CustomTable<T>({
   page,
   pageSize,
   totalItems,
+  pageSizeOptions = [5, 10, 20, 50],
   onPageChange,
   onPageSizeChange,
   onSortChange,
@@ -45,6 +48,7 @@ function CustomTable<T>({
   onView,
   onEdit,
   onDelete,
+  showActions = true,
 }: CustomTableProps<T>) {
   const totalPages = useMemo(
     () => Math.ceil(totalItems / pageSize),
@@ -91,19 +95,27 @@ function CustomTable<T>({
                   </div>
                 </th>
               ))}
-              <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
+              {showActions && (
+                <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
             {loading ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-12">
+                <td
+                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  className="text-center py-12"
+                >
                   <Loader size="lg" variant="dots" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-6">
+                <td
+                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  className="text-center py-6"
+                >
                   {emptyText}
                 </td>
               </tr>
@@ -123,38 +135,40 @@ function CustomTable<T>({
                         : (row[col.key] as React.ReactNode)}
                     </td>
                   ))}
-                  <td className="px-5 py-4 flex flex-wrap items-center justify-start gap-2 whitespace-nowrap">
-                    {onView && (
-                      <button
-                        onClick={() => onView(row)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition duration-200"
-                        title="Xem chi tiết"
-                      >
-                        <FaEye size={16} />
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button
-                        onClick={() => onEdit(row)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-green-500 hover:text-white transition duration-200"
-                        title="Chỉnh sửa"
-                      >
-                        <FaPencilAlt size={16} />
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={() => {
-                          setRowToDelete(row);
-                          setIsDeleteModalOpen(true);
-                        }}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-red-500 hover:text-white transition duration-200"
-                        title="Xóa"
-                      >
-                        <FaTrash size={16} />
-                      </button>
-                    )}
-                  </td>
+                  {showActions && (
+                    <td className="px-5 py-4 flex flex-wrap items-center justify-start gap-2 whitespace-nowrap">
+                      {onView && (
+                        <button
+                          onClick={() => onView(row)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition duration-200"
+                          title="Xem chi tiết"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          onClick={() => onEdit(row)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-green-500 hover:text-white transition duration-200"
+                          title="Chỉnh sửa"
+                        >
+                          <FaPencilAlt size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={() => {
+                            setRowToDelete(row);
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-red-500 hover:text-white transition duration-200"
+                          title="Xóa"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -162,37 +176,28 @@ function CustomTable<T>({
         </table>
       </div>
 
-      {/* Pagination Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-gray-800 border-t text-sm text-gray-600 dark:text-gray-300">
-        {/* Page size input */}
-        <div className="flex items-center gap-2">
-          <span>Hiển thị</span>
-          <input
-            type="text"
-            placeholder="10"
-            inputMode="numeric"
-            defaultValue={pageSize !== 10 ? pageSize : ""}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const val = (e.target as HTMLInputElement).value.trim();
-                if (val === "") {
-                  onPageSizeChange?.(10);
-                } else {
-                  const num = parseInt(val, 10);
-                  if (!isNaN(num) && num > 0) {
-                    onPageSizeChange?.(num);
-                  }
-                }
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <span>Hiển thị tối đa</span>
+            <select
+              value={pageSize}
+              onChange={(e) =>
+                onPageSizeChange && onPageSizeChange(Number(e.target.value))
               }
-            }}
-            className="w-24 border px-2 py-1 rounded text-sm appearance-none"
-            title="Nhấn Enter để áp dụng"
-          />
-          <span>trên {totalItems} kết quả</span>
+              className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"
+            >
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+            <span>trên {totalItems} kết quả</span>
+          </div>
         </div>
 
-        {/* Page buttons */}
-        <div className="flex items-center flex-wrap gap-1 sm:gap-2">
+        <div className="flex items-center flex-wrap justify-start gap-1 sm:gap-2 text-sm text-gray-600 dark:text-gray-300">
           <button
             onClick={() => page > 1 && onPageChange(page - 1)}
             disabled={page === 1}
@@ -225,7 +230,6 @@ function CustomTable<T>({
         </div>
       </div>
 
-      {/* Modal confirm delete */}
       <Modal
         opened={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

@@ -10,16 +10,21 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    const hostname = window.location.hostname;
-    const subdomain = "hadong"; // hoặc hostname.split('.')[0] nếu cần động
 
-    console.log("Subdomain:", subdomain);
+    const hostname = window.location.hostname;
+    // const subdomain = hostname.split('.')[0];
+    console.log(hostname);
+
+    const subdomain = "hadong";
+    console.log(subdomain);
+
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      window.location.href = "/home/login";
     }
+    // else {
+    //   window.location.href = "/home/login";
+    // }
 
     if (subdomain && !config.url?.includes("/auth/register")) {
       config.headers["X-Tenant-ID"] = subdomain;
@@ -31,3 +36,4 @@ axiosInstance.interceptors.request.use(
 );
 
 export default axiosInstance;
+

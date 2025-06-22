@@ -1,4 +1,4 @@
-import { Modal, TextInput, Button, Select } from "@mantine/core";
+import { Modal, TextInput, Button, Select, Divider } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
@@ -31,17 +31,24 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
 }) => {
   const form = useForm<StaffsRequest>({
     initialValues: {
-      name: "",
+      firstName: "",
+      middleName: "",
+      lastName: "",
       specialty: Specialty.OTHER,
       level: Level.INTERN,
       phone: "",
       email: "",
       gender: Gender.OTHER,
       dob: "",
-      accountId: undefined,
+      // username: "",
+      // password: "",
+      // confirmPassword: "",
+      // accountId: undefined,
     },
     validate: {
-      name: (value) => validateName(value ?? ""),
+      firstName: (value) => validateName(value ?? ""),
+      middleName: (value) => validateName(value ?? ""),
+      lastName: (value) => validateName(value ?? ""),
       phone: (value) => validatePhone(value ?? ""),
       email: (value) => validateEmail(value ?? ""),
       dob: (value) => validateDob(value ?? ""),
@@ -83,20 +90,37 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const isValid = form.validate();
-          if (!isValid.hasErrors) {
+          const { hasErrors } = form.validate();
+          if (!hasErrors) {
+            console.log("Form data:", form.values);
             onSubmit(form.values);
+            console.log("Form data2:", form.values);
             onClose();
           }
         }}
       >
-        <TextInput
-          label="Họ và tên"
-          placeholder="Nhập tên"
-          {...form.getInputProps("name")}
-          required
-          disabled={isViewMode}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <TextInput
+            label="Họ"
+            placeholder="Nhập họ"
+            {...form.getInputProps("firstName")}
+            required
+            disabled={isViewMode}
+          />
+          <TextInput
+            label="Tên đệm"
+            placeholder="Nhập tên đệm"
+            {...form.getInputProps("middleName")}
+            disabled={isViewMode}
+          />
+          <TextInput
+            label="Tên"
+            placeholder="Nhập tên"
+            {...form.getInputProps("lastName")}
+            required
+            disabled={isViewMode}
+          />
+        </div>
 
         <Select
           label="Chuyên môn"
@@ -162,6 +186,31 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           mt="sm"
           disabled={isViewMode}
         />
+        <Divider my="sm" label="Tài khoản" labelPosition="left" />
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <TextInput
+            label="Tài khoản"
+            placeholder="Nhập tên tài khoản"
+            {...form.getInputProps("username")}
+            required
+          />
+          <TextInput
+            label="Mật khẩu"
+            placeholder="Nhập mật khẩu"
+            type="password"
+            {...form.getInputProps("password")}
+            required
+          />
+        </div>
+
+        <TextInput
+          label="Nhập lại mật khẩu"
+          placeholder="Nhập lại mật khẩu"
+          type="password"
+          mt="sm"
+          {...form.getInputProps("confirmPassword")}
+          required
+        /> */}
 
         {!isViewMode && (
           <div className="flex justify-end gap-3 mt-4">
