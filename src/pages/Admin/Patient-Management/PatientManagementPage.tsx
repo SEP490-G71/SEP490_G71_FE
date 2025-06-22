@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { Button, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
 import CustomTable from "../../../components/common/CustomTable";
 import { CreatePatientModal } from "../../../components/admin/Patient-Management/CreatePatientModal";
@@ -27,12 +27,17 @@ export const PatientManagementPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchFullName, setSearchFullName] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
 
   useEffect(() => {
-    fetchAllPatients(page - 1, pageSize).then((total) => {
+    fetchAllPatients(page - 1, pageSize, {
+      fullName: searchFullName || undefined,
+      phone: searchPhone || undefined,
+    }).then((total) => {
       setTotalItems(total);
     });
-  }, [page, pageSize]);
+  }, [page, pageSize, searchFullName, searchPhone]);
 
   const handleAdd = () => {
     setSelectedPatient(null);
@@ -81,8 +86,8 @@ export const PatientManagementPage = () => {
       key: undefined as any,
       label: "Họ và tên",
       render: (row) =>
-        `${row.lastName ?? ""} ${row.middleName ?? ""} ${
-          row.firstName ?? ""
+        `${row.firstName ?? ""} ${row.middleName ?? ""} ${
+          row.lastName ?? ""
         }`.trim(),
     }),
     createColumn<Patient>({
@@ -104,6 +109,28 @@ export const PatientManagementPage = () => {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">Quản lý bệnh nhân</h1>
         <Button onClick={handleAdd}>Tạo bệnh nhân</Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 my-4">
+        <TextInput
+          placeholder="Tìm theo họ tên"
+          value={searchFullName}
+          onChange={(event) => {
+            setSearchFullName(event.currentTarget.value.trimStart());
+            setPage(1);
+          }}
+          className="flex-1 min-w-[150px]"
+        />
+
+        <TextInput
+          placeholder="Tìm theo SĐT"
+          value={searchPhone}
+          onChange={(event) => {
+            setSearchPhone(event.currentTarget.value.trim());
+            setPage(1);
+          }}
+          className="flex-1 min-w-[150px]"
+        />
       </div>
 
       <CustomTable

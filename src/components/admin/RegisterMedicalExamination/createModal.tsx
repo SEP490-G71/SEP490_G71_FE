@@ -4,7 +4,6 @@ import {
   TextInput,
   Grid,
   Select,
-  PasswordInput,
   Divider,
   Button,
   Group,
@@ -142,34 +141,6 @@ export default function CreateModal({
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Nhập địa chỉ"
-            />
-          </Grid.Col>
-        </Grid>
-
-        <Divider label="Thông tin tài khoản" mt="md" mb="md" />
-        <Grid gutter="xs">
-          <Grid.Col span={6}>
-            <TextInput
-              label="Tài khoản"
-              value={formData.username}
-              onChange={(e) => handleChange("username", e.target.value)}
-              placeholder="Nhập tên tài khoản"
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <PasswordInput
-              label="Mật khẩu"
-              value={formData.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              placeholder="Nhập mật khẩu"
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <PasswordInput
-              label="Nhập lại mật khẩu"
-              value={formData.confirmPassword}
-              onChange={(e) => handleChange("confirmPassword", e.target.value)}
-              placeholder="Nhập lại mật khẩu"
             />
           </Grid.Col>
         </Grid>

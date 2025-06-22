@@ -3,22 +3,37 @@ import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { Patient } from "../../types/Admin/Patient-Management/PatientManagement";
 
+interface PatientFilters {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  fullName?: string;
+  phone?: string;
+}
+
 export const usePatientManagement = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchAllPatients = async (page = 0, size = 5): Promise<number> => {
+  const fetchAllPatients = async (
+    page = 0,
+    size = 5,
+    filters: PatientFilters = {}
+  ): Promise<number> => {
     setLoading(true);
     try {
       const res = await axiosInstance.get("/patients", {
         params: {
           page,
           size,
+          ...filters,
         },
       });
-      setPatients(res.data.result.content || res.data.result); // Nếu dùng pagination
-      return res.data.result.totalElements || res.data.result.length; // tương ứng
+      const result = res.data.result;
+      setPatients(result.content || result);
+      setTotalItems(result.totalElements || result.length || 0);
+      return result.totalElements || result.length || 0;
     } catch (err) {
       toast.error("Failed to fetch patients");
       return 0;
@@ -41,7 +56,7 @@ export const usePatientManagement = () => {
     try {
       await axiosInstance.delete(`/patients/${id}`);
       toast.success("Deleted successfully");
-      fetchAllPatients();
+      await fetchAllPatients();
     } catch (err) {
       toast.error("Failed to delete patient");
     }
