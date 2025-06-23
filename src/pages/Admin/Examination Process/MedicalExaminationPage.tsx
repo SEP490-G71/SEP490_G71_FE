@@ -11,89 +11,93 @@ import {
 import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconDeviceFloppy } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import PatientPanel from "../../../components/patient/PatientPanel";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 import useDepartmentStaffs from "../../../hooks/department-Staffs/useDepartmentStaffs";
-import { Patient } from "../../../types/Patient/Patient";
+
+import { usePatientStore } from "../../../components/stores/patientStore";
 
 const MedicalExaminationPage = () => {
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [patientList, setPatientList] = useState<Patient[]>([
-    {
-      stt: 1,
-      maKcb: "2506180001",
-      maBn: "00000141",
-      ten: "Nguyễn Văn A",
-      sdt: "0967622356",
-      ngaySinh: "15/08/2019",
-      gioiTinh: "Nam",
-      ngayDangKy: "09/08/2023",
-      phong: "Phòng nội tổng quát",
-      diaChi: "Thanh Hoá",
-      soDangKy: 1,
-      trangThai: "hoàn thành",
-    },
-    {
-      stt: 2,
-      maKcb: "2506180002",
-      maBn: "00000143",
-      ten: "Nguyễn Văn B",
-      sdt: "0912345678",
-      ngaySinh: "12/12/1990",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tim mạch",
-      diaChi: "Hà Nội",
-      soDangKy: 2,
-      trangThai: "tạm dừng",
-    },
-    {
-      stt: 3,
-      maKcb: "2506180003",
-      maBn: "00000144",
-      ten: "Trần Thị C",
-      sdt: "0988888888",
-      ngaySinh: "20/05/1985",
-      gioiTinh: "Nữ",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng nội tổng quát",
-      diaChi: "Nghệ An",
-      soDangKy: 3,
-      trangThai: "đang khám",
-    },
-    {
-      stt: 4,
-      maKcb: "2506180004",
-      maBn: "00000145",
-      ten: "Phạm Văn D",
-      sdt: "0977777777",
-      ngaySinh: "01/01/1970",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tiêu hoá",
-      diaChi: "Hải Phòng",
-      soDangKy: 4,
-      trangThai: "đang khám",
-    },
-    {
-      stt: 5,
-      maKcb: "2506180005",
-      maBn: "00000146",
-      ten: "Dương Thị E",
-      sdt: "0977777777",
-      ngaySinh: "01/01/1970",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tiêu hoá",
-      diaChi: "Hà Nội",
-      soDangKy: 4,
-      trangThai: "chờ khám",
-    },
-  ]);
+  const { selectedPatient, setSelectedPatient, patientList, setPatientList } =
+    usePatientStore();
 
+  useEffect(() => {
+    setPatientList([
+      {
+        stt: 1,
+        maKcb: "2506180001",
+        maBn: "00000141",
+        ten: "Nguyễn Văn A",
+        sdt: "0967622356",
+        ngaySinh: "15/08/2019",
+        gioiTinh: "Nam",
+        ngayDangKy: "09/08/2023",
+        phong: "Phòng nội tổng quát",
+        diaChi: "Thanh Hoá",
+        soDangKy: 1,
+        trangThai: "hoàn thành",
+      },
+      {
+        stt: 2,
+        maKcb: "2506180002",
+        maBn: "00000143",
+        ten: "Nguyễn Văn B",
+        sdt: "0912345678",
+        ngaySinh: "12/12/1990",
+        gioiTinh: "Nam",
+        ngayDangKy: "10/08/2023",
+        phong: "Phòng tim mạch",
+        diaChi: "Hà Nội",
+        soDangKy: 2,
+        trangThai: "tạm dừng",
+      },
+      {
+        stt: 3,
+        maKcb: "2506180003",
+        maBn: "00000144",
+        ten: "Trần Thị C",
+        sdt: "0988888888",
+        ngaySinh: "20/05/1985",
+        gioiTinh: "Nữ",
+        ngayDangKy: "10/08/2023",
+        phong: "Phòng nội tổng quát",
+        diaChi: "Nghệ An",
+        soDangKy: 3,
+        trangThai: "đang khám",
+      },
+      {
+        stt: 4,
+        maKcb: "2506180004",
+        maBn: "00000145",
+        ten: "Phạm Văn D",
+        sdt: "0977777777",
+        ngaySinh: "01/01/1970",
+        gioiTinh: "Nam",
+        ngayDangKy: "10/08/2023",
+        phong: "Phòng tiêu hoá",
+        diaChi: "Hải Phòng",
+        soDangKy: 4,
+        trangThai: "đang khám",
+      },
+      {
+        stt: 5,
+        maKcb: "2506180005",
+        maBn: "00000146",
+        ten: "Dương Thị E",
+        sdt: "0977777777",
+        ngaySinh: "01/01/1970",
+        gioiTinh: "Nam",
+        ngayDangKy: "10/08/2023",
+        phong: "Phòng tiêu hoá",
+        diaChi: "Hà Nội",
+        soDangKy: 4,
+        trangThai: "chờ khám",
+      },
+    ]);
+  }, []);
   const form = useForm({
     initialValues: {
       appointmentDate: new Date(),

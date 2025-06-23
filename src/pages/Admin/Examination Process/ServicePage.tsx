@@ -6,7 +6,6 @@ import {
   ScrollArea,
   Select,
   Table,
-  TextInput,
   Divider,
   Text,
 } from "@mantine/core";
@@ -14,8 +13,8 @@ import { useEffect, useState } from "react";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
 import { MedicalService } from "../../../types/Admin/MedicalService/MedicalService";
 import PatientPanel from "../../../components/patient/PatientPanel";
-import { Patient } from "../../../types/Patient/Patient";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
+import { usePatientStore } from "../../../components/stores/patientStore";
 
 const ServicePage = () => {
   const { medicalServices, fetchAllMedicalServices, loading } =
@@ -53,81 +52,29 @@ const ServicePage = () => {
     label: s.name,
   }));
 
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const { selectedPatient, setSelectedPatient, patientList, setPatientList } =
+    usePatientStore();
+  const isEditable = selectedPatient?.trangThai?.toLowerCase() === "đang khám";
+  const totalCost = selectedServices.reduce((sum, row) => {
+    if (!row.service) return sum;
+    const vat = row.service.vat || 0;
+    return sum + row.service.price * (1 + vat / 100);
+  }, 0);
 
-  const [patientList, setPatientList] = useState<Patient[]>([
-    {
-      stt: 1,
-      maKcb: "2506180001",
-      maBn: "00000141",
-      ten: "Nguyễn Văn A",
-      sdt: "0967622356",
-      ngaySinh: "15/08/2019",
-      gioiTinh: "Nam",
-      ngayDangKy: "09/08/2023",
-      phong: "Phòng nội tổng quát",
-      diaChi: "Thanh Hoá",
-      soDangKy: 1,
-      trangThai: "hoàn thành",
-    },
-    {
-      stt: 2,
-      maKcb: "2506180002",
-      maBn: "00000143",
-      ten: "Nguyễn Văn B",
-      sdt: "0912345678",
-      ngaySinh: "12/12/1990",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tim mạch",
-      diaChi: "Hà Nội",
-      soDangKy: 2,
-      trangThai: "tạm dừng",
-    },
-    {
-      stt: 3,
-      maKcb: "2506180003",
-      maBn: "00000144",
-      ten: "Trần Thị C",
-      sdt: "0988888888",
-      ngaySinh: "20/05/1985",
-      gioiTinh: "Nữ",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng nội tổng quát",
-      diaChi: "Nghệ An",
-      soDangKy: 3,
-      trangThai: "đang khám",
-    },
-    {
-      stt: 4,
-      maKcb: "2506180004",
-      maBn: "00000145",
-      ten: "Phạm Văn D",
-      sdt: "0977777777",
-      ngaySinh: "01/01/1970",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tiêu hoá",
-      diaChi: "Hải Phòng",
-      soDangKy: 4,
-      trangThai: "đang khám",
-    },
-    {
-      stt: 5,
-      maKcb: "2506180005",
-      maBn: "00000146",
-      ten: "Dương Thị E",
-      sdt: "0977777777",
-      ngaySinh: "01/01/1970",
-      gioiTinh: "Nam",
-      ngayDangKy: "10/08/2023",
-      phong: "Phòng tiêu hoá",
-      diaChi: "Hà Nội",
-      soDangKy: 4,
-      trangThai: "chờ khám",
-    },
-  ]);
+  const handleSave = () => {
+    if (!selectedPatient) {
+      console.warn("Chưa chọn bệnh nhân");
+      return;
+    }
 
+    const savedData = {
+      patient: selectedPatient,
+      services: selectedServices.filter((s) => s.service !== null),
+      totalCost,
+    };
+
+    console.log("📦 Dữ liệu đã lưu:", savedData);
+  };
   return (
     <Grid p="md" gutter="md" align="start">
       {/* Left Column: Search + Table */}
@@ -151,10 +98,12 @@ const ServicePage = () => {
               <Button variant="outline" color="blue" size="xs" leftSection="🧾">
                 Kết quả
               </Button>
-              {/* <Button variant="outline" color="blue" size="xs" leftSection="🖨️">
-                In
-              </Button> */}
-              <Button color="blue" size="xs" leftSection="💾">
+              <Button
+                color="blue"
+                size="xs"
+                leftSection="💾"
+                onClick={handleSave}
+              >
                 Lưu
               </Button>
             </Flex>
@@ -163,9 +112,6 @@ const ServicePage = () => {
           {/* Bảng dịch vụ */}
           <ScrollArea offsetScrollbars scrollbarSize={8}>
             <Table
-              striped
-              withTableBorder
-              withColumnBorders
               verticalSpacing="xs"
               style={{
                 minWidth: 800,
@@ -182,15 +128,19 @@ const ServicePage = () => {
                     "SL",
                     "Phòng khám",
                     "Đơn giá",
-
-                    "#",
+                    "Ttác",
                   ].map((col, idx) => (
                     <th
                       key={idx}
                       style={{
                         textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        padding: "6px 8px",
+                        backgroundColor: "#f1f1f1",
+                        fontWeight: 500,
+                        border: "1px solid #dee2e6",
+                        position: col === "Ttác" ? "sticky" : undefined,
+                        right: col === "Ttác" ? 0 : undefined,
+                        zIndex: col === "Ttác" ? 2 : undefined,
                       }}
                     >
                       {col}
@@ -199,21 +149,14 @@ const ServicePage = () => {
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody style={{ textAlign: "center" }}>
                 {selectedServices.map((row, index) => (
-                  <tr
-                    key={row.id}
-                    style={{
-                      position: "relative",
-                      borderBottom: "1px solid #dee2e6",
-                    }}
-                  >
+                  <tr key={row.id}>
                     {/* STT */}
                     <td
                       style={{
-                        textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
                       {index + 1}
@@ -222,133 +165,157 @@ const ServicePage = () => {
                     {/* Mã DV */}
                     <td
                       style={{
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <TextInput
-                        value={row.service?.id || ""}
-                        size="xs"
-                        readOnly
-                      />
+                      {row.service?.id || ""}
                     </td>
 
-                    {/* Tên DV */}
+                    {/* Tên DV (Select) */}
                     <td
                       style={{
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <Select
-                        placeholder={loading ? "Đang tải..." : "Chọn dịch vụ"}
-                        data={serviceOptions}
-                        searchable
-                        size="xs"
-                        disabled={loading || !!row.service}
-                        value={row.service?.id || null}
-                        onChange={(value) => handleSelectService(index, value)}
-                      />
+                      {!row.service ? (
+                        <Select
+                          placeholder={loading ? "Đang tải..." : "Chọn dịch vụ"}
+                          data={serviceOptions}
+                          searchable
+                          size="xs"
+                          disabled={loading || !isEditable}
+                          value={null}
+                          onChange={(value) =>
+                            handleSelectService(index, value)
+                          }
+                          styles={{
+                            input: {
+                              border: "none",
+                              borderRadius: 0,
+                              textAlign: "center",
+                              minHeight: "28px",
+                              padding: "0 4px",
+                              lineHeight: "1.2",
+                            },
+                          }}
+                        />
+                      ) : (
+                        row.service?.name
+                      )}
                     </td>
 
                     {/* ĐVT */}
                     <td
                       style={{
-                        textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <TextInput
-                        value={row.service ? "Lần" : ""}
-                        size="xs"
-                        readOnly
-                      />
+                      {row.service ? "Lần" : ""}
                     </td>
 
                     {/* SL */}
                     <td
                       style={{
-                        textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <TextInput
-                        value={row.service ? "1" : ""}
-                        size="xs"
-                        readOnly
-                      />
+                      {row.service ? "1" : ""}
                     </td>
 
                     {/* Phòng khám */}
                     <td
                       style={{
-                        textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <TextInput
-                        value={row.service?.department?.name || ""}
-                        size="xs"
-                        readOnly
-                      />
+                      {row.service?.department?.name || ""}
                     </td>
 
                     {/* Đơn giá */}
                     <td
                       style={{
-                        textAlign: "center",
-                        padding: "0px",
-                        borderRight: "1px solid #dee2e6",
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
                       }}
                     >
-                      <TextInput
-                        value={
-                          row.service
-                            ? (
-                                row.service.price *
-                                (1 + (row.service.vat || 0) / 100)
-                              ).toLocaleString("vi-VN")
-                            : ""
-                        }
-                        size="xs"
-                        readOnly
-                      />
+                      {row.service
+                        ? (
+                            row.service.price *
+                            (1 + (row.service.vat || 0) / 100)
+                          ).toLocaleString("vi-VN")
+                        : ""}
                     </td>
 
-                    {/* 🗑 Xoá nổi đè */}
-                    {row.service && (
-                      <Button
-                        variant="subtle"
-                        size="xs"
-                        color="red"
-                        style={{
-                          position: "absolute",
-                          top: "50%",
-                          right: "4px",
-                          transform: "translateY(-50%)",
-                          zIndex: 10,
-                          padding: "2px 6px",
-                        }}
-                        onClick={() => {
-                          const newList = selectedServices.filter(
-                            (_, i) => i !== index
-                          );
-                          setSelectedServices(
-                            newList.length === 0
-                              ? [{ id: crypto.randomUUID(), service: null }]
-                              : newList
-                          );
-                        }}
-                      >
-                        🗑
-                      </Button>
-                    )}
+                    {/* Nút xoá */}
+                    <td
+                      style={{
+                        backgroundColor: "#fff",
+                        position: "sticky",
+                        right: 0,
+                        zIndex: 1,
+                        border: "1px solid #dee2e6",
+                        padding: "2px 4px",
+                      }}
+                    >
+                      {row.service && (
+                        <Button
+                          variant="subtle"
+                          size="sm"
+                          color="red"
+                          style={{ marginTop: "2px", marginLeft: "4px" }}
+                          onClick={() => {
+                            const newList = selectedServices.filter(
+                              (_, i) => i !== index
+                            );
+                            setSelectedServices(
+                              newList.length === 0
+                                ? [{ id: crypto.randomUUID(), service: null }]
+                                : newList
+                            );
+                          }}
+                        >
+                          🗑
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
+
+              <tfoot>
+                <tr>
+                  <td
+                    colSpan={7}
+                    style={{
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      padding: "8px",
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    Tổng chi
+                  </td>
+                  <td
+                    style={{
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      color: "red",
+                      backgroundColor: "#f9f9f9",
+                      position: "sticky",
+                      right: 0,
+                      zIndex: 1,
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    {totalCost.toLocaleString("vi-VN")}
+                  </td>
+                </tr>
+              </tfoot>
             </Table>
           </ScrollArea>
         </Paper>

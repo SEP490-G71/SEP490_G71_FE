@@ -30,7 +30,7 @@ const useDepartmentService = () => {
       },
     });
 
-    console.log("DEPARTMENT RESPONSE", res.data);
+  
 
     // Gán dữ liệu nếu đúng định dạng
     setDepartments(res.data.result.content);

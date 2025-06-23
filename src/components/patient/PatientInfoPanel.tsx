@@ -4,15 +4,18 @@ import { useLocation, useNavigate } from "react-router";
 
 interface Props {
   patient: Patient | null;
+  onEndExamination?: () => void;
 }
 
-const PatientInfoPanel = ({ patient }: Props) => {
+const PatientInfoPanel = ({ patient, onEndExamination }: Props) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isServicePage = location.pathname.includes("service");
   const activeTab: "thongtin" | "dichvu" = isServicePage
     ? "dichvu"
     : "thongtin";
+
+  const canEndExamination = patient?.trangThai?.toLowerCase() === "đang khám";
 
   return (
     <>
@@ -37,20 +40,32 @@ const PatientInfoPanel = ({ patient }: Props) => {
           variant="default"
           color="gray"
           onClick={() => navigate("/admin/medical-examination/service")}
+          disabled={patient?.trangThai?.toLowerCase() === "chờ khám"}
           style={{
             backgroundColor: activeTab === "dichvu" ? "#e0f7ff" : undefined,
             fontSize: activeTab === "dichvu" ? "16px" : "14px",
             fontWeight: activeTab === "dichvu" ? 600 : 400,
-            color: activeTab === "dichvu" ? "#1c7ed6" : undefined,
+            color:
+              activeTab === "dichvu"
+                ? "#1c7ed6"
+                : patient?.trangThai?.toLowerCase() === "chờ khám"
+                ? "#ccc"
+                : undefined,
+            cursor:
+              patient?.trangThai?.toLowerCase() === "chờ khám"
+                ? "not-allowed"
+                : "pointer",
           }}
         >
           Kê dịch vụ
         </Button>
 
         <Button
-          variant="default"
+          variant="light"
+          color="red"
           size="xs"
-          disabled
+          disabled={!canEndExamination}
+          onClick={onEndExamination}
           style={{ marginLeft: "auto" }}
         >
           Kết thúc khám
@@ -87,7 +102,6 @@ const PatientInfoPanel = ({ patient }: Props) => {
               {patient?.ten ?? "---"}
             </Text>
           </Grid.Col>
-
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             Điện thoại:{" "}
             <Text span fw={600}>
@@ -112,7 +126,6 @@ const PatientInfoPanel = ({ patient }: Props) => {
               {patient?.ngayDangKy ?? "---"}
             </Text>
           </Grid.Col>
-
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             Phòng đăng ký:{" "}
             <Text span fw={600}>
@@ -125,7 +138,7 @@ const PatientInfoPanel = ({ patient }: Props) => {
               {patient?.soDangKy ?? "---"}
             </Text>
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
             Địa chỉ:{" "}
             <Text span fw={600}>
               {patient?.diaChi ?? "---"}

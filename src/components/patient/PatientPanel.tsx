@@ -78,54 +78,7 @@ const PatientPanel = ({
           <Title order={5} mb="md">
             Danh sách đăng ký
           </Title>
-          {/* <ScrollArea offsetScrollbars scrollbarSize={8} h="auto">
-            <Table
-              striped
-              highlightOnHover
-              withTableBorder
-              withColumnBorders
-              style={{
-                minWidth: "700px",
-                borderCollapse: "separate",
-                borderSpacing: "2px",
-              }}
-            >
-              <thead style={{ backgroundColor: "#f0f0f0" }}>
-                <tr>
-                  <th style={{ textAlign: "center" }}>TT</th>
-                  <th style={{ textAlign: "center" }}>STT</th>
-                  <th style={{ textAlign: "center" }}>Mã KCB</th>
-                  <th style={{ textAlign: "center" }}>Mã BN</th>
-                  <th style={{ textAlign: "center" }}>Tên BN</th>
-                </tr>
-              </thead>
-              <tbody style={{ lineHeight: "1.4rem" }}>
-                {patientList.map((p, index) => (
-                  <tr
-                    key={index}
-                    onClick={() => onSelectPatient(p)}
-                    style={{
-                      cursor: "pointer",
-                      backgroundColor:
-                        selectedPatient?.maBn === p.maBn
-                          ? "#e0f7ff"
-                          : index % 2 === 0
-                          ? "#ffffff"
-                          : "#eeeeee",
-                    }}
-                  >
-                    <td style={{ textAlign: "center" }}>
-                      <StatusCell status={p.trangThai} />
-                    </td>
-                    <td style={{ textAlign: "center" }}>{p.stt}</td>
-                    <td style={{ textAlign: "center" }}>{p.maKcb}</td>
-                    <td style={{ textAlign: "center" }}>{p.maBn}</td>
-                    <td style={{ textAlign: "center" }}>{p.ten}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </ScrollArea> */}
+
           <ScrollArea offsetScrollbars scrollbarSize={8} h="auto">
             <Table
               withColumnBorders
@@ -158,10 +111,10 @@ const PatientPanel = ({
                       style={{
                         cursor: "pointer",
                         backgroundColor: isSelected
-                          ? "#cce5ff" // chọn dòng
+                          ? "#cce5ff"
                           : index % 2 === 0
-                          ? "#f8f9fa" // hàng chẵn
-                          : "#e9ecef", // hàng lẻ xám hơn
+                          ? "#f8f9fa"
+                          : "#e9ecef",
                         borderBottom: "1px solid #adb5bd", // phân cách hàng
                       }}
                     >
