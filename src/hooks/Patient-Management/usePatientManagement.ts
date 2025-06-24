@@ -4,11 +4,9 @@ import { toast } from "react-toastify";
 import { Patient } from "../../types/Admin/Patient-Management/PatientManagement";
 
 interface PatientFilters {
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  fullName?: string;
+  name?: string;
   phone?: string;
+  patientCode?: string;
 }
 
 export const usePatientManagement = () => {

@@ -7,6 +7,7 @@ export interface Patient {
   gender: "MALE" | "FEMALE";
   phone: string;
   email: string;
+  patientCode: string;
 }
 
 export interface CreateUpdatePatientRequest {
@@ -17,4 +18,5 @@ export interface CreateUpdatePatientRequest {
   gender: "MALE" | "FEMALE";
   phone: string;
   email: string;
+  patientCode: string;
 }

@@ -29,15 +29,20 @@ export const PatientManagementPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [searchFullName, setSearchFullName] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
+  const [searchPatientCode, setSearchPatientCode] = useState("");
+  const [searchPatientCodeInput, setSearchPatientCodeInput] = useState("");
+  const [searchFullNameInput, setSearchFullNameInput] = useState("");
+  const [searchPhoneInput, setSearchPhoneInput] = useState("");
 
   useEffect(() => {
     fetchAllPatients(page - 1, pageSize, {
-      fullName: searchFullName || undefined,
+      name: searchFullName || undefined,
       phone: searchPhone || undefined,
+      patientCode: searchPatientCode || undefined,
     }).then((total) => {
       setTotalItems(total);
     });
-  }, [page, pageSize, searchFullName, searchPhone]);
+  }, [page, pageSize, searchFullName, searchPhone, searchPatientCode]);
 
   const handleAdd = () => {
     setSelectedPatient(null);
@@ -83,6 +88,11 @@ export const PatientManagementPage = () => {
 
   const columns = [
     createColumn<Patient>({
+      key: "patientCode",
+      label: "Mã bệnh nhân", // hoặc "Patient Code"
+      render: (row) => row.patientCode,
+    }),
+    createColumn<Patient>({
       key: undefined as any,
       label: "Họ và tên",
       render: (row) =>
@@ -113,21 +123,44 @@ export const PatientManagementPage = () => {
 
       <div className="flex flex-wrap gap-2 my-4">
         <TextInput
+          placeholder="Tìm theo mã bệnh nhân"
+          value={searchPatientCodeInput}
+          onChange={(event) =>
+            setSearchPatientCodeInput(event.currentTarget.value)
+          }
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchPatientCode(searchPatientCodeInput.trim());
+              setPage(1);
+            }
+          }}
+          className="flex-1 min-w-[150px]"
+        />
+
+        <TextInput
           placeholder="Tìm theo họ tên"
-          value={searchFullName}
-          onChange={(event) => {
-            setSearchFullName(event.currentTarget.value.trimStart());
-            setPage(1);
+          value={searchFullNameInput}
+          onChange={(event) =>
+            setSearchFullNameInput(event.currentTarget.value)
+          }
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchFullName(searchFullNameInput.trimStart());
+              setPage(1);
+            }
           }}
           className="flex-1 min-w-[150px]"
         />
 
         <TextInput
           placeholder="Tìm theo SĐT"
-          value={searchPhone}
-          onChange={(event) => {
-            setSearchPhone(event.currentTarget.value.trim());
-            setPage(1);
+          value={searchPhoneInput}
+          onChange={(event) => setSearchPhoneInput(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchPhone(searchPhoneInput.trim());
+              setPage(1);
+            }
           }}
           className="flex-1 min-w-[150px]"
         />
