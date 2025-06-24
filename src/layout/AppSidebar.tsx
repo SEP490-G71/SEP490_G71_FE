@@ -46,6 +46,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUsers />,
       path: "/admin/patients",
     },
+    {
+      name: "Đăng ký khám",
+      icon: <FaUserPlus />,
+      path: "/admin/register-medical-examination",
+    },
   ],
   staff: [
     {

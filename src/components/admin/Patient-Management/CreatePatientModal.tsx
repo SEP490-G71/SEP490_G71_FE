@@ -1,7 +1,7 @@
 import { Modal, TextInput, Select, Button } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import { DatePickerInput } from "@mantine/dates";
+import { usePatientForm } from "../../../hooks/Patient-Management/usePatientForm";
 import {
   CreateUpdatePatientRequest,
   Patient,
@@ -22,58 +22,7 @@ export const CreatePatientModal = ({
   initialData,
   isViewMode = false,
 }: Props) => {
-  const validateText =
-    (label: string, max: number = 100) =>
-    (value?: string) => {
-      value = value ?? "";
-      if (!value.trim()) return `${label} là bắt buộc`;
-      if (value.length > max) return `${label} tối đa ${max} ký tự`;
-      return null;
-    };
-
-  const form = useForm<{
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    dob: Date | null;
-    gender: "MALE" | "FEMALE";
-    phone: string;
-    email: string;
-  }>({
-    initialValues: {
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      dob: null,
-      gender: "MALE",
-      phone: "",
-      email: "",
-    },
-    validate: {
-      firstName: validateText("Tên"),
-      middleName: validateText("Tên đệm"),
-      lastName: validateText("Họ"),
-      dob: (value) => {
-        if (!value) return "Ngày sinh là bắt buộc";
-        const today = new Date();
-        if (value >= today) return "Ngày sinh phải là trong quá khứ";
-        return null;
-      },
-      gender: (value) => (!value ? "Giới tính là bắt buộc" : null),
-      phone: (value) => {
-        if (!value.trim()) return "Số điện thoại là bắt buộc";
-        if (!/^\d{10,15}$/.test(value)) return "SĐT phải từ 10-15 chữ số";
-        return null;
-      },
-      email: (value) => {
-        if (!value.trim()) return "Email là bắt buộc";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-          return "Email không hợp lệ";
-        return null;
-      },
-    },
-    validateInputOnChange: true, // hiện lỗi khi người dùng nhập sai ngay lập tức
-  });
+  const form = usePatientForm();
 
   useEffect(() => {
     if (initialData) {
@@ -112,7 +61,6 @@ export const CreatePatientModal = ({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-
           form.setTouched({
             firstName: true,
             middleName: true,
@@ -122,7 +70,6 @@ export const CreatePatientModal = ({
             phone: true,
             email: true,
           });
-
           const result = form.validate();
           if (!result.hasErrors) {
             handleSubmit(form.values);
@@ -137,6 +84,7 @@ export const CreatePatientModal = ({
         />
         <TextInput
           label="Tên đệm"
+          required
           {...form.getInputProps("middleName")}
           mt="sm"
           disabled={isViewMode}
@@ -173,6 +121,7 @@ export const CreatePatientModal = ({
           mt="sm"
           disabled={isViewMode}
         />
+
         <TextInput
           label="SĐT"
           required
