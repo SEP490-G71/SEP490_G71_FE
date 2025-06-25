@@ -28,6 +28,7 @@ interface CustomTableProps<T> {
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  showActions?: boolean;
 }
 
 function CustomTable<T>({
@@ -47,6 +48,7 @@ function CustomTable<T>({
   onView,
   onEdit,
   onDelete,
+  showActions = true,
 }: CustomTableProps<T>) {
   const totalPages = useMemo(
     () => Math.ceil(totalItems / pageSize),
@@ -93,19 +95,27 @@ function CustomTable<T>({
                   </div>
                 </th>
               ))}
-              <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
+              {showActions && (
+                <th className="px-5 py-3 whitespace-nowrap">Thao Tác</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
             {loading ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-12">
+                <td
+                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  className="text-center py-12"
+                >
                   <Loader size="lg" variant="dots" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-6">
+                <td
+                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  className="text-center py-6"
+                >
                   {emptyText}
                 </td>
               </tr>
@@ -125,38 +135,40 @@ function CustomTable<T>({
                         : (row[col.key] as React.ReactNode)}
                     </td>
                   ))}
-                  <td className="px-5 py-4 flex flex-wrap items-center justify-start gap-2 whitespace-nowrap">
-                    {onView && (
-                      <button
-                        onClick={() => onView(row)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition duration-200"
-                        title="Xem chi tiết"
-                      >
-                        <FaEye size={16} />
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button
-                        onClick={() => onEdit(row)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-green-500 hover:text-white transition duration-200"
-                        title="Chỉnh sửa"
-                      >
-                        <FaPencilAlt size={16} />
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={() => {
-                          setRowToDelete(row);
-                          setIsDeleteModalOpen(true);
-                        }}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-red-500 hover:text-white transition duration-200"
-                        title="Xóa"
-                      >
-                        <FaTrash size={16} />
-                      </button>
-                    )}
-                  </td>
+                  {showActions && (
+                    <td className="px-5 py-4 flex flex-wrap items-center justify-start gap-2 whitespace-nowrap">
+                      {onView && (
+                        <button
+                          onClick={() => onView(row)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-blue-500 hover:text-white transition duration-200"
+                          title="Xem chi tiết"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          onClick={() => onEdit(row)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-green-500 hover:text-white transition duration-200"
+                          title="Chỉnh sửa"
+                        >
+                          <FaPencilAlt size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={() => {
+                            setRowToDelete(row);
+                            setIsDeleteModalOpen(true);
+                          }}
+                          className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-red-500 hover:text-white transition duration-200"
+                          title="Xóa"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}

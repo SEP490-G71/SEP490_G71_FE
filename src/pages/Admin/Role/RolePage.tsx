@@ -23,11 +23,11 @@ const RolePage = () => {
     handleDeleteRoleById,
   } = useRoleService();
 
-  const [searchName, setSearchName] = useState<string>("");
-
   const [isViewMode, setIsViewMode] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [searchNameInput, setSearchNameInput] = useState<string>("");
+  const [searchName, setSearchName] = useState<string>("");
 
   useEffect(() => {
     fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
@@ -110,10 +110,13 @@ const RolePage = () => {
       <div className="flex flex-wrap gap-2 my-4">
         <TextInput
           placeholder="Nhập tên vai trò"
-          value={searchName}
-          onChange={(event) => {
-            setSearchName(event.currentTarget.value);
-            setPage(1);
+          value={searchNameInput}
+          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchName(searchNameInput.trim());
+              setPage(1);
+            }
           }}
           className="flex-1 min-w-[150px]"
         />

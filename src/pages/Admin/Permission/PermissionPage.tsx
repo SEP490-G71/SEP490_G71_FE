@@ -22,6 +22,7 @@ const PermissionPage = () => {
     useState<PermissionWithGroup | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [searchName, setSearchName] = useState<string>("");
+  const [searchNameInput, setSearchNameInput] = useState<string>("");
 
   const loadPermissions = async () => {
     const groupedPermissions = await fetchGroupedPermissions();
@@ -129,8 +130,13 @@ const PermissionPage = () => {
       <div className="flex flex-wrap gap-2 my-4">
         <TextInput
           placeholder="Nhập tên permission"
-          value={searchName}
-          onChange={(event) => setSearchName(event.currentTarget.value)}
+          value={searchNameInput}
+          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchName(searchNameInput.trim());
+            }
+          }}
           className="flex-1 min-w-[150px]"
         />
       </div>

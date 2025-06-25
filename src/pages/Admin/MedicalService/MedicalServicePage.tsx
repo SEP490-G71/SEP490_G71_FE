@@ -34,6 +34,7 @@ const MedicalServicePage = () => {
   const [selectedService, setSelectedService] = useState<MedicalService | null>(
     null
   );
+  const [searchNameInput, setSearchNameInput] = useState<string>("");
 
   const [searchName, setSearchName] = useState<string>("");
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
@@ -217,10 +218,13 @@ const MedicalServicePage = () => {
 
         <TextInput
           placeholder="Nhập tên dịch vụ"
-          value={searchName}
-          onChange={(event) => {
-            setSearchName(event.currentTarget.value);
-            setPage(1);
+          value={searchNameInput}
+          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              setSearchName(searchNameInput.trim());
+              setPage(1);
+            }
           }}
           className="flex-1 min-w-[150px]"
         />

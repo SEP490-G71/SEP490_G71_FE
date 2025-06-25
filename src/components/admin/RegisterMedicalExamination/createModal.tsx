@@ -1,18 +1,16 @@
-// File: createModal.tsx
 import {
   Modal,
   TextInput,
   Grid,
   Select,
-  PasswordInput,
   Divider,
   Button,
   Group,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
-import { toast } from "react-toastify";
+import { useRegisterMedicalExamination } from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
+import { usePatientForm } from "../../../hooks/Patient-Management/usePatientForm"; // Đã có validate ở đây
 
 interface CreateModalProps {
   opened: boolean;
@@ -20,51 +18,29 @@ interface CreateModalProps {
   onSubmit: (data: Patient, resetForm: () => void) => void;
 }
 
-const initialState: Patient = {
-  id: 0,
-  maBN: "",
-  maLichHen: "",
-  name: "",
-  phone: "",
-  dob: "",
-  gender: "",
-  account: "",
-  address: "",
-  maKCB: "",
-  stt: "",
-  phongKham: "",
-  ngayDangKy: "",
-  email: "",
-  cccd: "",
-  username: "",
-  password: "",
-  confirmPassword: "",
-};
-
 export default function CreateModal({
   opened,
   onClose,
   onSubmit,
 }: CreateModalProps) {
-  const [formData, setFormData] = useState<Patient>(initialState);
+  const form = usePatientForm();
+  const { createPatient } = useRegisterMedicalExamination();
 
-  const handleChange = (field: keyof Patient, value: any) => {
-    if (field === "dob" && value instanceof Date && !isNaN(value.getTime())) {
-      const iso = value.toISOString().split("T")[0];
-      setFormData((prev) => ({ ...prev, dob: iso }));
-    } else if (field === "dob" && !value) {
-      setFormData((prev) => ({ ...prev, dob: "" }));
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleSubmit = async () => {
+    const result = form.validate();
+    if (result.hasErrors) return;
+
+    const payload = {
+      ...form.values,
+      dob: form.values.dob?.toISOString().split("T")[0] || "",
+    };
+
+    const createdPatient = await createPatient(payload);
+    if (createdPatient) {
+      form.reset();
+      onClose();
+      onSubmit(createdPatient, () => form.reset());
     }
-  };
-
-  const handleSubmit = () => {
-    console.log("Dữ liệu gửi đi:", formData);
-    onSubmit(formData, () => {
-      setFormData(initialState);
-      toast.success("Đã tạo bệnh nhân mới!");
-    });
   };
 
   return (
@@ -81,85 +57,75 @@ export default function CreateModal({
         }}
       >
         <Divider label="Thông tin cá nhân" mb="md" />
-        <Grid gutter="xs">
-          <Grid.Col span={6}>
+        <Grid gutter="md">
+          {/* Họ - Tên đệm - Tên trên cùng 1 hàng */}
+          <Grid.Col span={4}>
             <TextInput
-              label="Họ và tên"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
+              label="Họ"
+              placeholder="Nhập họ"
+              required
+              {...form.getInputProps("firstName")}
             />
           </Grid.Col>
+          <Grid.Col span={4}>
+            <TextInput
+              label="Tên đệm"
+              placeholder="Nhập tên đệm"
+              required
+              {...form.getInputProps("middleName")}
+            />
+          </Grid.Col>
+          <Grid.Col span={4}>
+            <TextInput
+              label="Tên"
+              placeholder="Nhập tên"
+              required
+              {...form.getInputProps("lastName")}
+            />
+          </Grid.Col>
+
+          {/* Ngày sinh - Giới tính */}
           <Grid.Col span={6}>
             <DatePickerInput
               label="Ngày sinh"
-              value={
-                formData.dob && !isNaN(Date.parse(formData.dob))
-                  ? new Date(formData.dob)
-                  : null
+              placeholder="dd/mm/yyyy"
+              value={form.values.dob}
+              onChange={(value) =>
+                form.setFieldValue("dob", value ? new Date(value) : null)
               }
-              onChange={(value) => handleChange("dob", value)}
               valueFormat="DD/MM/YYYY"
+              required
+              error={form.errors.dob}
             />
           </Grid.Col>
           <Grid.Col span={6}>
             <Select
               label="Giới tính"
-              data={["Nam", "Nữ", "Không xác định"]}
-              value={formData.gender}
-              onChange={(value) => handleChange("gender", value)}
+              placeholder="Chọn giới tính"
+              required
+              data={[
+                { value: "MALE", label: "Nam" },
+                { value: "FEMALE", label: "Nữ" },
+              ]}
+              {...form.getInputProps("gender")}
             />
           </Grid.Col>
+
+          {/* Số điện thoại - Email */}
           <Grid.Col span={6}>
             <TextInput
               label="Số điện thoại"
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <TextInput
-              label="CMT/CCCD"
-              value={formData.cccd}
-              onChange={(e) => handleChange("cccd", e.target.value)}
+              placeholder="Nhập số điện thoại"
+              required
+              {...form.getInputProps("phone")}
             />
           </Grid.Col>
           <Grid.Col span={6}>
             <TextInput
               label="Email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-            />
-          </Grid.Col>
-          <Grid.Col span={12}>
-            <TextInput
-              label="Địa chỉ"
-              value={formData.address}
-              onChange={(e) => handleChange("address", e.target.value)}
-            />
-          </Grid.Col>
-        </Grid>
-
-        <Divider label="Thông tin tài khoản" mt="md" mb="md" />
-        <Grid gutter="xs">
-          <Grid.Col span={6}>
-            <TextInput
-              label="Tài khoản"
-              value={formData.username}
-              onChange={(e) => handleChange("username", e.target.value)}
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <PasswordInput
-              label="Mật khẩu"
-              value={formData.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-            />
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <PasswordInput
-              label="Nhập lại mật khẩu"
-              value={formData.confirmPassword}
-              onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              placeholder="Nhập email"
+              required
+              {...form.getInputProps("email")}
             />
           </Grid.Col>
         </Grid>
