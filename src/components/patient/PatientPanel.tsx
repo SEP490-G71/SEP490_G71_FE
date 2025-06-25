@@ -58,7 +58,9 @@ const PatientPanel = ({
                   <th style={{ textAlign: "center" }}>TT</th>
                   <th style={{ textAlign: "center" }}>STT</th>
                   <th style={{ textAlign: "center" }}>Mã BN</th>
-                  <th style={{ textAlign: "center" }}>Tên BN</th>
+                  <th style={{ textAlign: "left", paddingLeft: "20px" }}>
+                    Tên BN
+                  </th>
                   <th style={{ textAlign: "center" }}>Điện thoại</th>
                 </tr>
               </thead>
@@ -88,7 +90,9 @@ const PatientPanel = ({
                       </td>
                       <td style={{ textAlign: "center" }}>{index + 1}</td>
                       <td style={{ textAlign: "center" }}>{p.patientCode}</td>
-                      <td style={{ textAlign: "center" }}>{p.fullName}</td>
+                      <td style={{ textAlign: "left", paddingLeft: "20px" }}>
+                        {p.fullName}
+                      </td>
                       <td style={{ textAlign: "center" }}>{p.phone}</td>
                     </tr>
                   );

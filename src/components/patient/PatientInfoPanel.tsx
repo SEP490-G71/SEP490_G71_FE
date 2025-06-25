@@ -2,6 +2,7 @@ import { Paper, Title, Grid, Group, Text } from "@mantine/core";
 import { Patient } from "../../types/Patient/Patient";
 import { useNavigate } from "react-router";
 import React from "react";
+import dayjs from "dayjs";
 
 interface Props {
   patient: Patient | null;
@@ -56,7 +57,7 @@ const PatientInfoPanel = ({ patient, onEndExamination }: Props) => {
             <Text span size="md">
               Ngày sinh:{" "}
               <Text span fw={700} size="md">
-                {patient?.dob ?? "---"}
+                {patient?.dob ? dayjs(patient.dob).format("DD/MM/YYYY") : "---"}
               </Text>
             </Text>
           </Grid.Col>

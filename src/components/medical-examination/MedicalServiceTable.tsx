@@ -104,7 +104,7 @@ const ServiceTable = ({
                 {index + 1}
               </td>
               <td style={{ border: "1px solid #dee2e6", padding: "2px 4px" }}>
-                {service?.id || ""}
+                {service?.serviceCode || ""}
               </td>
               <td style={{ border: "1px solid #dee2e6", padding: "2px 4px" }}>
                 <Select

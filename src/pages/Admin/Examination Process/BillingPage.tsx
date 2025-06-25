@@ -24,6 +24,7 @@ import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import { PaymentType } from "../../../enums/Payment/PaymentType";
 import FilterPanel from "../../../components/common/FilterSection";
+import { Pagination } from "@mantine/core";
 
 const BillingPage = () => {
   const {
@@ -33,6 +34,7 @@ const BillingPage = () => {
     loadingDetail,
     fetchInvoices,
     fetchInvoiceDetail,
+    pagination,
   } = useInvoice();
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
@@ -86,6 +88,16 @@ const BillingPage = () => {
       });
     }
   }, [invoiceDetail]);
+
+  const [page, setPage] = useState(1); // Mantine sử dụng 1-based index
+
+  useEffect(() => {
+    fetchInvoices(page - 1, 5); // API vẫn là 0-based index
+  }, [page]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
   return (
     <Grid>
       {/* Cột trái: Danh sách hóa đơn */}
@@ -102,82 +114,122 @@ const BillingPage = () => {
           {loadingList ? (
             <Loader />
           ) : (
-            <ScrollArea offsetScrollbars scrollbarSize={8} type="auto">
-              <div
-                style={{
-                  width: "100%",
-                  overflowX: "auto",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <Table
-                  striped
-                  withColumnBorders
-                  highlightOnHover
+            <>
+              <ScrollArea offsetScrollbars scrollbarSize={8} type="auto">
+                <div
                   style={{
                     width: "100%",
-                    maxWidth: "800px",
-                    minWidth: "500px",
-                    border: "1px solid #dee2e6",
-                    borderCollapse: "collapse",
+                    overflowX: "auto",
                   }}
                 >
-                  <thead style={{ backgroundColor: "#f1f3f5" }}>
-                    <tr>
-                      <th
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                        }}
-                      >
-                        Mã hóa đơn
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #dee2e6",
-                          textAlign: "center",
-                        }}
-                      >
-                        Tên bệnh nhân
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((inv) => (
-                      <tr
-                        key={inv.invoiceId}
-                        onClick={() => handleSelectInvoice(inv.invoiceId)}
-                        style={{
-                          backgroundColor:
-                            selectedInvoiceId === inv.invoiceId
-                              ? "#cce5ff"
-                              : "white",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <td
+                  <Table
+                    striped
+                    withColumnBorders
+                    highlightOnHover
+                    style={{
+                      width: "100%",
+                      minWidth: "500px",
+                      border: "1px solid #dee2e6",
+                      borderCollapse: "collapse",
+                    }}
+                  >
+                    <thead style={{ backgroundColor: "#f1f3f5" }}>
+                      <tr>
+                        <th
                           style={{
                             border: "1px solid #dee2e6",
                             textAlign: "center",
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          {inv.invoiceCode}
-                        </td>
-                        <td
+                          Trạng thái
+                        </th>
+
+                        <th
                           style={{
                             border: "1px solid #dee2e6",
                             textAlign: "center",
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          {inv.patientName}
-                        </td>
+                          Mã hóa đơn
+                        </th>
+                        <th
+                          style={{
+                            border: "1px solid #dee2e6",
+                            textAlign: "center",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Tên bệnh nhân
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            </ScrollArea>
+                    </thead>
+                    <tbody>
+                      {invoices.map((inv) => (
+                        <tr
+                          key={inv.invoiceId}
+                          onClick={() => handleSelectInvoice(inv.invoiceId)}
+                          style={{
+                            backgroundColor:
+                              selectedInvoiceId === inv.invoiceId
+                                ? "#cce5ff"
+                                : "white",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <td
+                            style={{
+                              textAlign: "center",
+                              whiteSpace: "nowrap",
+                              border: "1px solid #dee2e6",
+                            }}
+                          >
+                            {inv.status}
+                          </td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              whiteSpace: "nowrap",
+                              border: "1px solid #dee2e6",
+                            }}
+                          >
+                            {inv.invoiceCode}
+                          </td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              whiteSpace: "nowrap",
+                              border: "1px solid #dee2e6",
+                            }}
+                          >
+                            {inv.patientName}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </ScrollArea>
+
+              {pagination.totalPages > 1 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: "12px",
+                  }}
+                >
+                  <Pagination
+                    value={page}
+                    onChange={setPage}
+                    total={pagination.totalPages}
+                    size="sm"
+                    radius="md"
+                  />
+                </div>
+              )}
+            </>
           )}
         </Paper>
       </Grid.Col>
@@ -455,16 +507,28 @@ const BillingPage = () => {
         </Paper>
       </Grid.Col>
 
-      {/* {invoiceDetail && (
-        <EditInvoiceModal
-          opened={editModalOpened}
-          onClose={() => setEditModalOpened(false)}
-          invoiceId={invoiceDetail.invoiceId}
-          staffId={invoiceDetail.staffId}
-          availableServices={medicalServices}
-          onSuccess={() => fetchInvoiceDetail(invoiceDetail.invoiceId)}
-        />
-      )} */}
+      <EditInvoiceModal
+        opened={editModalOpened}
+        onClose={() => setEditModalOpened(false)}
+        invoiceId={invoiceDetail?.invoiceId || ""}
+        staffId={"current-staff-id"} // tuỳ vào context login
+        availableServices={medicalServices}
+        invoiceItems={
+          invoiceDetail?.items.map((item) => {
+            const matched = medicalServices.find(
+              (s) => s.serviceCode === item.serviceCode
+            );
+            return {
+              serviceId: matched?.id ?? "",
+              quantity: item.quantity,
+            };
+          }) ?? []
+        }
+        onSuccess={() => {
+          fetchInvoiceDetail(invoiceDetail?.invoiceId ?? "");
+          fetchInvoices();
+        }}
+      />
     </Grid>
   );
 };

@@ -6,12 +6,12 @@ export interface InvoiceSummary {
   invoiceCode: string;
   patientName: string;
   amount: number;
-  paymentType: string | null;
-  status: InvoiceStatus;
+  paymentType: "CASH" | "CARD" | null;
+  status: "PAID" | "UNPAID";
   confirmedAt: string | null;
-  createdAt: string | null;
-   
+  createdAt: string;
 }
+
 
 export interface InvoiceItem {
   name: string;
