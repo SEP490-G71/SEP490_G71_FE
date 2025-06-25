@@ -5,7 +5,8 @@ export interface StaffsResponse {
   firstName: string;
   middleName: string | null;
   lastName: string;
-  specialty: Specialty; // enum
+   fullName:string;
+    specialty: keyof typeof Specialty; // enum
   level: Level; // enum
   phone: string;
   email: string;

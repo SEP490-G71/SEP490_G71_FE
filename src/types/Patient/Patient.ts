@@ -1,14 +1,12 @@
-export type Patient = {
-  stt: number;
-  maKcb: string;
-  maBn: string;
-  ten: string;
-  sdt: string;
-  ngaySinh: string;
-  gioiTinh: string;
-  ngayDangKy: string;
-  phong: string;
-  diaChi: string;
-  soDangKy: number;
-  trangThai: string;
-};
+export interface Patient {
+  id: string;
+  patientCode: string; // Mã bệnh nhân
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  fullName: string;
+  dob: string; // Date of birth (ISO format)
+  gender: "MALE" | "FEMALE" | string;
+  phone: string;
+  email: string;
+}

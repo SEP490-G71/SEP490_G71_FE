@@ -4,117 +4,68 @@ import {
   Flex,
   Grid,
   Paper,
-  Select,
-  TextInput,
-  Textarea,
+  ScrollArea,
+  Text,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
+import { useEffect, useState } from "react";
 import { IconDeviceFloppy } from "@tabler/icons-react";
-import { useEffect } from "react";
-
 import PatientPanel from "../../../components/patient/PatientPanel";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
+import { usePatientStore } from "../../../components/stores/patientStore";
 import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 import useDepartmentStaffs from "../../../hooks/department-Staffs/useDepartmentStaffs";
-
-import { usePatientStore } from "../../../components/stores/patientStore";
+import useMedicalService from "../../../hooks/medical-service/useMedicalService";
+import { toast } from "react-toastify";
+import ExaminationInfoForm from "../../../components/medical-examination/MedicalExaminationFormSection";
+import VitalSignsForm from "../../../components/medical-examination/VitalSignsForm";
+import DiagnosisForm from "../../../components/medical-examination/DiagnosisForm";
+import ServiceTable from "../../../components/medical-examination/MedicalServiceTable";
+import { usePatientManagement } from "../../../hooks/Patient-Management/usePatientManagement";
+import useMedicalRecord from "../../../hooks/medicalRecord/useMedicalRecord";
 
 const MedicalExaminationPage = () => {
-  const { selectedPatient, setSelectedPatient, patientList, setPatientList } =
-    usePatientStore();
+  const { selectedPatient, setSelectedPatient } = usePatientStore();
+  const {
+    patients: patientList,
+    fetchAllPatients,
+    loading: loadingPatients,
+  } = usePatientManagement();
 
   useEffect(() => {
-    setPatientList([
-      {
-        stt: 1,
-        maKcb: "2506180001",
-        maBn: "00000141",
-        ten: "Nguyễn Văn A",
-        sdt: "0967622356",
-        ngaySinh: "15/08/2019",
-        gioiTinh: "Nam",
-        ngayDangKy: "09/08/2023",
-        phong: "Phòng nội tổng quát",
-        diaChi: "Thanh Hoá",
-        soDangKy: 1,
-        trangThai: "hoàn thành",
-      },
-      {
-        stt: 2,
-        maKcb: "2506180002",
-        maBn: "00000143",
-        ten: "Nguyễn Văn B",
-        sdt: "0912345678",
-        ngaySinh: "12/12/1990",
-        gioiTinh: "Nam",
-        ngayDangKy: "10/08/2023",
-        phong: "Phòng tim mạch",
-        diaChi: "Hà Nội",
-        soDangKy: 2,
-        trangThai: "tạm dừng",
-      },
-      {
-        stt: 3,
-        maKcb: "2506180003",
-        maBn: "00000144",
-        ten: "Trần Thị C",
-        sdt: "0988888888",
-        ngaySinh: "20/05/1985",
-        gioiTinh: "Nữ",
-        ngayDangKy: "10/08/2023",
-        phong: "Phòng nội tổng quát",
-        diaChi: "Nghệ An",
-        soDangKy: 3,
-        trangThai: "đang khám",
-      },
-      {
-        stt: 4,
-        maKcb: "2506180004",
-        maBn: "00000145",
-        ten: "Phạm Văn D",
-        sdt: "0977777777",
-        ngaySinh: "01/01/1970",
-        gioiTinh: "Nam",
-        ngayDangKy: "10/08/2023",
-        phong: "Phòng tiêu hoá",
-        diaChi: "Hải Phòng",
-        soDangKy: 4,
-        trangThai: "đang khám",
-      },
-      {
-        stt: 5,
-        maKcb: "2506180005",
-        maBn: "00000146",
-        ten: "Dương Thị E",
-        sdt: "0977777777",
-        ngaySinh: "01/01/1970",
-        gioiTinh: "Nam",
-        ngayDangKy: "10/08/2023",
-        phong: "Phòng tiêu hoá",
-        diaChi: "Hà Nội",
-        soDangKy: 4,
-        trangThai: "chờ khám",
-      },
-    ]);
+    fetchAllPatients(0, 100);
   }, []);
+
   const form = useForm({
     initialValues: {
       appointmentDate: new Date(),
       doctor: "",
       department: "",
-      temperature: "",
-      breathingRate: "",
-      bloodPressure: "",
-      heartRate: "",
-      height: "",
-      weight: "",
-      bmi: "",
-      spo2: "",
       symptoms: "",
       notes: "Không",
     },
   });
+
+  interface ServiceRow {
+    id: number;
+    serviceId: string | null;
+    quantity: number;
+  }
+  const [activeTab, setActiveTab] = useState<"info" | "service">("info");
+
+  const [serviceRows, setServiceRows] = useState<ServiceRow[]>([
+    { id: 1, serviceId: null, quantity: 1 },
+  ]);
+
+  const { medicalServices, fetchAllMedicalServices } = useMedicalService();
+  const serviceOptions = medicalServices.map((item) => ({
+    value: item.id,
+    label: item.name,
+  }));
+
+  useEffect(() => {
+    fetchAllMedicalServices(0, 100);
+  }, []);
 
   const {
     departments,
@@ -130,57 +81,36 @@ const MedicalExaminationPage = () => {
   const { data: departmentStaffs = [], loading: staffLoading } =
     useDepartmentStaffs(selectedDepartmentId);
 
-  const doctorStaffIds = new Set(
-    departmentStaffs
-      .filter((s) => s.position === "DOCTOR")
-      .map((s) => s.staffId)
-  );
+  const doctorOptions = departmentStaffs
+    .filter((s) => s.position === "DOCTOR")
+    .map((staff) => ({ value: staff.staffId, label: staff.staffName }));
 
-  const uniqueDoctorStaffs = Array.from(
-    new Map(
-      departmentStaffs
-        .filter((s) => doctorStaffIds.has(s.staffId))
-        .map((s) => [s.staffId, s])
-    ).values()
-  );
-
-  const doctorOptions = uniqueDoctorStaffs.map((staff) => {
-    const fullName = [staff.lastName, staff.middleName, staff.firstName]
-      .filter(Boolean)
-      .join(" ");
-    return {
-      value: staff.staffId,
-      label: fullName,
-    };
-  });
-
-  const handleSubmit = async (values: typeof form.values) => {
-    if (
-      selectedPatient &&
-      selectedPatient.trangThai.toLowerCase() === "chờ khám"
-    ) {
-      const updatedPatient = { ...selectedPatient, trangThai: "đang khám" };
-      const updatedList = patientList.map((p) =>
-        p.maBn === selectedPatient.maBn ? updatedPatient : p
-      );
-      setPatientList(updatedList);
-      setSelectedPatient(updatedPatient);
-    }
-    console.log("Submitted values:", values);
-  };
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: d.name,
+  }));
 
   const handleEndExamination = () => {
-    if (
-      selectedPatient &&
-      selectedPatient.trangThai.toLowerCase() === "đang khám"
-    ) {
-      const updatedPatient = { ...selectedPatient, trangThai: "hoàn thành" };
-      const updatedList = patientList.map((p) =>
-        p.maBn === selectedPatient.maBn ? updatedPatient : p
-      );
-      setPatientList(updatedList);
-      setSelectedPatient(updatedPatient);
+    if (selectedPatient) {
+      setSelectedPatient(null);
+      toast.success("Đã kết thúc khám bệnh cho bệnh nhân.");
     }
+  };
+
+  const { submitExamination, loading } = useMedicalRecord();
+
+  const handleSave = async () => {
+    if (!selectedPatient || !form.values.doctor) {
+      toast.error("Thiếu thông tin bệnh nhân hoặc bác sĩ");
+      return;
+    }
+
+    await submitExamination({
+      patientId: selectedPatient.id,
+      staffId: form.values.doctor,
+      diagnosisText: form.values.symptoms,
+      services: serviceRows,
+    });
   };
 
   return (
@@ -189,128 +119,118 @@ const MedicalExaminationPage = () => {
         selectedPatient={selectedPatient}
         onSelectPatient={setSelectedPatient}
         patientList={patientList}
-        setPatientList={setPatientList}
+        setPatientList={() => {}}
       />
+
       <Grid.Col span={{ base: 12, md: 8 }}>
-        <Paper>
+        {/* ===== Nút chuyển tab và kết thúc khám ===== */}
+        <Flex justify="space-between" align="center" mb="sm">
+          <Flex gap="xs">
+            <Button
+              size="sm"
+              variant={activeTab === "info" ? "filled" : "outline"}
+              onClick={() => setActiveTab("info")}
+            >
+              Thông tin khám
+            </Button>
+            <Button
+              size="sm"
+              variant={activeTab === "service" ? "filled" : "outline"}
+              onClick={() => setActiveTab("service")}
+            >
+              Kê dịch vụ
+            </Button>
+          </Flex>
+
+          <Button
+            variant="light"
+            color="red"
+            size="sm"
+            onClick={handleEndExamination}
+            disabled={!selectedPatient}
+          >
+            Kết thúc khám
+          </Button>
+        </Flex>
+
+        <Paper p="md">
+          {/* ===== Thông tin bệnh nhân ===== */}
           <PatientInfoPanel patient={selectedPatient} />
 
-          <Divider my="sm" label="Thông tin khám bệnh" labelPosition="left" />
-          <form onSubmit={form.onSubmit(handleSubmit)}>
-            <Grid gutter="xs">
-              <Grid.Col span={4}>
-                <DateTimePicker
-                  label="Ngày khám"
-                  value={form.values.appointmentDate}
-                  required
+          <form
+            onSubmit={(e) => {
+              e.preventDefault(); // ✅ Chặn reload trang
+              handleSave(); // ✅ Gọi logic lưu
+            }}
+          >
+            {/* === Tab 1: Thông tin khám === */}
+            {activeTab === "info" && (
+              <>
+                <Divider
+                  my="sm"
+                  label="Thông tin khám bệnh"
+                  labelPosition="left"
                 />
-              </Grid.Col>
-
-              <Grid.Col span={4}>
-                <Select
-                  label="Bác sĩ"
-                  placeholder={staffLoading ? "Đang tải..." : "Chọn bác sĩ"}
-                  data={doctorOptions}
-                  searchable
-                  disabled={staffLoading || !selectedDepartmentId}
-                  {...form.getInputProps("doctor")}
-                  required
+                <ExaminationInfoForm
+                  form={form}
+                  doctorOptions={doctorOptions}
+                  departmentOptions={departmentOptions}
+                  staffLoading={staffLoading}
+                  departmentLoading={departmentLoading}
                 />
-              </Grid.Col>
 
-              <Grid.Col span={4}>
-                <Select
-                  label="Phòng khám"
-                  placeholder={
-                    departmentLoading ? "Đang tải..." : "Chọn phòng khám"
-                  }
-                  data={departments.map((d) => ({
-                    value: d.id,
-                    label: d.name,
-                  }))}
-                  searchable
-                  disabled={departmentLoading}
-                  {...form.getInputProps("department")}
-                  required
+                <VitalSignsForm />
+
+                <DiagnosisForm
+                  values={{
+                    symptoms: form.values.symptoms,
+                    notes: form.values.notes,
+                  }}
+                  onChange={(field, value) => form.setFieldValue(field, value)}
                 />
-              </Grid.Col>
+              </>
+            )}
 
-              <Grid.Col span={3}>
-                <TextInput
-                  label="Nhiệt độ"
-                  {...form.getInputProps("temperature")}
-                />
-              </Grid.Col>
+            {/* === Tab 2: Kê dịch vụ === */}
+            {activeTab === "service" && (
+              <>
+                <Divider my="sm" label="Kê dịch vụ" labelPosition="left" />
 
-              <Grid.Col span={3}>
-                <TextInput
-                  label="Nhịp thở"
-                  {...form.getInputProps("breathingRate")}
-                />
-              </Grid.Col>
+                <Flex justify="space-between" align="center" mt="sm" mb="sm">
+                  <Text fw={600}>Danh sách dịch vụ</Text>
+                  <Flex gap="xs">
+                    <Button
+                      color="blue"
+                      size="xs"
+                      leftSection="💾"
+                      onClick={handleSave}
+                      loading={loading}
+                    >
+                      Lưu
+                    </Button>
+                  </Flex>
+                </Flex>
 
-              <Grid.Col span={3}>
-                <TextInput
-                  label="Huyết áp"
-                  {...form.getInputProps("bloodPressure")}
-                />
-              </Grid.Col>
+                <ScrollArea offsetScrollbars scrollbarSize={8}>
+                  <ServiceTable
+                    serviceRows={serviceRows}
+                    setServiceRows={setServiceRows}
+                    medicalServices={medicalServices}
+                    serviceOptions={serviceOptions}
+                  />
+                </ScrollArea>
+              </>
+            )}
 
-              <Grid.Col span={3}>
-                <TextInput label="Mạch" {...form.getInputProps("heartRate")} />
-              </Grid.Col>
-
-              <Grid.Col span={3}>
-                <TextInput
-                  label="Chiều cao"
-                  {...form.getInputProps("height")}
-                />
-              </Grid.Col>
-
-              <Grid.Col span={3}>
-                <TextInput label="Cân nặng" {...form.getInputProps("weight")} />
-              </Grid.Col>
-
-              <Grid.Col span={3}>
-                <TextInput label="BMI" {...form.getInputProps("bmi")} />
-              </Grid.Col>
-
-              <Grid.Col span={3}>
-                <TextInput label="SPO2" {...form.getInputProps("spo2")} />
-              </Grid.Col>
-            </Grid>
-
-            <Textarea
-              mt="md"
-              label="Triệu chứng"
-              minRows={2}
-              {...form.getInputProps("symptoms")}
-            />
-
-            <Textarea
-              mt="md"
-              label="Ghi chú"
-              minRows={2}
-              {...form.getInputProps("notes")}
-            />
-
+            {/* ==== Nút lưu dùng chung ==== */}
             <Flex mt="md" gap="sm">
               <Button
                 type="submit"
                 leftSection={<IconDeviceFloppy size={16} />}
+                loading={loading}
               >
                 Lưu
               </Button>
-
-              {selectedPatient?.trangThai.toLowerCase() === "đang khám" && (
-                <Button
-                  variant="light"
-                  color="red"
-                  onClick={handleEndExamination}
-                >
-                  Kết thúc khám
-                </Button>
-              )}
             </Flex>
           </form>
         </Paper>

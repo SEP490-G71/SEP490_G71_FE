@@ -1,6 +1,7 @@
-import { Paper, Title, Grid, Button, Group, Text } from "@mantine/core";
+import { Paper, Title, Grid, Group, Text } from "@mantine/core";
 import { Patient } from "../../types/Patient/Patient";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import React from "react";
 
 interface Props {
   patient: Patient | null;
@@ -9,145 +10,92 @@ interface Props {
 
 const PatientInfoPanel = ({ patient, onEndExamination }: Props) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isServicePage = location.pathname.includes("service");
-  const activeTab: "thongtin" | "dichvu" = isServicePage
-    ? "dichvu"
-    : "thongtin";
 
-  const canEndExamination = patient?.trangThai?.toLowerCase() === "đang khám";
+  // ⚠️ Tạm mock trạng thái nếu chưa có trường này trong dữ liệu
+  const mockStatus = "đang khám"; // hoặc "hoàn thành", "chờ khám"
+  const canEndExamination = mockStatus.toLowerCase() === "đang khám";
 
   return (
     <>
-      <Group mb="xs" gap="xs" style={{ fontSize: "14px" }}>
-        <Button
-          size="xs"
-          variant="default"
-          color="gray"
-          onClick={() => navigate("/admin/medical-examination")}
-          style={{
-            backgroundColor: activeTab === "thongtin" ? "#e0f7ff" : undefined,
-            fontSize: activeTab === "thongtin" ? "16px" : "14px",
-            fontWeight: activeTab === "thongtin" ? 600 : 400,
-            color: activeTab === "thongtin" ? "#1c7ed6" : undefined,
-          }}
-        >
-          Thông tin khám bệnh
-        </Button>
+      <Group mb="xs" gap="xs" style={{ fontSize: "14px" }}></Group>
 
-        <Button
-          size="xs"
-          variant="default"
-          color="gray"
-          onClick={() => navigate("/admin/medical-examination/service")}
-          disabled={patient?.trangThai?.toLowerCase() === "chờ khám"}
-          style={{
-            backgroundColor: activeTab === "dichvu" ? "#e0f7ff" : undefined,
-            fontSize: activeTab === "dichvu" ? "16px" : "14px",
-            fontWeight: activeTab === "dichvu" ? 600 : 400,
-            color:
-              activeTab === "dichvu"
-                ? "#1c7ed6"
-                : patient?.trangThai?.toLowerCase() === "chờ khám"
-                ? "#ccc"
-                : undefined,
-            cursor:
-              patient?.trangThai?.toLowerCase() === "chờ khám"
-                ? "not-allowed"
-                : "pointer",
-          }}
-        >
-          Kê dịch vụ
-        </Button>
-
-        <Button
-          variant="light"
-          color="red"
-          size="xs"
-          disabled={!canEndExamination}
-          onClick={onEndExamination}
-          style={{ marginLeft: "auto" }}
-        >
-          Kết thúc khám
-        </Button>
-      </Group>
-
-      <Paper p="sm" mb="md" withBorder={false}>
-        <Title order={5} mb="xs">
+      <Paper mb="md">
+        <Title order={4} mb="sm">
           Thông tin người đăng ký
         </Title>
 
         <Grid gutter="xs">
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Mã lịch hẹn:{" "}
-            <Text span fw={600}>
-              ---
+            <Text span size="md">
+              Mã BN:{" "}
+              <Text span fw={700} size="md">
+                {patient?.patientCode ?? "---"}
+              </Text>
             </Text>
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Mã KCB:{" "}
-            <Text span fw={600}>
-              {patient?.maKcb ?? "---"}
+            <Text span size="md">
+              Họ tên:{" "}
+              <Text span fw={700} size="md">
+                {patient?.fullName ?? "---"}
+              </Text>
             </Text>
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Mã BN:{" "}
-            <Text span fw={600}>
-              {patient?.maBn ?? "---"}
+            <Text span size="md">
+              Điện thoại:{" "}
+              <Text span fw={700} size="md">
+                {patient?.phone ?? "---"}
+              </Text>
             </Text>
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Họ tên:{" "}
-            <Text span fw={600}>
-              {patient?.ten ?? "---"}
+            <Text span size="md">
+              Ngày sinh:{" "}
+              <Text span fw={700} size="md">
+                {patient?.dob ?? "---"}
+              </Text>
             </Text>
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Điện thoại:{" "}
-            <Text span fw={600}>
-              {patient?.sdt ?? "---"}
+            <Text span size="md">
+              Giới tính:{" "}
+              <Text span fw={700} size="md">
+                {patient?.gender === "MALE"
+                  ? "Nam"
+                  : patient?.gender === "FEMALE"
+                  ? "Nữ"
+                  : "---"}
+              </Text>
             </Text>
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Ngày sinh:{" "}
-            <Text span fw={600}>
-              {patient?.ngaySinh ?? "---"}
+
+          {/* Bạn có thể mở lại các trường dưới đây nếu cần */}
+          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <Text span size="md">
+              Ngày đăng ký: <Text span fw={700} size="md">---</Text>
             </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Giới tính:{" "}
-            <Text span fw={600}>
-              {patient?.gioiTinh ?? "---"}
+          </Grid.Col> */}
+
+          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <Text span size="md">
+              Số đăng ký: <Text span fw={700} size="md">---</Text>
             </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Ngày đăng ký:{" "}
-            <Text span fw={600}>
-              {patient?.ngayDangKy ?? "---"}
+          </Grid.Col> */}
+
+          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <Text span size="md">
+              Địa chỉ: <Text span fw={700} size="md">---</Text>
             </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Phòng đăng ký:{" "}
-            <Text span fw={600}>
-              {patient?.phong ?? "---"}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            Số đăng ký:{" "}
-            <Text span fw={600}>
-              {patient?.soDangKy ?? "---"}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 6, md: 6 }}>
-            Địa chỉ:{" "}
-            <Text span fw={600}>
-              {patient?.diaChi ?? "---"}
-            </Text>
-          </Grid.Col>
+          </Grid.Col> */}
         </Grid>
       </Paper>
     </>
   );
 };
 
-export default PatientInfoPanel;
+export default React.memo(PatientInfoPanel);

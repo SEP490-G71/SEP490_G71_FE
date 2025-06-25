@@ -1,4 +1,4 @@
-import { Modal, TextInput, Button, Select, Divider } from "@mantine/core";
+import { Modal, TextInput, Button, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
@@ -34,20 +34,16 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       firstName: "",
       middleName: "",
       lastName: "",
+      fullName: "",
       specialty: Specialty.OTHER,
       level: Level.INTERN,
       phone: "",
       email: "",
       gender: Gender.OTHER,
       dob: "",
-      // username: "",
-      // password: "",
-      // confirmPassword: "",
-      // accountId: undefined,
     },
     validate: {
       firstName: (value) => validateName(value ?? ""),
-      middleName: (value) => validateName(value ?? ""),
       lastName: (value) => validateName(value ?? ""),
       phone: (value) => validatePhone(value ?? ""),
       email: (value) => validateEmail(value ?? ""),
@@ -84,6 +80,17 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         },
         close: {
           color: "white",
+        },
+        content: {
+          overflowY: "scroll",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        },
+        // ẩn scrollbar trong Chrome
+        inner: {
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
         },
       }}
     >
@@ -186,32 +193,6 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           mt="sm"
           disabled={isViewMode}
         />
-        <Divider my="sm" label="Tài khoản" labelPosition="left" />
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <TextInput
-            label="Tài khoản"
-            placeholder="Nhập tên tài khoản"
-            {...form.getInputProps("username")}
-            required
-          />
-          <TextInput
-            label="Mật khẩu"
-            placeholder="Nhập mật khẩu"
-            type="password"
-            {...form.getInputProps("password")}
-            required
-          />
-        </div>
-
-        <TextInput
-          label="Nhập lại mật khẩu"
-          placeholder="Nhập lại mật khẩu"
-          type="password"
-          mt="sm"
-          {...form.getInputProps("confirmPassword")}
-          required
-        /> */}
-
         {!isViewMode && (
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={onClose}>

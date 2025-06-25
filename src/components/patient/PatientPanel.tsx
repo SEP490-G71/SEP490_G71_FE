@@ -14,6 +14,8 @@ import {
 import { Patient } from "../../types/Patient/Patient";
 import StatusCell from "./StatusCell";
 import { Group } from "@mantine/core";
+import React from "react";
+import FilterPanel from "../common/FilterSection";
 
 type Props = {
   selectedPatient: Patient | null;
@@ -34,47 +36,9 @@ const PatientPanel = ({
         {/* Tìm kiếm */}
         <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
           <Grid gutter="xs">
-            <Grid.Col span={6}>
-              <Select
-                label="Trạng thái"
-                placeholder="Chọn trạng thái"
-                data={[]}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <TextInput label="Mã KCB" placeholder="Nhập mã KCB" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <TextInput label="Từ ngày" placeholder="dd/mm/yyyy" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <TextInput label="Đến ngày" placeholder="dd/mm/yyyy" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <TextInput label="Họ tên" placeholder="Nhập họ tên" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <TextInput label="Mã BN" placeholder="Nhập mã BN" />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <Select
-                label="Phòng đăng ký"
-                placeholder="Chọn phòng"
-                data={["Phòng nội tổng quát", "Phòng tim mạch"]}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <Select
-                label="Ưu tiên"
-                placeholder="Chọn mức ưu tiên"
-                data={["Cao", "Trung bình", "Thấp"]}
-              />
-            </Grid.Col>
+            <FilterPanel />
           </Grid>
-        </Paper>
 
-        {/* Danh sách đăng ký */}
-        <Paper shadow="lg" p="md" radius="md" withBorder>
           <Title order={5} mb="md">
             Danh sách đăng ký
           </Title>
@@ -93,7 +57,6 @@ const PatientPanel = ({
                 <tr>
                   <th style={{ textAlign: "center" }}>TT</th>
                   <th style={{ textAlign: "center" }}>STT</th>
-                  <th style={{ textAlign: "center" }}>Mã KCB</th>
                   <th style={{ textAlign: "center" }}>Mã BN</th>
                   <th style={{ textAlign: "center" }}>Tên BN</th>
                   <th style={{ textAlign: "center" }}>Điện thoại</th>
@@ -102,11 +65,12 @@ const PatientPanel = ({
 
               <tbody>
                 {patientList.map((p, index) => {
-                  const isSelected = selectedPatient?.maBn === p.maBn;
+                  const isSelected =
+                    selectedPatient?.patientCode === p.patientCode;
 
                   return (
                     <tr
-                      key={index}
+                      key={p.id}
                       onClick={() => onSelectPatient(p)}
                       style={{
                         cursor: "pointer",
@@ -115,17 +79,17 @@ const PatientPanel = ({
                           : index % 2 === 0
                           ? "#f8f9fa"
                           : "#e9ecef",
-                        borderBottom: "1px solid #adb5bd", // phân cách hàng
+                        borderBottom: "1px solid #adb5bd",
                       }}
                     >
                       <td style={{ textAlign: "center" }}>
-                        <StatusCell status={p.trangThai} />
+                        <StatusCell status={"Đang khám"} />{" "}
+                        {/* mock nếu chưa có p.trangThai */}
                       </td>
-                      <td style={{ textAlign: "center" }}>{p.stt}</td>
-                      <td style={{ textAlign: "center" }}>{p.maKcb}</td>
-                      <td style={{ textAlign: "center" }}>{p.maBn}</td>
-                      <td style={{ textAlign: "center" }}>{p.ten}</td>
-                      <td style={{ textAlign: "center" }}>{p.sdt}</td>
+                      <td style={{ textAlign: "center" }}>{index + 1}</td>
+                      <td style={{ textAlign: "center" }}>{p.patientCode}</td>
+                      <td style={{ textAlign: "center" }}>{p.fullName}</td>
+                      <td style={{ textAlign: "center" }}>{p.phone}</td>
                     </tr>
                   );
                 })}
@@ -155,5 +119,4 @@ const PatientPanel = ({
     </Grid.Col>
   );
 };
-
-export default PatientPanel;
+export default React.memo(PatientPanel);

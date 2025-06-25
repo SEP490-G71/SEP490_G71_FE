@@ -84,6 +84,7 @@ const StaffsPage = () => {
     firstName: res.firstName,
     middleName: res.middleName,
     lastName: res.lastName,
+    fullName: res.fullName,
     email: res.email,
     phone: res.phone,
     gender: res.gender,
@@ -135,11 +136,11 @@ const StaffsPage = () => {
     try {
       const normalizedData: StaffsRequest = {
         ...data,
-        middleName: data.middleName ?? null, // ✅ Luôn đảm bảo là string hoặc null
+        middleName: data.middleName ?? null,
         dob:
           typeof data.dob === "string"
             ? data.dob
-            : new Date(data.dob).toISOString().split("T")[0], // ✅ Đảm bảo đúng định dạng YYYY-MM-DD
+            : new Date(data.dob).toISOString().split("T")[0],
       };
 
       if (editingId) {
@@ -161,10 +162,9 @@ const StaffsPage = () => {
   };
   const columns = [
     createColumn<StaffsResponse>({
-      key: "fullName" as keyof StaffsResponse,
+      key: "fullName",
       label: "Họ và tên",
-      render: (row) =>
-        [row.firstName, row.middleName, row.lastName].filter(Boolean).join(" "),
+      render: (row) => row.fullName,
       sortable: false,
     }),
     createColumn<StaffsResponse>({ key: "email", label: "Email" }),

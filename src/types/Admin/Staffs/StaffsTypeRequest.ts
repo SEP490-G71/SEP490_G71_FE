@@ -13,6 +13,7 @@ export interface StaffsRequest {
    firstName: string;
   middleName: string | null;
   lastName: string;
+  fullName:string;
   specialty: Specialty; // enum
   level: Level; // enum
   phone: string;

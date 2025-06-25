@@ -5,8 +5,6 @@ export interface DepartmentStaffResponse {
   departmentId: string;
   staffId: string;
   departmentName: string;
-  firstName: string;
-  middleName: string | null;
-  lastName: string;
+  staffName: string; 
   position: keyof typeof Position;
 }

@@ -74,6 +74,12 @@ const allNavItems: NavItem[] = [
     icon: <AiOutlineApartment />,
     path: "/admin/medical-examination",
   },
+
+  {
+    name: "Thu chi",
+    icon: <AiOutlineApartment />,
+    path: "/admin/medical-examination/billing",
+  },
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
