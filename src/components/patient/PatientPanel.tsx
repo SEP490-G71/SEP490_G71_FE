@@ -6,7 +6,6 @@ import {
   ScrollArea,
   Select,
   Table,
-  TextInput,
   Title,
   Text,
 } from "@mantine/core";
