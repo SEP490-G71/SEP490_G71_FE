@@ -14,8 +14,8 @@ export interface InvoiceSummary {
 
 
 export interface InvoiceItem {
-  name: string;
   serviceCode: string;
+  name: string;
   quantity: number;
   price: number;
   discount: number;

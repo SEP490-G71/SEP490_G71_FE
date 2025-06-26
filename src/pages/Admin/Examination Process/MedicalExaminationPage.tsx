@@ -159,8 +159,8 @@ const MedicalExaminationPage = () => {
 
           <form
             onSubmit={(e) => {
-              e.preventDefault(); // ✅ Chặn reload trang
-              handleSave(); // ✅ Gọi logic lưu
+              e.preventDefault(); //  Chặn reload trang
+              handleSave(); // Gọi logic lưu
             }}
           >
             {/* === Tab 1: Thông tin khám === */}
@@ -217,6 +217,8 @@ const MedicalExaminationPage = () => {
                     setServiceRows={setServiceRows}
                     medicalServices={medicalServices}
                     serviceOptions={serviceOptions}
+                    editable={true}
+                    showDepartment={true}
                   />
                 </ScrollArea>
               </>

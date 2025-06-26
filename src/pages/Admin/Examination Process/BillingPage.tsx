@@ -1,5 +1,4 @@
 import {
-  Card,
   Divider,
   Group,
   Paper,
@@ -25,6 +24,10 @@ import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import { PaymentType } from "../../../enums/Payment/PaymentType";
 import FilterPanel from "../../../components/common/FilterSection";
 import { Pagination } from "@mantine/core";
+import ServiceTable from "../../../components/medical-examination/MedicalServiceTable";
+import { ServiceRow } from "../../../types/serviceRow";
+import ViewInvoiceServicesModal from "../../../components/invoice/EditInvoiceModal";
+import { MedicalService } from "../../../types/Admin/MedicalService/MedicalService";
 
 const BillingPage = () => {
   const {
@@ -41,7 +44,10 @@ const BillingPage = () => {
     null
   );
   const [editModalOpened, setEditModalOpened] = useState(false);
-  const { medicalServices } = useMedicalService();
+  //const { medicalServices } = useMedicalService();
+
+  const [viewModalOpened, setViewModalOpened] = useState(false);
+  const [medicalServices, setMedicalServices] = useState<MedicalService[]>([]);
 
   useEffect(() => {
     fetchInvoices();
@@ -89,15 +95,25 @@ const BillingPage = () => {
     }
   }, [invoiceDetail]);
 
-  const [page, setPage] = useState(1); // Mantine sử dụng 1-based index
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetchInvoices(page - 1, 5); // API vẫn là 0-based index
+    fetchInvoices(page - 1, 5);
   }, [page]);
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
+  const rowsFromInvoice: ServiceRow[] =
+    invoiceDetail?.items.map((item, index) => ({
+      id: index,
+      serviceId: null,
+      serviceCode: item.serviceCode,
+      name: item.name,
+      price: item.price,
+      discount: item.discount,
+      vat: item.vat,
+      quantity: item.quantity,
+      total: item.total,
+    })) ?? [];
+
   return (
     <Grid>
       {/* Cột trái: Danh sách hóa đơn */}
@@ -236,14 +252,43 @@ const BillingPage = () => {
 
       <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
         <Paper shadow="xs" radius="md" p="md" withBorder>
-          <Group justify="space-between" mb="sm">
-            <Button variant="light" size="md">
-              Ghi thông tin hóa đơn
-            </Button>
-            <Button color="red" variant="filled" size="md">
-              Thanh toán
-            </Button>
+          <Group justify="space-between" mb="sm" align="center">
+            {/* Nút bên trái */}
+            <Group gap="xs">
+              <Button variant="light" size="md">
+                Ghi thông tin hóa đơn
+              </Button>
+            </Group>
+
+            {/* Nút bên phải */}
+            <Group gap="xs">
+              <Button
+                variant="outline"
+                size="md"
+                color="blue"
+                // onClick={handleSavePendingInvoice}
+                disabled={!editableInvoiceDetail.confirmedBy}
+                title={
+                  !editableInvoiceDetail.confirmedBy
+                    ? "Vui lòng chọn người thu trước"
+                    : ""
+                }
+              >
+                Lưu hóa đơn
+              </Button>
+
+              <Button
+                color="red"
+                variant="filled"
+                size="md"
+                // onClick={handleConfirmPayment}
+                // disabled={invoiceDetail.status !== "PENDING"}
+              >
+                Thanh toán
+              </Button>
+            </Group>
           </Group>
+
           <PatientInfoPanel patient={null} />
           <Box mt="xl">
             <Textarea
@@ -371,124 +416,27 @@ const BillingPage = () => {
                 <Button
                   color="cyan"
                   size="xs"
-                  onClick={() => setEditModalOpened(true)}
+                  onClick={() => setViewModalOpened(true)}
+                  disabled={!editableInvoiceDetail.confirmedBy}
+                  title={
+                    !editableInvoiceDetail.confirmedBy
+                      ? "Vui lòng chọn người thu trước"
+                      : ""
+                  }
                 >
                   Thêm dịch vụ
                 </Button>
               </Group>
 
               {invoiceDetail.items.length ? (
-                <Table
-                  striped
-                  withTableBorder
-                  withColumnBorders
-                  highlightOnHover
-                >
-                  <thead style={{ backgroundColor: "#f1f3f5" }}>
-                    <tr>
-                      {[
-                        "Mã DV",
-                        "Tên DV",
-                        "ĐVT",
-                        "SL",
-                        "Đơn giá",
-                        "Giảm giá (%)",
-                        "VAT (%)",
-                        "Thành tiền",
-                      ].map((title, i) => (
-                        <th
-                          key={i}
-                          style={{
-                            textAlign:
-                              i === 1 ? "left" : i >= 4 ? "right" : "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {title}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoiceDetail.items.map((item, index) => (
-                      <tr key={index}>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.serviceCode}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "left",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.name}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          Lần
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.quantity}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "right",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.price.toLocaleString()}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.discount ?? 0}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.vat ?? 0}%
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "right",
-                            padding: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.total?.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                <ServiceTable
+                  serviceRows={rowsFromInvoice}
+                  setServiceRows={() => {}}
+                  medicalServices={[]}
+                  serviceOptions={[]}
+                  editable={false}
+                  showDepartment={false}
+                />
               ) : (
                 <Text c="dimmed">Không có dịch vụ nào được ghi nhận.</Text>
               )}
@@ -507,11 +455,11 @@ const BillingPage = () => {
         </Paper>
       </Grid.Col>
 
-      <EditInvoiceModal
+      {/* <EditInvoiceModal
         opened={editModalOpened}
         onClose={() => setEditModalOpened(false)}
         invoiceId={invoiceDetail?.invoiceId || ""}
-        staffId={"current-staff-id"} // tuỳ vào context login
+        staffId={"current-staff-id"}
         availableServices={medicalServices}
         invoiceItems={
           invoiceDetail?.items.map((item) => {
@@ -528,7 +476,16 @@ const BillingPage = () => {
           fetchInvoiceDetail(invoiceDetail?.invoiceId ?? "");
           fetchInvoices();
         }}
-      />
+      /> */}
+
+      {invoiceDetail && (
+        <ViewInvoiceServicesModal
+          opened={viewModalOpened}
+          onClose={() => setViewModalOpened(false)}
+          invoiceItems={invoiceDetail.items}
+          availableServices={medicalServices}
+        />
+      )}
     </Grid>
   );
 };
