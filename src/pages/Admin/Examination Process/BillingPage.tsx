@@ -15,7 +15,7 @@ import {
   Box,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { useInvoice } from "../../../hooks/invoice/useInvoice";
+import { useFilteredInvoices } from "../../../hooks/invoice/useInvoice";
 import dayjs from "dayjs";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
@@ -37,7 +37,7 @@ const BillingPage = () => {
     fetchInvoices,
     fetchInvoiceDetail,
     pagination,
-  } = useInvoice();
+  } = useFilteredInvoices();
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null
@@ -94,7 +94,7 @@ const BillingPage = () => {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetchInvoices(page - 1, 5);
+    fetchInvoices({}, page - 1, 5);
   }, [page]);
 
   const rowsFromInvoice: ServiceRow[] =
@@ -428,7 +428,7 @@ const BillingPage = () => {
                     xem trước
                   </Button>
                   <Button color="cyan" size="xs">
-                    in
+                    in pdf
                   </Button>
                   <Button
                     color="cyan"

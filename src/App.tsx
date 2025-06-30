@@ -32,6 +32,7 @@ import DepartmentPage from "./pages/Admin/DepartmentService/DepartmentPage";
 import MedicalExaminationPage from "./pages/Admin/Examination Process/MedicalExaminationPage";
 import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 import BillingPage from "./pages/Admin/Examination Process/BillingPage";
+import ClinicalPage from "./pages/Admin/Examination Process/ClinicalPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -88,6 +89,11 @@ export default function App() {
             <Route
               path="/admin/medical-examination/billing"
               element={<BillingPage />}
+            />
+
+            <Route
+              path="/admin/medical-examination/clinical"
+              element={<ClinicalPage />}
             />
           </Route>
 

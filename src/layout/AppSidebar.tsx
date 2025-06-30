@@ -80,6 +80,21 @@ const allNavItems: NavItem[] = [
     icon: <AiOutlineApartment />,
     path: "/admin/medical-examination/billing",
   },
+  {
+    name: "Khám bệnh",
+    icon: <AiOutlineApartment />,
+    subItems: [
+      {
+        name: "Khám lâm sàng",
+        path: "/admin/medical-examination/clinical",
+      },
+      {
+        name: "Tai mũi họng",
+        path: "/admin/medical-examination/ent",
+      },
+    ],
+  },
+
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
