@@ -85,8 +85,8 @@ const ServiceTable = ({
   }, 0);
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <div style={{ minWidth: "800px" }}>
+    <div className="overflow-x-auto">
+      <div className="min-w-[800px]">
         <Table>
           <thead style={{ backgroundColor: "#f1f1f1" }}>
             <tr>
@@ -110,9 +110,7 @@ const ServiceTable = ({
               >
                 Tên DV
               </th>
-              <th style={{ border: "1px solid #ccc", textAlign: "center" }}>
-                ĐVT
-              </th>
+
               <th style={{ border: "1px solid #ccc", textAlign: "center" }}>
                 SL
               </th>
@@ -121,7 +119,7 @@ const ServiceTable = ({
                   style={{
                     border: "1px solid #ccc",
                     textAlign: "left",
-                    paddingLeft: "20px",
+                    paddingLeft: "10px",
                   }}
                 >
                   Phòng khám
@@ -131,7 +129,7 @@ const ServiceTable = ({
                 style={{
                   border: "1px solid #ccc",
                   textAlign: "right",
-                  paddingRight: "20px",
+                  paddingRight: "10px",
                 }}
               >
                 Đơn giá
@@ -139,7 +137,7 @@ const ServiceTable = ({
               <th
                 style={{
                   border: "1px solid #ccc",
-                  textAlign: "right",
+                  textAlign: "center",
                   paddingRight: "10px",
                 }}
               >
@@ -214,9 +212,7 @@ const ServiceTable = ({
                     row.name || "---"
                   )}
                 </td>
-                <td style={{ border: "1px solid #ccc", textAlign: "center" }}>
-                  Lần
-                </td>
+
                 <td style={{ border: "1px solid #ccc", textAlign: "center" }}>
                   {editable ? (
                     <NumberInput
@@ -239,7 +235,7 @@ const ServiceTable = ({
                     style={{
                       border: "1px solid #ccc",
                       textAlign: "left",
-                      paddingLeft: "20px",
+                      paddingLeft: "10px",
                     }}
                   >
                     {row.departmentName || "---"}
@@ -298,7 +294,7 @@ const ServiceTable = ({
           <tfoot>
             <tr>
               <td
-                colSpan={showDepartment ? 9 : 8}
+                colSpan={showDepartment ? 8 : 7}
                 style={{
                   textAlign: "right",
                   fontWeight: "bold",

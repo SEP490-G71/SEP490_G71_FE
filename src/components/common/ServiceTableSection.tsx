@@ -1,12 +1,4 @@
-import {
-  Title,
-  Table,
-  Button,
-  Group,
-  Checkbox,
-  Text,
-  Center,
-} from "@mantine/core";
+import { Title, Table, Button, Group, Text, Center } from "@mantine/core";
 import { FaFolderOpen } from "react-icons/fa6";
 
 interface ServiceTableProps {
@@ -17,7 +9,7 @@ interface ServiceTableProps {
   emptyMessage?: string;
   type: "pending" | "done";
   onAction?: (item: any) => void;
-  centeredColumns?: number[]; // ví dụ: [0, 1, 3, 4] để căn giữa STT, mã DV, thu tiền, thao tác
+  centeredColumns?: number[];
 }
 
 const thStyle =
@@ -43,7 +35,7 @@ const ServiceTableSection = ({
       )}
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[900px] text-sm" highlightOnHover striped>
+        <Table className="min-w-[700px] text-sm" highlightOnHover striped>
           <thead>
             <tr>
               {headers.map((header, idx) => (
@@ -78,11 +70,8 @@ const ServiceTableSection = ({
                   type === "pending"
                     ? [
                         index + 1,
-                        item.code,
-                        item.name,
-                        <div className="flex justify-center items-center h-full">
-                          <Checkbox readOnly checked disabled />
-                        </div>,
+                        item.serviceName,
+                        item.createdBy ?? "—", // ensure always 1 td
                         <Group gap={4} justify="center">
                           <Button
                             size="xs"
@@ -94,11 +83,25 @@ const ServiceTableSection = ({
                           </Button>
                         </Group>,
                       ]
-                    : [index + 1, item.code, item.name, "-"];
+                    : [
+                        index + 1,
+                        item.serviceName,
+                        item.completedBy ?? "—", // also same index
+                        <Group gap={4} justify="center">
+                          <Button
+                            size="xs"
+                            color="blue"
+                            radius="sm"
+                            onClick={() => onAction?.(item)}
+                          >
+                            Xem kết quả
+                          </Button>
+                        </Group>,
+                      ];
 
                 return (
                   <tr
-                    key={item.code || index}
+                    key={item.id || index}
                     className="hover:bg-blue-50 transition"
                   >
                     {rowData.map((cell, colIdx) => (

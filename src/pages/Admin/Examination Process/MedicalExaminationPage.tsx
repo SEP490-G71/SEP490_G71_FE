@@ -26,11 +26,7 @@ import useMedicalRecord from "../../../hooks/medicalRecord/useMedicalRecord";
 
 const MedicalExaminationPage = () => {
   const { selectedPatient, setSelectedPatient } = usePatientStore();
-  const {
-    patients: patientList,
-    fetchAllPatients,
-    loading: loadingPatients,
-  } = usePatientManagement();
+  const { patients: patientList, fetchAllPatients } = usePatientManagement();
 
   useEffect(() => {
     fetchAllPatients(0, 100);

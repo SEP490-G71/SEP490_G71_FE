@@ -1,38 +1,37 @@
 import { Group, Button, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import { MedicalRecordOrder } from "../../types/MedicalRecord/MedicalRecordDetail";
 
 interface Props {
-  selectedService: { name: string; code: string } | null;
+  selectedOrder: MedicalRecordOrder | null;
   onSelectInfo: () => void;
   onViewResult: () => void;
-  onCloseService?: () => void;
+  onCloseOrder?: () => void;
   isResultMode: boolean;
 }
 
 const HeaderBar = ({
-  selectedService,
+  selectedOrder,
   onSelectInfo,
   onViewResult,
-  onCloseService,
+  onCloseOrder,
   isResultMode,
 }: Props) => {
   return (
     <Group mt="sm" gap="xs">
-      {/* Nút: Thông tin khám */}
       <Button
         variant="light"
         size="md"
         radius={4}
-        color={isResultMode ? "gray" : "blue"}
+        color={!isResultMode ? "blue" : "gray"}
         onClick={onSelectInfo}
       >
-        <Text size="sm" fw={600} c={isResultMode ? "black" : "blue"}>
+        <Text size="sm" fw={600} c={!isResultMode ? "blue" : "black"}>
           Thông tin khám
         </Text>
       </Button>
 
-      {/* Nút: DV mã + Xem kết quả + Đóng */}
-      {selectedService && (
+      {selectedOrder && (
         <Button
           variant="light"
           size="md"
@@ -43,15 +42,15 @@ const HeaderBar = ({
             <IconX
               size={16}
               onClick={(e) => {
-                e.stopPropagation(); // tránh lan sự kiện
-                onCloseService?.();
+                e.stopPropagation();
+                onCloseOrder?.();
               }}
               style={{ cursor: "pointer" }}
             />
           }
         >
           <Text size="sm" fw={600} c={isResultMode ? "blue" : "black"}>
-            {selectedService.code}
+            {selectedOrder.serviceName}
           </Text>
         </Button>
       )}

@@ -12,13 +12,15 @@ import {
   Loader,
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
-import useDepartmentStaffs from "../../hooks/department-Staffs/useDepartmentStaffs";
+import uploadMedicalResult from "../../hooks/medicalRecord/uploadMedicalResult";
+import { toast } from "react-toastify";
+import useStaffs from "../../hooks/staffs-service/useStaffs";
 
 interface Props {
+  resultId: string;
   serviceName: string;
-  departmentId: string | null;
   onSubmit: (result: {
     resultText: string;
     selectedStaffId: string | null;
@@ -31,8 +33,8 @@ interface Props {
 }
 
 const ServiceResultPanel = ({
+  resultId,
   serviceName,
-  departmentId,
   onSubmit,
   onCancel,
 }: Props) => {
@@ -42,14 +44,17 @@ const ServiceResultPanel = ({
   const [conclusion, setConclusion] = useState("Bình thường");
   const [suggestion, setSuggestion] = useState("");
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: staffList, loading: loadingStaffs } = useDepartmentStaffs(
-    departmentId ?? undefined
-  );
-  const uniqueStaffList = staffList.filter(
-    (staff, index, self) =>
-      index === self.findIndex((s) => s.staffId === staff.staffId)
+
+  const { staffs, loading: loadingStaffs, fetchStaffs } = useStaffs();
+
+  useEffect(() => {
+    fetchStaffs();
+  }, []);
+
+  const uniqueStaffList = staffs.filter(
+    (staff, index, self) => index === self.findIndex((s) => s.id === staff.id)
   );
 
   const handleUploadClick = () => {
@@ -60,13 +65,15 @@ const ServiceResultPanel = ({
     const files = Array.from(e.target.files || []);
     const urls = files.map((file) => URL.createObjectURL(file));
     setImagePreviews((prev) => [...prev, ...urls]);
+    setUploadedFiles((prev) => [...prev, ...files]);
   };
 
   const handleRemoveImage = (index: number) => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!description.trim()) {
       alert("Vui lòng nhập mô tả kết quả.");
       return;
@@ -77,14 +84,26 @@ const ServiceResultPanel = ({
       return;
     }
 
-    onSubmit({
-      resultText: description.trim(),
-      selectedStaffId: doctor,
-      performedAt: date,
-      conclusion: conclusion.trim(),
-      suggestion: suggestion.trim(),
-      images: imagePreviews,
-    });
+    if (!doctor) {
+      alert("Vui lòng chọn bác sĩ.");
+      return;
+    }
+
+    try {
+      await uploadMedicalResult(resultId, uploadedFiles, doctor, conclusion);
+      toast.success("Đã lưu kết quả và upload file thành công.");
+
+      onSubmit({
+        resultText: description.trim(),
+        selectedStaffId: doctor,
+        performedAt: date,
+        conclusion: conclusion.trim(),
+        suggestion: suggestion.trim(),
+        images: imagePreviews,
+      });
+    } catch (error) {
+      toast.error("Không thể lưu kết quả khám hoặc upload file.");
+    }
   };
 
   return (
@@ -120,7 +139,7 @@ const ServiceResultPanel = ({
                 placeholder="Chọn bác sĩ"
                 data={
                   uniqueStaffList.map((staff) => ({
-                    label: staff.staffName,
+                    label: staff.fullName,
                     value: staff.id,
                   })) ?? []
                 }
@@ -187,7 +206,7 @@ const ServiceResultPanel = ({
                 key={index}
                 style={{
                   position: "relative",
-                  width: 200, // 👈 tăng kích thước ảnh
+                  width: 200,
                   height: 150,
                   borderRadius: 8,
                   overflow: "hidden",
@@ -235,7 +254,6 @@ const ServiceResultPanel = ({
         </Grid.Col>
       </Grid>
 
-      {/* Nút hủy */}
       <Group mt="md" justify="flex-end">
         <Button variant="default" onClick={onCancel}>
           Hủy

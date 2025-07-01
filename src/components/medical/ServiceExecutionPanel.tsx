@@ -1,15 +1,11 @@
 import { Title } from "@mantine/core";
 import ServiceTableSection from "../common/ServiceTableSection";
-
-interface ServiceItem {
-  code: string;
-  name: string;
-}
+import { MedicalRecordOrder } from "../../types/MedicalRecord/MedicalRecordDetail";
 
 interface Props {
-  pendingServices: ServiceItem[];
-  doneServices?: ServiceItem[];
-  onAction?: (item: ServiceItem) => void;
+  pendingServices: MedicalRecordOrder[];
+  doneServices?: MedicalRecordOrder[];
+  onAction?: (item: MedicalRecordOrder) => void;
 }
 
 const ServiceExecutionPanel = ({
@@ -17,6 +13,11 @@ const ServiceExecutionPanel = ({
   doneServices = [],
   onAction,
 }: Props) => {
+  const mappedDoneServices = doneServices.map((order, index) => ({
+    ...order,
+    completedBy: order.results?.[0]?.completedBy ?? order.createdBy,
+  }));
+
   return (
     <>
       <div className="mb-6">
@@ -25,10 +26,10 @@ const ServiceExecutionPanel = ({
         </Title>
         <ServiceTableSection
           type="pending"
-          headers={["TT", "Mã dịch vụ", "Tên dịch vụ", "Thu tiền", "Thao tác"]}
+          headers={["#", "Tên dịch vụ", "Người tạo", "Thao tác"]}
           data={pendingServices}
           onAction={onAction}
-          centeredColumns={[0, 1, 3, 4]}
+          centeredColumns={[0, 3]}
         />
       </div>
 
@@ -38,9 +39,10 @@ const ServiceExecutionPanel = ({
         </Title>
         <ServiceTableSection
           type="done"
-          headers={["TT", "Mã dịch vụ", "Tên dịch vụ", "Thao tác"]}
-          data={doneServices}
-          centeredColumns={[0, 1, 3]}
+          headers={["#", "Tên dịch vụ", "Người khám", "Thao tác"]}
+          data={mappedDoneServices}
+          onAction={onAction}
+          centeredColumns={[0, 3]}
         />
       </div>
     </>
