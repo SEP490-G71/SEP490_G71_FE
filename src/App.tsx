@@ -33,6 +33,7 @@ import MedicalExaminationPage from "./pages/Admin/Examination Process/MedicalExa
 import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientManagementPage";
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
+import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -53,6 +54,10 @@ export default function App() {
             <Route path="/admin/staffs" element={<StaffsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/patients" element={<PatientManagementPage />} />
+            <Route
+              path="/admin/view-medical-records"
+              element={<UserViewMedicalExaminationPage />}
+            />
             <Route
               path="/admin/medical-records"
               element={<MedicalRecordPage />}

@@ -56,6 +56,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaFileMedical />,
       path: "/admin/medical-records",
     },
+    {
+      name: "Xem Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/view-medical-records",
+    },
   ],
   staff: [
     {
