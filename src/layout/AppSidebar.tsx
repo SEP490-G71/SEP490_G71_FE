@@ -5,6 +5,12 @@ import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import {
+  IconBusinessplan,
+  IconCashRegister,
+  IconClipboardList,
+  IconHeartRateMonitor,
+} from "@tabler/icons-react";
 
 type NavItem = {
   name: string;
@@ -65,24 +71,29 @@ const allNavItems: NavItem[] = [
     path: "/admin/departments",
   },
   {
+    name: "Quản lý hoá đơn ",
+    icon: <IconBusinessplan />,
+    path: "/admin/invoice",
+  },
+  {
     name: "Đăng ký khám",
     icon: <AiOutlineApartment />,
     path: "/admin/register-medical-examination",
   },
   {
     name: "Bệnh án",
-    icon: <AiOutlineApartment />,
+    icon: <IconClipboardList />,
     path: "/admin/medical-examination",
   },
 
   {
     name: "Thu chi",
-    icon: <AiOutlineApartment />,
+    icon: <IconCashRegister />,
     path: "/admin/medical-examination/billing",
   },
   {
     name: "Khám bệnh",
-    icon: <AiOutlineApartment />,
+    icon: <IconHeartRateMonitor />,
     subItems: [
       {
         name: "Khám lâm sàng",

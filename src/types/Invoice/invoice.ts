@@ -41,6 +41,7 @@ export interface InvoiceResponse {
   patientName: string;
   amount: number;
   paymentType: string | null;
+  confirmedBy:string | null;
   status: InvoiceStatus;
   confirmedAt: string | null;
   createdAt: string | null;

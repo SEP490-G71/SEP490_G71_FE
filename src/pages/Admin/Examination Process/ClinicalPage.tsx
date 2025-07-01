@@ -11,6 +11,7 @@ import { ServiceItem } from "../../../types/ServiceItem";
 import { mapInvoiceItemsToServiceItems } from "../../../components/utils/mapInvoiceItemsToServiceRows";
 
 const TARGET_DEPARTMENT_NAME = "phòng lâm sàng";
+
 const ClinicalPage = () => {
   useEffect(() => {}, []);
   const [selectedService, setSelectedService] = useState<any | null>(null);

@@ -33,6 +33,8 @@ import MedicalExaminationPage from "./pages/Admin/Examination Process/MedicalExa
 import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
 import BillingPage from "./pages/Admin/Examination Process/BillingPage";
 import ClinicalPage from "./pages/Admin/Examination Process/ClinicalPage";
+import InvoicePage from "./pages/Admin/InvoiceManager/InvoicePage";
+
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -52,6 +54,7 @@ export default function App() {
             <Route path="/admin/permission" element={<PermissionPage />} />
             <Route path="/admin/staffs" element={<StaffsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
+            <Route path="/admin/invoice" element={<InvoicePage />} />
             <Route
               path="/admin/register-medical-examination"
               element={<RegisterMedicalExaminationPage />}

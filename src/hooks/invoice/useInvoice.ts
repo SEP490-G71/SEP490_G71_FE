@@ -1,136 +1,48 @@
-// import { useState } from "react";
-// import axiosInstance from "../../services/axiosInstance";
-// import { InvoiceDetail, InvoiceSummary } from "../../types/Invoice/invoice";
-
-// export interface InvoiceItemUpdate {
-//   serviceId: string;
-//   quantity: number;
-// }
-
-// export interface UpdateInvoiceRequest {
-//   invoiceId: string;
-//   staffId: string;
-//   services: InvoiceItemUpdate[];
-// }
-
-// export const useInvoice = () => {
-//   const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
-//   const [invoiceDetail, setInvoiceDetail] = useState<InvoiceDetail | null>(null);
-//   const [loadingList, setLoadingList] = useState(false);
-//   const [loadingDetail, setLoadingDetail] = useState(false);
-//   const [updating, setUpdating] = useState(false);
-// const [pagination, setPagination] = useState({
-//   pageNumber: 0,
-//   pageSize: 5,
-//   totalElements: 0,
-//   totalPages: 0,
-//   last: false,
-// });
-// const fetchInvoices = async (page = 0, size = 5) => {
-//   try {
-//     setLoadingList(true);
-//     const res = await axiosInstance.get(`/invoice?page=${page}&size=${size}&sortDir=asc`);
-//     const result = res.data?.result;
-
-//     const list = result?.content;
-//     setInvoices(Array.isArray(list) ? list : []);
-
-//     if (result) {
-//       setPagination({
-//         pageNumber: result.pageNumber,
-//         pageSize: result.pageSize,
-//         totalElements: result.totalElements,
-//         totalPages: result.totalPages,
-//         last: result.last,
-//       });
-//     }
-//   } catch (err) {
-//     console.error("❌ Lỗi khi lấy danh sách hóa đơn:", err);
-//   } finally {
-//     setLoadingList(false);
-//   }
-// };
-
-
-//   const fetchInvoiceDetail = async (invoiceId: string) => {
-//     try {
-//       setLoadingDetail(true);
-//       const res = await axiosInstance.get(`/invoice/${invoiceId}`);
-//          const detail = res.data?.result || null;
-//     console.log("🧾 Chi tiết hóa đơn:", detail);
-//       setInvoiceDetail(res.data?.result || null);
-     
-//     } catch (err) {
-//       console.error("❌ Lỗi khi lấy chi tiết hóa đơn:", err);
-//       setInvoiceDetail(null);
-//     } finally {
-//       setLoadingDetail(false);
-//     }
-//   };
-
-//   const updateInvoice = async (payload: UpdateInvoiceRequest) => {
-//     try {
-//       setUpdating(true);
-//       const res = await axiosInstance.put("/invoice", payload);
-//       await fetchInvoiceDetail(payload.invoiceId);
-//       return res.data;
-//     } catch (error) {
-//       console.error("❌ Lỗi khi cập nhật hóa đơn:", error);
-//       throw error;
-//     } finally {
-//       setUpdating(false);
-//     }
-//   };
-
-//   return {
-//     invoices,
-//     invoiceDetail,
-//     loadingList,
-//     loadingDetail,
-//     updating,
-//     fetchInvoices,
-//     fetchInvoiceDetail,
-//     pagination,
-//     updateInvoice,
-//   };
-// };
-
-
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { InvoiceDetail, InvoiceSummary } from "../../types/Invoice/invoice";
+import { InvoiceDetail, InvoiceResponse } from "../../types/Invoice/invoice";
 
 export interface InvoiceFilters {
-  status?: string;         // Ví dụ: "PAID", "UNPAID"
+  status?: string;
   staffId?: string;
   patientId?: string;
-  fromDate?: string;       // Format: "YYYY-MM-DD"
-  toDate?: string;         // Format: "YYYY-MM-DD"
+  invoiceCode?: string;
+  fromDate?: string; // format: YYYY-MM-DD
+  toDate?: string;
 }
 
 export const useFilteredInvoices = () => {
-  const [invoices, setInvoices] = useState<InvoiceSummary[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [invoiceDetail, setInvoiceDetail] = useState<InvoiceDetail | null>(null);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
   const [pagination, setPagination] = useState({
     pageNumber: 0,
-    pageSize: 5,
+    pageSize: 10,
     totalElements: 0,
     totalPages: 0,
     last: false,
   });
 
+  const [invoiceStats, setInvoiceStats] = useState({
+    totalInvoices: 0,
+    totalAmount: 0,
+    monthlyRevenue: 0,
+    validInvoices: 0,
+  });
+
   const fetchInvoices = async (
     filters: InvoiceFilters = {},
     page = 0,
-    size = 5,
+    size = 10,
     sortBy = "createdAt",
     sortDir = "desc"
   ) => {
     try {
       setLoadingList(true);
-      const params: any = {
+
+      const params = {
         ...filters,
         page,
         size,
@@ -139,19 +51,48 @@ export const useFilteredInvoices = () => {
       };
 
       const res = await axiosInstance.get("/invoice", { params });
-      const result = res.data?.result;
-      const list = result?.content;
-      setInvoices(Array.isArray(list) ? list : []);
+      const outerResult = res.data?.result;
+      const result = outerResult?.data;
 
-      if (result) {
+      if (!result || !Array.isArray(result.content)) {
+        console.error("❌ Không có dữ liệu hợp lệ từ API /invoice");
+        setInvoices([]);
         setPagination({
-          pageNumber: result.pageNumber,
-          pageSize: result.pageSize,
-          totalElements: result.totalElements,
-          totalPages: result.totalPages,
-          last: result.last,
+          pageNumber: 0,
+          pageSize: size,
+          totalElements: 0,
+          totalPages: 0,
+          last: true,
         });
+        return;
       }
+
+      const mappedInvoices: InvoiceResponse[] = result.content.map((item: any) => ({
+        invoiceId: item.invoiceId,
+        invoiceCode: item.invoiceCode ?? "---",
+        status: item.status ?? "UNKNOWN",
+        amount: item.amount ?? 0,
+        patientName: item.patientName?.split(" - ")[0] ?? "---",
+        confirmedBy: item.confirmedBy ?? "---",
+        createdAt: item.createdAt ? new Date(item.createdAt) : null,
+      }));
+
+      setInvoices(mappedInvoices);
+
+      setPagination({
+        pageNumber: result.pageNumber ?? 0,
+        pageSize: result.pageSize ?? size,
+        totalElements: result.totalElements ?? 0,
+        totalPages: result.totalPages ?? 1,
+        last: result.last ?? true,
+      });
+
+      setInvoiceStats({
+        totalInvoices: outerResult?.totalInvoices ?? 0,
+        totalAmount: outerResult?.totalAmount ?? 0,
+        monthlyRevenue: outerResult?.monthlyRevenue ?? 0,
+        validInvoices: outerResult?.validInvoices ?? 0,
+      });
     } catch (err) {
       console.error("❌ Lỗi khi lấy danh sách hóa đơn:", err);
     } finally {
@@ -163,7 +104,7 @@ export const useFilteredInvoices = () => {
     try {
       setLoadingDetail(true);
       const res = await axiosInstance.get(`/invoice/${invoiceId}`);
-      setInvoiceDetail(res.data?.result || null);
+      setInvoiceDetail(res.data?.result ?? null);
     } catch (err) {
       console.error("❌ Lỗi khi lấy chi tiết hóa đơn:", err);
       setInvoiceDetail(null);
@@ -178,7 +119,8 @@ export const useFilteredInvoices = () => {
     loadingList,
     loadingDetail,
     pagination,
-    fetchInvoices,        // 🎯 Hàm có thể truyền filters đa dạng
+    invoiceStats,
+    fetchInvoices,
     fetchInvoiceDetail,
   };
 };
