@@ -3,8 +3,10 @@ import CustomTable from "../../../components/common/CustomTable";
 import useMedicalRecord from "../../../hooks/Medical-Record/useMedicalRecord";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { MedicalRecord } from "../../../types/Admin/Medical-Record/MedicalRecord";
-import { Select, TextInput } from "@mantine/core";
+import { TextInput, Select, Button } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
+import { LuEye, LuDownload } from "react-icons/lu";
+import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
@@ -43,6 +45,8 @@ export const MedicalRecordPage = () => {
     toDate: null,
   });
 
+  const { options: patientOptions, searchPatients } = usePatientSearch();
+
   const formatLocalDateTime = (date: Date): string =>
     date
       .toLocaleString("sv-SE", {
@@ -50,8 +54,14 @@ export const MedicalRecordPage = () => {
       })
       .replace(" ", "T");
 
-  const { medicalRecords, totalItems, loading, fetchAllMedicalRecords } =
-    useMedicalRecord();
+  const {
+    medicalRecords,
+    totalItems,
+    loading,
+    fetchAllMedicalRecords,
+    handlePreview,
+    handleDownload,
+  } = useMedicalRecord();
 
   useEffect(() => {
     fetchAllMedicalRecords(page - 1, pageSize, sortDir, filters);
@@ -90,6 +100,33 @@ export const MedicalRecordPage = () => {
       label: "Ngày tạo",
       render: (row) => new Date(row.createdAt).toLocaleString(),
     }),
+    createColumn<MedicalRecord>({
+      key: "actions",
+      label: "Thao tác",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button
+            size="xs"
+            variant="light"
+            color="blue"
+            onClick={() => handlePreview(row.id)}
+            className="p-1 w-8 h-8 flex items-center justify-center"
+          >
+            <LuEye size={16} />
+          </Button>
+
+          <Button
+            size="xs"
+            variant="light"
+            color="green"
+            onClick={() => handleDownload(row.id)}
+            className="p-1 w-8 h-8 flex items-center justify-center"
+          >
+            <LuDownload size={16} />
+          </Button>
+        </div>
+      ),
+    }),
   ];
 
   return (
@@ -121,6 +158,24 @@ export const MedicalRecordPage = () => {
         />
 
         <Select
+          searchable
+          placeholder="Tìm tên bệnh nhân"
+          data={patientOptions}
+          onSearchChange={(query) => searchPatients(query)}
+          onChange={(value) => {
+            setFilterInput({ ...filterInput, patientId: value || "" });
+            setFilters((prev) => ({
+              ...prev,
+              patientId: value || "",
+            }));
+            setPage(1);
+          }}
+          value={filterInput.patientId}
+          className="flex-1 min-w-[250px]"
+          clearable
+        />
+
+        <Select
           data={[
             { value: "", label: "Tất cả trạng thái" },
             { value: "TESTING", label: "Đang xét nghiệm" },
@@ -143,7 +198,6 @@ export const MedicalRecordPage = () => {
           }}
           className="flex-1 min-w-[200px]"
         />
-
         <DatePickerInput
           placeholder="Từ ngày"
           value={filterInput.fromDate}
@@ -160,7 +214,6 @@ export const MedicalRecordPage = () => {
             setPage(1);
           }}
         />
-
         <DatePickerInput
           placeholder="Đến ngày"
           value={filterInput.toDate}

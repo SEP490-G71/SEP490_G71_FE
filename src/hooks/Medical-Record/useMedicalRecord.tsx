@@ -43,11 +43,49 @@ const useMedicalRecord = () => {
     }
   };
 
+  const handlePreview = async (id: string) => {
+    try {
+      const res = await axiosInstance.get(`/medical-record/${id}/preview`, {
+        responseType: "blob",
+      });
+
+      const url = URL.createObjectURL(res.data);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Preview lỗi", error);
+      toast.error("Không thể xem trước hồ sơ bệnh án");
+    }
+  };
+
+  const handleDownload = async (id: string) => {
+    try {
+      const res = await axiosInstance.get(`/medical-record/${id}/download`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `medical-record-${id}.docx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Download lỗi", error);
+      toast.error("Không thể tải hồ sơ bệnh án");
+    }
+  };
+
   return {
     medicalRecords,
     totalItems,
     loading,
     fetchAllMedicalRecords,
+    handlePreview,
+    handleDownload,
   };
 };
 
