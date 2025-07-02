@@ -43,7 +43,7 @@ export default function SignInClient() {
             <div className="space-y-6">
               <div>
                 <Label>
-                  Email <span className="text-error-500">*</span>{" "}
+                  Tên đăng nhập <span className="text-error-500">*</span>{" "}
                 </Label>
                 <Input
                   placeholder="info@gmail.com"

@@ -1,41 +1,33 @@
 export interface Patient {
   id: number;
-  maBN: string;
+  patientCode: string;
   maLichHen: string;
-  name: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   phone: string;
   dob: string;
   gender: string;
-  account: string;
-  address: string;
-  maKCB: string;
   stt: string;
   phongKham: string;
   ngayDangKy: string;
   email?: string;
-  cccd?: string;
-  username?: string;
-  password?: string;
-  confirmPassword?: string;
+  type?: string;
 }
 
 export interface PatientRequest {
   id: number;
-  maBN?: string;
+  patientCode?: string;
   maLichHen?: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   name: string;
   phone: string;
   dob: string;
   gender: string;
-  account?: string;
-  address: string;
-  maKCB?: string;
   stt?: string;
   phongKham?: string;
   ngayDangKy?: string;
   email: string;
-  cccd: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
 }

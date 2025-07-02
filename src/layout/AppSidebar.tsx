@@ -1,6 +1,9 @@
+// 🔁 File: src/components/AppSidebar.tsx
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
+import { FaUserPlus, FaFileMedical, FaUsers } from "react-icons/fa";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
@@ -11,6 +14,7 @@ import {
   IconClipboardList,
   IconHeartRateMonitor,
 } from "@tabler/icons-react";
+import { parseJwt } from "../../src/components/utils/jwt";
 
 type NavItem = {
   name: string;
@@ -19,141 +23,114 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const allNavItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Thống kê",
-    path: "/admin/dashboard",
-  },
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "/calendar",
-  // },
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Tables",
-  //   icon: <TableIcon />,
-  //   path: "/basic-tables",
-  // },
-  {
-    name: "Quản lý dịch vụ khám",
-    icon: <FaBriefcaseMedical />,
-    path: "/admin/medical-service",
-  },
-  {
-    name: "Quản lý role",
-    icon: <MdManageAccounts />,
-    path: "/admin/role",
-  },
-  {
-    name: "Quản lý permission",
-    icon: <MdManageAccounts />,
-    path: "/admin/permission",
-  },
-  {
-    name: "Quản lý nhân viên",
-    icon: <AiOutlineAudit />,
-    path: "/admin/staffs",
-  },
-  {
-    name: "Quản lý phòng ban",
-    icon: <AiOutlineApartment />,
-    path: "/admin/departments",
-  },
-  {
-    name: "Quản lý hoá đơn ",
-    icon: <IconBusinessplan />,
-    path: "/admin/invoice",
-  },
-  {
-    name: "Đăng ký khám",
-    icon: <AiOutlineApartment />,
-    path: "/admin/register-medical-examination",
-  },
-  {
-    name: "Bệnh án",
-    icon: <IconClipboardList />,
-    path: "/admin/medical-examination",
-  },
+const navItemsByRole: Record<string, NavItem[]> = {
+  admin: [
+    { icon: <GridIcon />, name: "Thống kê", path: "/admin/dashboard" },
+    {
+      name: "Quản lý dịch vụ khám",
+      icon: <FaBriefcaseMedical />,
+      path: "/admin/medical-service",
+    },
+    { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
+    {
+      name: "Quản lý permission",
+      icon: <MdManageAccounts />,
+      path: "/admin/permission",
+    },
+    {
+      name: "Quản lý nhân viên",
+      icon: <AiOutlineAudit />,
+      path: "/admin/staffs",
+    },
+    {
+      name: "Quản lý phòng ban",
+      icon: <AiOutlineApartment />,
+      path: "/admin/departments",
+    },
+    {
+      name: "Quản lý hoá đơn",
+      icon: <IconBusinessplan />,
+      path: "/admin/invoice",
+    },
+    {
+      name: "Đăng ký khám",
+      icon: <FaUserPlus />,
+      path: "/admin/register-medical-examination",
+    },
+    {
+      name: "Quản lý bệnh nhân",
+      icon: <FaUsers />,
+      path: "/admin/patients",
+    },
+    {
+      name: "Quản Lý Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/medical-records",
+    },
+    {
+      name: "Xem Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/view-medical-records",
+    },
+    {
+      name: "Thu chi",
+      icon: <IconCashRegister />,
+      path: "/admin/medical-examination/billing",
+    },
+    {
+      name: "Khám bệnh",
+      icon: <IconHeartRateMonitor />,
+      subItems: [
+        {
+          name: "Khám lâm sàng",
+          path: "/admin/medical-examination/clinical",
+        },
+        {
+          name: "Tai mũi họng",
+          path: "/admin/medical-examination/ent",
+        },
+      ],
+    },
+  ],
+  staff: [
+    {
+      name: "Đăng ký khám",
+      icon: <FaUserPlus />,
+      path: "/admin/register-medical-examination",
+    },
+  ],
+  user: [
+    {
+      name: "Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/medical-examination",
+    },
+  ],
+};
 
-  {
-    name: "Thu chi",
-    icon: <IconCashRegister />,
-    path: "/admin/medical-examination/billing",
-  },
-  {
-    name: "Khám bệnh",
-    icon: <IconHeartRateMonitor />,
-    subItems: [
-      {
-        name: "Khám lâm sàng",
-        path: "/admin/medical-examination/clinical",
-      },
-      {
-        name: "Tai mũi họng",
-        path: "/admin/medical-examination/ent",
-      },
-    ],
-  },
-
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Blank Page", path: "/blank", pro: false },
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <PieChartIcon />,
-  //   name: "Charts",
-  //   subItems: [
-  //     { name: "Line Chart", path: "/line-chart", pro: false },
-  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <BoxCubeIcon />,
-  //   name: "UI Elements",
-  //   subItems: [
-  //     { name: "Alerts", path: "/alerts", pro: false },
-  //     { name: "Avatar", path: "/avatars", pro: false },
-  //     { name: "Badge", path: "/badge", pro: false },
-  //     { name: "Buttons", path: "/buttons", pro: false },
-  //     { name: "Images", path: "/images", pro: false },
-  //     { name: "Videos", path: "/videos", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <PlugInIcon />,
-  //   name: "Authentication",
-  //   subItems: [
-  //     { name: "Sign In", path: "/signin", pro: false },
-  //     { name: "Sign Up", path: "/signup", pro: false },
-  //   ],
-  // },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
-
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // ✅ Xác định role từ JWT
+  const token = localStorage.getItem("token");
+  let role = "user";
+  if (token) {
+    const payload = parseJwt(token);
+    if (payload?.scope === "ROLE_ADMIN") role = "admin";
+    else if (payload?.scope === "ROLE_STAFF") role = "staff";
+    else if (payload?.scope === "ROLE_USER") role = "user";
+  }
+
+  // ✅ Lấy danh sách menu theo role
+  const allNavItems = navItemsByRole[role] || [];
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -170,7 +147,7 @@ const AppSidebar: React.FC = () => {
       });
     });
     setOpenSubmenu(matchedIndex);
-  }, [location, isActive]);
+  }, [location, isActive, allNavItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -288,16 +265,15 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
-        }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 ${
+        isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
+          ? "w-[290px]"
+          : "w-[90px]"
+      } ${
+        isMobileOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
