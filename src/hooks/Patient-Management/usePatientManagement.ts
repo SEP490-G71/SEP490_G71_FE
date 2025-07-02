@@ -1,8 +1,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
-import { Patient } from "../../types/Admin/Patient-Management/PatientManagement";
-
+import { Patient } from "../../types/Patient/Patient";
 interface PatientFilters {
   name?: string;
   phone?: string;

@@ -8,6 +8,12 @@ import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import {
+  IconBusinessplan,
+  IconCashRegister,
+  IconClipboardList,
+  IconHeartRateMonitor,
+} from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
 
 type NavItem = {
@@ -42,14 +48,19 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/departments",
     },
     {
-      name: "Quản lý bệnh nhân",
-      icon: <FaUsers />,
-      path: "/admin/patients",
+      name: "Quản lý hoá đơn",
+      icon: <IconBusinessplan />,
+      path: "/admin/invoice",
     },
     {
       name: "Đăng ký khám",
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
+    },
+    {
+      name: "Quản lý bệnh nhân",
+      icon: <FaUsers />,
+      path: "/admin/patients",
     },
     {
       name: "Quản Lý Bệnh án",
@@ -60,6 +71,25 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Xem Bệnh án",
       icon: <FaFileMedical />,
       path: "/admin/view-medical-records",
+    },
+    {
+      name: "Thu chi",
+      icon: <IconCashRegister />,
+      path: "/admin/medical-examination/billing",
+    },
+    {
+      name: "Khám bệnh",
+      icon: <IconHeartRateMonitor />,
+      subItems: [
+        {
+          name: "Khám lâm sàng",
+          path: "/admin/medical-examination/clinical",
+        },
+        {
+          name: "Tai mũi họng",
+          path: "/admin/medical-examination/ent",
+        },
+      ],
     },
   ],
   staff: [
@@ -77,6 +107,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
   ],
 };
+
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();

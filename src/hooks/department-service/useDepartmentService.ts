@@ -30,7 +30,7 @@ const useDepartmentService = () => {
       },
     });
 
-    console.log("DEPARTMENT RESPONSE", res.data);
+  
 
     // Gán dữ liệu nếu đúng định dạng
     setDepartments(res.data.result.content);
@@ -78,6 +78,18 @@ const useDepartmentService = () => {
     }
   };
 
+  const fetchAllDepartmentsRaw = async (): Promise<DepartmentResponse[]> => {
+  try {
+    const res = await axiosInstance.get("/departments", {
+      params: { page: 0, size: 100, sortBy: "name", sortDir: "asc" },
+    });
+    return res.data.result.content || [];
+  } catch (error) {
+    console.error("Failed to fetch departments", error);
+    return [];
+  }
+};
+
   return {
     departments,
     totalItems,
@@ -86,6 +98,7 @@ const useDepartmentService = () => {
     setDepartments,
     fetchAllDepartments,
     fetchDepartmentById,
+    fetchAllDepartmentsRaw,
     handleDeleteDepartmentById,
   };
 };

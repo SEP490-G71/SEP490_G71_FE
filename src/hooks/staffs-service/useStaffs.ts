@@ -8,38 +8,51 @@ export const useStaffs = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchStaffs = async (
-    page: number = 0,
-    size: number = 5,
-    sortBy: string = "name",
-    sortDir: "asc" | "desc" = "asc",
-    filters?: {
-      name?: string;
-      // level?: string;
-      // specialty?: string;
-    }
-  ) => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get("/staffs", {
-        params: {
-          page,
-          size,
-          sortBy,
-          sortDir,
-          name: filters?.name,
-          // level: filters?.level,
-          // specialty: filters?.specialty,
-        },
-      });
-      setStaffs(res.data.result.content);
-      setTotalItems(res.data.result.totalElements);
-    } catch (error) {
-      console.error("Failed to fetch employees:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchStaffs = async (
+  //   page: number = 0,
+  //   size: number = 5,
+  //   sortBy: string = "name",
+  //   sortDir: "asc" | "desc" = "asc",
+  //   filters?: {
+  //     name?: string;
+  //     // level?: string;
+  //     // specialty?: string;
+  //   }
+  // ) => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await axiosInstance.get("/staffs", {
+  //       params: {
+  //         page,
+  //         size,
+  //         sortBy,
+  //         sortDir,
+  //         name: filters?.name,
+  //         // level: filters?.level,
+  //         // specialty: filters?.specialty,
+  //       },
+  //     });
+  //     setStaffs(res.data.result.content);
+  //     setTotalItems(res.data.result.totalElements);
+  //   } catch (error) {
+  //     console.error("Failed to fetch employees:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchStaffs = async () => {
+  setLoading(true);
+  try {
+    const res = await axiosInstance.get("/staffs/all"); // ✅ gọi endpoint mới
+    setStaffs(res.data.result); // hoặc res.data nếu không có .result
+    setTotalItems(res.data.result?.length ?? 0);
+  } catch (error) {
+    console.error("Failed to fetch employees:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchStaffsById = async (id: string) => {
     try {

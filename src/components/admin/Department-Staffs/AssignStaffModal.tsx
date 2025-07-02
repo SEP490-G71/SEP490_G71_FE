@@ -40,7 +40,6 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     AssignStaffMultiplePosition[]
   >([]);
 
-  const [staffToRemoveId, setStaffToRemoveId] = useState<string | null>(null);
   const [invalidStaffIds, setInvalidStaffIds] = useState<string[]>([]);
 
   const { assignStaffs, loading: assigning } = useAssignStaffsToDepartment();
@@ -51,7 +50,6 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
       const res = await axiosInstance.get(`/staffs/unassigned`);
       setStaffs(res.data.result || []);
       setSelectedStaffs([]);
-      setStaffToRemoveId(null);
       setInvalidStaffIds([]);
     } catch (error) {
       console.error("Lỗi khi tải nhân viên chưa gán:", error);
@@ -63,11 +61,9 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   const toggleSelection = (staffId: string) => {
     setSelectedStaffs((prev) => {
       const exists = prev.find((s) => s.staffId === staffId);
-      if (exists) {
-        return prev.filter((s) => s.staffId !== staffId);
-      } else {
-        return [...prev, { staffId, positions: [] }];
-      }
+      return exists
+        ? prev.filter((s) => s.staffId !== staffId)
+        : [...prev, { staffId, positions: [] }];
     });
   };
 
@@ -91,13 +87,15 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
       setInvalidStaffIds(invalidIds);
       const invalidNames = staffs
         .filter((s) => invalidIds.includes(s.id))
-        .map((s) => s.name)
+        .map((s) =>
+          [s.firstName, s.middleName, s.lastName].filter(Boolean).join(" ")
+        )
         .join(", ");
       toast.error(`Vui lòng chọn chức vụ cho: ${invalidNames}`);
       return;
     }
 
-    setInvalidStaffIds([]); // clear lỗi nếu hợp lệ
+    setInvalidStaffIds([]);
 
     const formatted: { staffId: string; position: keyof typeof Position }[] =
       [];
@@ -158,7 +156,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
             <thead style={{ backgroundColor: "#f9f9f9" }}>
               <tr>
                 <th style={{ textAlign: "left", padding: "8px" }}></th>
-                <th style={{ textAlign: "left", padding: "8px" }}>Họ tên</th>
+                <th style={{ textAlign: "left", padding: "8px" }}>Họ và tên</th>
                 <th style={{ textAlign: "left", padding: "8px" }}>Email</th>
                 <th style={{ textAlign: "left", padding: "8px" }}>Chức vụ</th>
               </tr>
@@ -189,7 +187,9 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
                       />
                     </td>
                     <td style={{ textAlign: "left", padding: "8px" }}>
-                      {staff.name}
+                      {[staff.firstName, staff.middleName, staff.lastName]
+                        .filter(Boolean)
+                        .join(" ")}
                     </td>
                     <td style={{ textAlign: "left", padding: "8px" }}>
                       {staff.email}

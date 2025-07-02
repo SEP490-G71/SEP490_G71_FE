@@ -24,7 +24,7 @@ const StaffsPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] = useState<keyof StaffsResponse>("name");
+  const [sortKey, setSortKey] = useState<keyof StaffsResponse>("firstName");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const [modalOpened, setModalOpened] = useState(false);
@@ -81,14 +81,17 @@ const StaffsPage = () => {
   ]);
 
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
-    name: res.name,
+    firstName: res.firstName,
+    middleName: res.middleName,
+    lastName: res.lastName,
+    fullName: res.fullName,
     email: res.email,
     phone: res.phone,
     gender: res.gender,
     dob: res.dob,
     level: res.level,
     specialty: res.specialty,
-    accountId: res.accountId,
+    //accountId: res.accountId,
   });
 
   const handleAdd = () => {
@@ -131,27 +134,38 @@ const StaffsPage = () => {
 
   const handleSubmit = async (data: StaffsRequest) => {
     try {
+      const normalizedData: StaffsRequest = {
+        ...data,
+        middleName: data.middleName ?? null,
+        dob:
+          typeof data.dob === "string"
+            ? data.dob
+            : new Date(data.dob).toISOString().split("T")[0],
+      };
+
       if (editingId) {
-        await axiosInstance.put(`/staffs/${editingId}`, data);
+        await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
         toast.success("Cập nhật thành công");
       } else {
-        await axiosInstance.post(`/staffs`, data);
+        await axiosInstance.post(`/staffs`, normalizedData);
         toast.success("Tạo nhân viên thành công");
       }
+
       fetchStaffs();
-    } catch {
+    } catch (err: any) {
+      console.error(" Submit staff error:", err.response?.data || err);
       toast.error("Lỗi khi lưu nhân viên");
     } finally {
       setModalOpened(false);
       setEditingId(null);
     }
   };
-
   const columns = [
     createColumn<StaffsResponse>({
-      key: "name",
-      label: "Họ tên",
-      sortable: true,
+      key: "fullName",
+      label: "Họ và tên",
+      render: (row) => row.fullName,
+      sortable: false,
     }),
     createColumn<StaffsResponse>({ key: "email", label: "Email" }),
     createColumn<StaffsResponse>({ key: "phone", label: "SĐT" }),

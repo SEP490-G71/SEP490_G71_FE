@@ -31,17 +31,20 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
 }) => {
   const form = useForm<StaffsRequest>({
     initialValues: {
-      name: "",
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      fullName: "",
       specialty: Specialty.OTHER,
       level: Level.INTERN,
       phone: "",
       email: "",
       gender: Gender.OTHER,
       dob: "",
-      accountId: undefined,
     },
     validate: {
-      name: (value) => validateName(value ?? ""),
+      firstName: (value) => validateName(value ?? ""),
+      lastName: (value) => validateName(value ?? ""),
       phone: (value) => validatePhone(value ?? ""),
       email: (value) => validateEmail(value ?? ""),
       dob: (value) => validateDob(value ?? ""),
@@ -78,25 +81,53 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         close: {
           color: "white",
         },
+        content: {
+          overflowY: "scroll",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        },
+        // ẩn scrollbar trong Chrome
+        inner: {
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        },
       }}
     >
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const isValid = form.validate();
-          if (!isValid.hasErrors) {
+          const { hasErrors } = form.validate();
+          if (!hasErrors) {
+            console.log("Form data:", form.values);
             onSubmit(form.values);
+            console.log("Form data2:", form.values);
             onClose();
           }
         }}
       >
-        <TextInput
-          label="Họ và tên"
-          placeholder="Nhập tên"
-          {...form.getInputProps("name")}
-          required
-          disabled={isViewMode}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <TextInput
+            label="Họ"
+            placeholder="Nhập họ"
+            {...form.getInputProps("firstName")}
+            required
+            disabled={isViewMode}
+          />
+          <TextInput
+            label="Tên đệm"
+            placeholder="Nhập tên đệm"
+            {...form.getInputProps("middleName")}
+            disabled={isViewMode}
+          />
+          <TextInput
+            label="Tên"
+            placeholder="Nhập tên"
+            {...form.getInputProps("lastName")}
+            required
+            disabled={isViewMode}
+          />
+        </div>
 
         <Select
           label="Chuyên môn"
@@ -162,7 +193,6 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           mt="sm"
           disabled={isViewMode}
         />
-
         {!isViewMode && (
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={onClose}>

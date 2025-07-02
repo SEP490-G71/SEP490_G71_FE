@@ -19,6 +19,7 @@ import { Position } from "../../../enums/Admin/Position";
 import AssignStaffModal from "../Department-Staffs/AssignStaffModal";
 import { DepartmentStaffResponse } from "../../../types/Admin/Department-Staffs/DepartmentStaffResponse ";
 import useRemoveStaffFromDepartment from "../../../hooks/department-Staffs/useRemoveStaffFromDepartment";
+import { IconSquareX } from "@tabler/icons-react";
 import {
   validateName,
   validateRoomNumber,
@@ -202,7 +203,6 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             required
             disabled={isViewMode}
           />
-
           {initialData && (
             <div className="mt-6">
               <Flex justify="space-between" align="center" mb="sm">
@@ -229,22 +229,33 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                   Không có nhân viên nào trong phòng này.
                 </Text>
               ) : (
-                <div style={{ padding: "0 24px" }}>
+                <div style={{ width: "100%" }}>
                   <Table
                     highlightOnHover
-                    verticalSpacing="sm"
-                    style={{
-                      borderSpacing: "0 12px",
-                      borderCollapse: "separate",
-                      fontSize: "14px",
-                      width: "100%",
-                    }}
+                    verticalSpacing={2}
+                    style={{ width: "100%" }}
                   >
                     <thead style={{ backgroundColor: "#f1f1f1" }}>
                       <tr>
-                        <th style={{ textAlign: "left" }}>Họ tên</th>
-                        <th style={{ textAlign: "left" }}>Chức vụ</th>
-                        <th style={{ textAlign: "left" }}>Thao tác</th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "4px 8px",
+                            paddingLeft: "40px",
+                          }}
+                        >
+                          Họ tên
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: "4px 8px",
+                            paddingLeft: "48px",
+                          }}
+                        >
+                          Chức vụ
+                        </th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -264,21 +275,42 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                           return acc;
                         }, {} as Record<string, { staffId: string; staffName: string; positions: string[] }>)
                       ).map((staff) => (
-                        <tr key={staff.staffId}>
-                          <td style={{ textAlign: "left" }}>
+                        <tr
+                          key={staff.staffId}
+                          style={{
+                            borderBottom: "1px solid #dee2e6",
+                          }}
+                        >
+                          <td
+                            style={{
+                              textAlign: "left",
+                              padding: "4px 8px",
+                              paddingLeft: "40px",
+                            }}
+                          >
                             {staff.staffName}
                           </td>
-                          <td style={{ textAlign: "left" }}>
+                          <td
+                            style={{
+                              textAlign: "left",
+                              padding: "4px 8px",
+                              paddingLeft: "48px",
+                            }}
+                          >
                             {staff.positions.join(", ")}
                           </td>
-                          <td style={{ textAlign: "left" }}>
+                          <td
+                            style={{ textAlign: "center", padding: "4px 8px" }}
+                          >
                             <Button
-                              variant="outline"
+                              size="sm"
+                              variant="subtle"
                               color="red"
-                              size="xs"
+                              px={0}
+                              style={{ height: "auto" }}
                               onClick={() => handleRemoveStaff(staff.staffId)}
                             >
-                              ×
+                              <IconSquareX size={24} />
                             </Button>
                           </td>
                         </tr>

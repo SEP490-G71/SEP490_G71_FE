@@ -2,9 +2,11 @@ export interface MedicalService {
   id: string;
   name: string;
   description: string;
-  department: Department;
   price: number;
   vat: number;
+  discount: number;
+  serviceCode: string; // <- thêm mới
+  department: Department;
 }
 
 export interface Department {

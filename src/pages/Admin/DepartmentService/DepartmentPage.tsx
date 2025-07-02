@@ -21,7 +21,7 @@ const DepartmentPage = () => {
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [sortKey, setSortKey] = useState<keyof DepartmentResponse>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 

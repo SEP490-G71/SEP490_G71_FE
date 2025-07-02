@@ -31,6 +31,10 @@ import StaffsPage from "./pages/Admin/StaffsService/StaffsPage";
 import DepartmentPage from "./pages/Admin/DepartmentService/DepartmentPage";
 import MedicalExaminationPage from "./pages/Admin/Examination Process/MedicalExaminationPage";
 import RegisterMedicalExaminationPage from "./pages/Admin/RegisterMedicalExamination/RegisterMedicalExaminationPage";
+import BillingPage from "./pages/Admin/Examination Process/BillingPage";
+import ClinicalPage from "./pages/Admin/Examination Process/ClinicalPage";
+import InvoicePage from "./pages/Admin/InvoiceManager/InvoicePage";
+
 import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientManagementPage";
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
@@ -53,6 +57,7 @@ export default function App() {
             <Route path="/admin/permission" element={<PermissionPage />} />
             <Route path="/admin/staffs" element={<StaffsPage />} />
             <Route path="/admin/departments" element={<DepartmentPage />} />
+            <Route path="/admin/invoice" element={<InvoicePage />} />
             <Route path="/admin/patients" element={<PatientManagementPage />} />
             <Route
               path="/admin/view-medical-records"
@@ -94,6 +99,16 @@ export default function App() {
             <Route
               path="/admin/medical-examination"
               element={<MedicalExaminationPage />}
+            />
+
+            <Route
+              path="/admin/medical-examination/billing"
+              element={<BillingPage />}
+            />
+
+            <Route
+              path="/admin/medical-examination/clinical"
+              element={<ClinicalPage />}
             />
           </Route>
 
