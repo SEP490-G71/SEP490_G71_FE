@@ -51,6 +51,16 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
     },
+    {
+      name: "Quản Lý Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/medical-records",
+    },
+    {
+      name: "Xem Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/view-medical-records",
+    },
   ],
   staff: [
     {
