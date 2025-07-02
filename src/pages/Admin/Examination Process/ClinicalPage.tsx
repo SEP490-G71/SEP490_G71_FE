@@ -6,6 +6,9 @@ import {
   Text,
   Loader,
   Pagination,
+  Select,
+  Group,
+  Title,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import FilterPanel from "../../../components/common/FilterSection";
@@ -25,15 +28,11 @@ const ClinicalPage = () => {
   const [isResultMode, setIsResultMode] = useState(false);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-
+  const [pageSize, setPageSize] = useState(10);
   const { records, loading, pagination, fetchMedicalRecords } =
     useMedicalRecordList();
 
-  const {
-    recordDetail,
-    loading: loadingDetail,
-    fetchMedicalRecordDetail,
-  } = useMedicalRecordDetail();
+  const { recordDetail, fetchMedicalRecordDetail } = useMedicalRecordDetail();
 
   useEffect(() => {
     fetchMedicalRecords({
@@ -47,7 +46,13 @@ const ClinicalPage = () => {
       fetchMedicalRecordDetail(selectedRecordId);
     }
   }, [selectedRecordId]);
-
+  useEffect(() => {
+    fetchMedicalRecords({
+      page: page - 1,
+      size: pageSize,
+      status: "TESTING",
+    });
+  }, [page, pageSize]);
   const handleSelectOrder = (order: MedicalRecordOrder) => {
     setSelectedOrder(order);
     setIsResultMode(true);
@@ -61,6 +66,9 @@ const ClinicalPage = () => {
   const handleSelectInfo = () => {
     setIsResultMode(false);
   };
+  const testingRecords = records.filter(
+    (record) => record.status === "TESTING"
+  );
 
   const pendingOrders =
     recordDetail?.orders.filter((order) => order.status !== "COMPLETED") ?? [];
@@ -72,96 +80,136 @@ const ClinicalPage = () => {
     <Grid>
       {/* Cột trái: Danh sách hồ sơ */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
-        <FilterPanel />
+        <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
+          <FilterPanel />
+        </Paper>
 
-        <Paper shadow="xs" p="md" radius="md" withBorder>
-          <ScrollArea offsetScrollbars scrollbarSize={8} h={300}>
-            <Table
-              withColumnBorders
-              highlightOnHover
-              style={{
-                minWidth: 700,
-                borderCollapse: "separate",
-                borderSpacing: "2px",
-              }}
-            >
-              <thead style={{ backgroundColor: "#dee2e6" }}>
-                <tr>
-                  <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                    Trạng thái
-                  </th>
-                  <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                    Mã hồ sơ
-                  </th>
-                  <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                    Tên bệnh nhân
-                  </th>
-                  <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                    Người kê đơn
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      style={{ textAlign: "center", padding: "12px" }}
-                    >
-                      <Loader size="sm" />
-                      <Text mt="sm">Đang tải dữ liệu...</Text>
-                    </td>
-                  </tr>
-                ) : records.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      style={{ textAlign: "center", padding: "12px" }}
-                    >
-                      Chưa có dữ liệu dịch vụ
-                    </td>
-                  </tr>
-                ) : (
-                  records.map((record) => (
-                    <tr
-                      key={record.id}
-                      onClick={() => setSelectedRecordId(record.id)}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor:
-                          selectedRecordId === record.id
-                            ? "#e7f5ff"
-                            : "transparent",
-                      }}
-                    >
-                      <td style={{ paddingLeft: "10px" }}>
-                        {MedicalRecordStatusMap[record.status] || record.status}
-                      </td>
-                      <td style={{ paddingLeft: "10px" }}>
-                        {record.medicalRecordCode}
-                      </td>
-                      <td style={{ paddingLeft: "10px" }}>
-                        {record.patientName}
-                      </td>
-                      <td style={{ paddingLeft: "10px" }}>
-                        {record.doctorName}
-                      </td>
+        <Paper shadow="xs" radius="md" p="md" withBorder>
+          <Title order={5} mb="md">
+            Danh sách hồ sơ TESTING
+          </Title>
+
+          {loading ? (
+            <Loader />
+          ) : (
+            <>
+              <ScrollArea offsetScrollbars scrollbarSize={8} h="auto">
+                <Table
+                  withColumnBorders
+                  highlightOnHover
+                  style={{
+                    minWidth: 700,
+                    borderCollapse: "separate",
+                    borderSpacing: "2px",
+                  }}
+                >
+                  <thead style={{ backgroundColor: "#dee2e6" }}>
+                    <tr>
+                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
+                        Trạng thái
+                      </th>
+                      <th style={{ textAlign: "center" }}>Mã hồ sơ</th>
+                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
+                        Tên bệnh nhân
+                      </th>
+                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
+                        Người kê đơn
+                      </th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </ScrollArea>
+                  </thead>
 
-          <Pagination
-            mt="md"
-            value={page}
-            onChange={setPage}
-            total={pagination.totalPages}
-            size="sm"
-            withControls
-            withEdges
-          />
+                  <tbody>
+                    {testingRecords.map((record, index) => {
+                      const isSelected = selectedRecordId === record.id;
+                      return (
+                        <tr
+                          key={record.id}
+                          onClick={() => setSelectedRecordId(record.id)}
+                          style={{
+                            cursor: "pointer",
+                            backgroundColor: isSelected
+                              ? "#cce5ff"
+                              : index % 2 === 0
+                              ? "#f8f9fa"
+                              : "#e9ecef",
+                            borderBottom: "1px solid #adb5bd",
+                          }}
+                        >
+                          <td
+                            style={{
+                              paddingLeft: "10px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {MedicalRecordStatusMap[record.status] ||
+                              record.status}
+                          </td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {record.medicalRecordCode}
+                          </td>
+                          <td
+                            style={{
+                              paddingLeft: "10px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {record.patientName}
+                          </td>
+                          <td
+                            style={{
+                              paddingLeft: "10px",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {record.doctorName}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </ScrollArea>
+
+              {/* Pagination + Info */}
+              <Group justify="space-between" mt="sm">
+                <Text size="sm">
+                  {testingRecords.length > 0
+                    ? `${(page - 1) * pageSize + 1}–${
+                        (page - 1) * pageSize + testingRecords.length
+                      } của ${pagination.totalElements}`
+                    : "Không có hồ sơ TESTING"}
+                </Text>
+
+                <Group>
+                  <Select
+                    data={["5", "10", "20"]}
+                    value={pageSize.toString()}
+                    onChange={(value) => {
+                      if (value) {
+                        setPageSize(parseInt(value));
+                        setPage(1);
+                      }
+                    }}
+                    w={100}
+                    variant="filled"
+                    size="xs"
+                  />
+
+                  <Pagination
+                    total={pagination.totalPages}
+                    value={page}
+                    onChange={setPage}
+                    size="sm"
+                  />
+                </Group>
+              </Group>
+            </>
+          )}
         </Paper>
       </Grid.Col>
 

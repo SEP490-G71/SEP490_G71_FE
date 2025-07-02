@@ -9,6 +9,7 @@ export interface MedicalRecordFilter {
   toDate?: string;
   page?: number;
   size?: number;
+   status?: string;
 }
 
 const useMedicalRecordList = () => {
@@ -31,6 +32,7 @@ const useMedicalRecordList = () => {
         size: filters.size ?? 50,
         fromDate: filters.fromDate,
         toDate: filters.toDate,
+        status:filters.status,
       };
 
       const res = await axiosInstance.get("/medical-record", { params });

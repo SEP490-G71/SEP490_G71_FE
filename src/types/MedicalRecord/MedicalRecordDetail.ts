@@ -3,7 +3,7 @@ export interface MedicalRecordOrder {
   serviceName: string;
   status: string;
   createdBy: string;
-  results: any[]; // Có thể khai báo rõ kiểu nếu biết structure
+  results: any[]; 
 }
 
 export interface MedicalRecordDetail {

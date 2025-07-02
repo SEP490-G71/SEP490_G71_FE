@@ -26,7 +26,11 @@ import ServiceTable from "../../../components/medical-examination/MedicalService
 import { ServiceRow } from "../../../types/serviceRow";
 import { markInvoicePending } from "../../../hooks/invoice/payment/invoicePayment";
 import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
-import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
+import {
+  InvoiceStatus,
+  InvoiceStatusMap,
+} from "../../../enums/InvoiceStatus/InvoiceStatus";
+import { toast } from "react-toastify";
 
 const BillingPage = () => {
   const {
@@ -92,10 +96,10 @@ const BillingPage = () => {
   }, [invoiceDetail]);
 
   const [page, setPage] = useState(1);
-
+  const [pageSize, setPageSize] = useState(5);
   useEffect(() => {
-    fetchInvoices({}, page - 1, 5);
-  }, [page]);
+    fetchInvoices({ status: InvoiceStatus.UNPAID }, page - 1, pageSize);
+  }, [page, pageSize]);
 
   const rowsFromInvoice: ServiceRow[] =
     invoiceDetail?.items.map((item, index) => ({
@@ -109,6 +113,7 @@ const BillingPage = () => {
       quantity: item.quantity,
       total: item.total,
     })) ?? [];
+
   const handleSavePendingInvoice = async () => {
     if (!invoiceDetail) return;
 
@@ -118,7 +123,14 @@ const BillingPage = () => {
         editableInvoiceDetail,
         fetchInvoiceDetail
       );
-      alert("✅ Hóa đơn đã được lưu ở trạng thái Đang xử lý");
+
+      toast.success("Hóa đơn đã được thanh toán");
+
+      // Load lại danh sách
+      fetchInvoices({ status: InvoiceStatus.UNPAID }, page - 1, pageSize);
+
+      // Reset lựa chọn nếu muốn
+      setSelectedInvoiceId(null);
     } catch (error: any) {
       const messageMap: Record<string, string> = {
         MISSING_STAFF_ID: "❗ Vui lòng chọn người thu trước",
@@ -129,9 +141,10 @@ const BillingPage = () => {
       const rawMessage = error?.message || "❗ Đã có lỗi xảy ra";
       const message = messageMap[rawMessage] || rawMessage;
 
-      alert(message);
+      toast.error(message);
     }
   };
+
   const { previewInvoice } = usePreviewInvoice();
   return (
     <Grid>
@@ -230,18 +243,23 @@ const BillingPage = () => {
                   {invoices.length > 0
                     ? `${(page - 1) * 5 + 1}–${
                         (page - 1) * 5 + invoices.length
-                      } của ${pagination.totalElements}`
-                    : "Không có kết quả"}
+                      }`
+                    : "Không có hóa đơn chưa thanh toán"}
                 </Text>
 
                 <Group>
                   <Select
                     data={["5", "10", "20"]}
-                    defaultValue="5"
+                    value={pageSize.toString()} // 👈 dùng state thật sự
+                    onChange={(value) => {
+                      if (value) {
+                        setPageSize(Number(value)); // cập nhật pageSize
+                        setPage(1); // reset về trang đầu khi thay đổi
+                      }
+                    }}
                     w={100}
                     variant="filled"
                     size="xs"
-                    disabled
                   />
                   <Pagination
                     total={pagination.totalPages}
@@ -271,7 +289,7 @@ const BillingPage = () => {
               <Button
                 variant="outline"
                 size="md"
-                color="blue"
+                color="red"
                 onClick={handleSavePendingInvoice}
                 disabled={!editableInvoiceDetail.confirmedBy}
                 title={
@@ -279,15 +297,6 @@ const BillingPage = () => {
                     ? "Vui lòng chọn người thu trước"
                     : ""
                 }
-              >
-                Lưu hóa đơn
-              </Button>
-              <Button
-                color="red"
-                variant="filled"
-                size="md"
-                // onClick={handleConfirmPayment}
-                // disabled={invoiceDetail.status !== "PENDING"}
               >
                 Thanh toán
               </Button>
