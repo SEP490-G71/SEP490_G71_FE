@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
-import { FaUserPlus, FaFileMedical, FaUsers } from "react-icons/fa";
+import { FaUserPlus, FaFileMedical, FaUsers, FaClock } from "react-icons/fa";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
@@ -66,7 +66,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
     {
       name: "Xem Hàng Chờ",
-      icon: <FaFileMedical />,
+      icon: <FaClock />,
       path: "/admin/view-medical-records",
     },
     {
