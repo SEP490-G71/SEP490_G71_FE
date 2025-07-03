@@ -11,6 +11,7 @@ import { usePatientManagement } from "../../../hooks/Patient-Management/usePatie
 import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
+import { normalizePatient } from "../../../types/Admin/Patient-Management/patientUtils";
 
 export const PatientManagementPage = () => {
   const {
@@ -50,18 +51,18 @@ export const PatientManagementPage = () => {
   };
 
   const handleView = async (row: Patient) => {
-    const patient = await fetchPatientById(row.id);
-    if (patient) {
-      setSelectedPatient(patient);
+    const rawPatient = await fetchPatientById(row.id);
+    if (rawPatient) {
+      setSelectedPatient(normalizePatient(rawPatient));
       setIsViewMode(true);
       setModalOpened(true);
     }
   };
 
   const handleEdit = async (row: Patient) => {
-    const patient = await fetchPatientById(row.id);
-    if (patient) {
-      setSelectedPatient(patient);
+    const rawPatient = await fetchPatientById(row.id);
+    if (rawPatient) {
+      setSelectedPatient(normalizePatient(rawPatient));
       setIsViewMode(false);
       setModalOpened(true);
     }

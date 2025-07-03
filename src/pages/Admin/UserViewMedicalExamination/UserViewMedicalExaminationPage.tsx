@@ -21,6 +21,10 @@ const statusColor = (status: string): string => {
   }
 };
 
+const statusTextColor = (_status: string): string => {
+  return "#000"; // chữ đen cho dễ đọc trên nền nhạt
+};
+
 const statusLabel = (status: string): string => {
   switch (status) {
     case "WAITING":
@@ -56,9 +60,7 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     key: "status",
     label: "Trạng thái",
     render: (row) => (
-      <span style={{ color: statusColor(row.status), fontWeight: 600 }}>
-        {statusLabel(row.status)}
-      </span>
+      <span style={{ fontWeight: 600 }}>{statusLabel(row.status)}</span>
     ),
   },
 ];
@@ -158,6 +160,10 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                   totalItems={patients.length}
                   onPageChange={() => {}}
                   showActions={false}
+                  getRowStyle={(row) => ({
+                    backgroundColor: statusColor(row.status),
+                    color: statusTextColor(row.status),
+                  })}
                 />
               </div>
             </div>

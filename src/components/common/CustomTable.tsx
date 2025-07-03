@@ -29,6 +29,7 @@ interface CustomTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   showActions?: boolean;
+  getRowStyle?: (row: T) => React.CSSProperties;
 }
 
 function CustomTable<T>({
@@ -49,6 +50,7 @@ function CustomTable<T>({
   onEdit,
   onDelete,
   showActions = true,
+  getRowStyle,
 }: CustomTableProps<T>) {
   const totalPages = useMemo(
     () => Math.ceil(totalItems / pageSize),
@@ -75,7 +77,7 @@ function CustomTable<T>({
                 <th
                   key={String(col.key)}
                   className="px-5 py-3 cursor-pointer select-none whitespace-nowrap"
-                  onClick={() => col.sortable && handleSort(col.key)}
+                  onClick={() => col.sortable && handleSort(col.key as keyof T)}
                 >
                   <div className="flex items-center gap-1">
                     {col.label}
@@ -123,7 +125,8 @@ function CustomTable<T>({
               data.map((row, idx) => (
                 <tr
                   key={idx}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="transition-colors"
+                  style={getRowStyle ? getRowStyle(row) : {}}
                 >
                   {columns.map((col) => (
                     <td
@@ -132,7 +135,7 @@ function CustomTable<T>({
                     >
                       {col.render
                         ? col.render(row)
-                        : (row[col.key] as React.ReactNode)}
+                        : (row[col.key as keyof T] as React.ReactNode)}
                     </td>
                   ))}
                   {showActions && (

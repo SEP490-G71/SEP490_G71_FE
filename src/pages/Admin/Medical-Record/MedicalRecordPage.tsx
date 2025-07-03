@@ -202,6 +202,7 @@ export const MedicalRecordPage = () => {
           placeholder="Từ ngày"
           value={filterInput.fromDate}
           valueFormat="DD/MM/YYYY"
+          maxDate={new Date()}
           onChange={(value) => {
             const date = value ? new Date(value) : null;
             if (date) date.setHours(0, 0, 0, 0);

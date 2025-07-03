@@ -68,12 +68,14 @@ export const useRegisterMedicalExamination = () => {
   const queuePatient = async (
     patientId: string,
     type: string = "CONSULTATION",
+    registeredTime: string,
     onSuccess?: () => void
   ) => {
     try {
       await axiosInstance.post("/queue-patients", {
         patientId,
         type,
+        registeredTime,
       });
       toast.success("Đăng ký khám thành công");
 

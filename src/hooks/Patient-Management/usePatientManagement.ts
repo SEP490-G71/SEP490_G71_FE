@@ -1,7 +1,9 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
-import { Patient } from "../../types/Patient/Patient";
+import { Patient } from "../../types/Admin/Patient-Management/PatientManagement";
+import { normalizePatient } from "../../types/Admin/Patient-Management/patientUtils";
+
 interface PatientFilters {
   name?: string;
   phone?: string;
@@ -27,10 +29,15 @@ export const usePatientManagement = () => {
           ...filters,
         },
       });
+
       const result = res.data.result;
-      setPatients(result.content || result);
-      setTotalItems(result.totalElements || result.length || 0);
-      return result.totalElements || result.length || 0;
+      const items = result.content || result;
+
+      setPatients(items.map(normalizePatient));
+
+      const total = result.totalElements || result.length || 0;
+      setTotalItems(total);
+      return total;
     } catch (err) {
       toast.error("Failed to fetch patients");
       return 0;
