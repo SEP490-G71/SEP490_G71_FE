@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
-import { Input, Select } from "@mantine/core";
-import { toast } from "react-toastify";
+import { Button, Input, Select } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
-
+import { LuEye, LuDownload } from "react-icons/lu";
 import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { InvoiceResponse } from "../../../types/Invoice/invoice";
-import { DatePickerInput } from "@mantine/dates";
 import EcommerceMetrics from "../../../components/ecommerce/EcommerceMetrics";
 import { useFilteredInvoices } from "../../../hooks/invoice/useInvoice";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import { useInvoiceStatistics } from "../../../hooks/invoice/useInvoiceStatistics";
 import { useExportInvoicesExcel } from "../../../hooks/invoice/useExportInvoicesExcel";
+import { useDownloadInvoiceById } from "../../../hooks/invoice/useDownloadInvoiceById";
+
 import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
+import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
 
 const InvoicePage = () => {
   const [filterStatus, setFilterStatus] = useState("");
@@ -26,8 +28,11 @@ const InvoicePage = () => {
   const [inputPatient, setInputPatient] = useState("");
   const [filterCode, setFilterCode] = useState("");
   const [filterPatient, setFilterPatient] = useState("");
+
   const { stats, fetchInvoiceStats } = useInvoiceStatistics();
   const { exportInvoicesExcel } = useExportInvoicesExcel();
+  const { downloadInvoice } = useDownloadInvoiceById();
+  const { previewInvoice } = usePreviewInvoice();
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
 
@@ -59,6 +64,7 @@ const InvoicePage = () => {
     filterToDate,
     filterPatient,
   ]);
+
   useEffect(() => {
     fetchInvoiceStats();
   }, []);
@@ -78,9 +84,8 @@ const InvoicePage = () => {
       key: "status",
       label: "Trạng thái",
       render: (row) =>
-        InvoiceStatusMap[
-          row.status as unknown as keyof typeof InvoiceStatusMap
-        ] ?? "Không xác định",
+        InvoiceStatusMap[row.status as keyof typeof InvoiceStatusMap] ??
+        "Không xác định",
     }),
     createColumn<InvoiceResponse>({
       key: "invoiceCode",
@@ -91,7 +96,10 @@ const InvoicePage = () => {
       key: "patientName",
       label: "Tên bệnh nhân",
     }),
-    createColumn<InvoiceResponse>({ key: "confirmedBy", label: "Người thu" }),
+    createColumn<InvoiceResponse>({
+      key: "confirmedBy",
+      label: "Người thu",
+    }),
     createColumn<InvoiceResponse>({
       key: "createdAt",
       label: "Ngày tạo",
@@ -100,7 +108,40 @@ const InvoicePage = () => {
         return date.isValid() ? date.format("DD/MM/YYYY HH:mm") : "---";
       },
     }),
-    createColumn<InvoiceResponse>({ key: "amount", label: "Đơn giá" }),
+    createColumn<InvoiceResponse>({
+      key: "total",
+      label: "Đơn giá",
+      render: (row) => row.total?.toLocaleString("vi-VN"),
+    }),
+    createColumn<InvoiceResponse>({
+      key: "actions",
+      label: "Thao tác",
+      render: (row) => (
+        <div className="flex gap-2">
+          <Button
+            size="xs"
+            variant="light"
+            color="blue"
+            onClick={() => previewInvoice(row.invoiceId)}
+            className="p-1 w-8 h-8 flex items-center justify-center"
+            title="Xem trước"
+          >
+            <LuEye size={16} />
+          </Button>
+
+          <Button
+            size="xs"
+            variant="light"
+            color="green"
+            onClick={() => downloadInvoice(row.invoiceId)}
+            className="p-1 w-8 h-8 flex items-center justify-center"
+            title="Tải PDF"
+          >
+            <LuDownload size={16} />
+          </Button>
+        </div>
+      ),
+    }),
   ];
 
   return (
@@ -169,6 +210,7 @@ const InvoicePage = () => {
             styles={{ input: { height: 40 } }}
           />
         </FloatingLabelWrapper>
+
         <FloatingLabelWrapper label="Từ ngày">
           <DatePickerInput
             placeholder="Từ ngày"
@@ -230,13 +272,12 @@ const InvoicePage = () => {
           setPageSize(newSize);
           setPage(1);
         }}
-        onSortChange={(key, direction) => {
+        onSortChange={(_, direction) => {
           setSortDirection(direction);
         }}
         sortDirection={sortDirection}
         loading={loadingList}
-        onView={() => toast.info("Tính năng cập nhật chưa bật")}
-        onDelete={() => toast.info("Tính năng xoá chưa bật")}
+        showActions={false}
       />
     </>
   );

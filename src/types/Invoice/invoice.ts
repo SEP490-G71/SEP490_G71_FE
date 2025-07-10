@@ -39,9 +39,14 @@ export interface InvoiceResponse {
   invoiceId: string;
   invoiceCode: string;
   patientName: string;
-  amount: number;
+  amount: number; // = total
+  total: number;
+  discountTotal: number | null;
+  originalTotal: number | null;
+  vatTotal: number | null;
   paymentType: string | null;
-  confirmedBy:string | null;
+  confirmedBy: string | null;
+  description: string | null;
   status: InvoiceStatus;
   confirmedAt: string | null;
   createdAt: string | null;

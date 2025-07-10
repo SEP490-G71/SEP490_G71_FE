@@ -11,7 +11,6 @@ import { useSidebar } from "../context/SidebarContext";
 import {
   IconBusinessplan,
   IconCashRegister,
-  IconClipboardList,
   IconHeartRateMonitor,
 } from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
@@ -57,6 +56,12 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
     },
+    {
+      name: "khám lâm sàng",
+      icon: <FaUserPlus />,
+      path: "/admin/medical-examination",
+    },
+
     {
       name: "Quản lý bệnh nhân",
       icon: <FaUsers />,
@@ -107,7 +112,6 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
   ],
 };
-
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();

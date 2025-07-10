@@ -47,7 +47,7 @@ const BillingPage = () => {
     null
   );
 
-  const [viewModalOpened, setViewModalOpened] = useState(false);
+  //const [viewModalOpened, setViewModalOpened] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
@@ -250,11 +250,11 @@ const BillingPage = () => {
                 <Group>
                   <Select
                     data={["5", "10", "20"]}
-                    value={pageSize.toString()} // 👈 dùng state thật sự
+                    value={pageSize.toString()}
                     onChange={(value) => {
                       if (value) {
-                        setPageSize(Number(value)); // cập nhật pageSize
-                        setPage(1); // reset về trang đầu khi thay đổi
+                        setPageSize(Number(value));
+                        setPage(1);
                       }
                     }}
                     w={100}
@@ -437,12 +437,12 @@ const BillingPage = () => {
                     xem trước
                   </Button>
                   <Button color="cyan" size="xs">
-                    in pdf
+                    tải xuống
                   </Button>
                   <Button
                     color="cyan"
                     size="xs"
-                    onClick={() => setViewModalOpened(true)}
+                    // onClick={() => setViewModalOpened(true)}
                     disabled={!editableInvoiceDetail.confirmedBy}
                     title={
                       !editableInvoiceDetail.confirmedBy

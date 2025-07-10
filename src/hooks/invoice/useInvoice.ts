@@ -7,8 +7,9 @@ export interface InvoiceFilters {
   staffId?: string;
   patientId?: string;
   invoiceCode?: string;
-  fromDate?: string; // format: YYYY-MM-DD
+  fromDate?: string; 
   toDate?: string;
+  
 }
 
 export const useFilteredInvoices = () => {
@@ -67,15 +68,22 @@ export const useFilteredInvoices = () => {
         return;
       }
 
-      const mappedInvoices: InvoiceResponse[] = result.content.map((item: any) => ({
-        invoiceId: item.invoiceId,
-        invoiceCode: item.invoiceCode ?? "---",
-        status: item.status ?? "UNKNOWN",
-        amount: item.amount ?? 0,
-        patientName: item.patientName?.split(" - ")[0] ?? "---",
-        confirmedBy: item.confirmedBy ?? "---",
-        createdAt: item.createdAt ? new Date(item.createdAt) : null,
-      }));
+  const mappedInvoices: InvoiceResponse[] = result.content.map((item: any) => ({
+  invoiceId: item.invoiceId,
+  invoiceCode: item.invoiceCode ?? "---",
+  status: item.status ?? "UNKNOWN",
+  total: item.total ?? 0,                         
+  amount: item.total ?? 0,                       
+  discountTotal: item.discountTotal ?? null,
+  originalTotal: item.originalTotal ?? null,
+  vatTotal: item.vatTotal ?? null,
+  paymentType: item.paymentType ?? null,
+  patientName: item.patientName?.split(" - ")[0] ?? "---",
+  confirmedBy: item.confirmedBy ?? "---",
+  confirmedAt: item.confirmedAt ?? null,
+  createdAt: item.createdAt ? new Date(item.createdAt) : null,
+  description: item.description ?? null,
+}));
 
       setInvoices(mappedInvoices);
 

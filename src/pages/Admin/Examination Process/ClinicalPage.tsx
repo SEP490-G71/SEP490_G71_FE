@@ -227,7 +227,7 @@ const ClinicalPage = () => {
 
         {selectedOrder && isResultMode ? (
           <ServiceResultPanel
-            resultId={selectedOrder.id}
+            medicalOrderId={selectedOrder.id}
             serviceName={selectedOrder.serviceName}
             onSubmit={(result) => {
               console.log("🧾 Kết quả lưu:", result);

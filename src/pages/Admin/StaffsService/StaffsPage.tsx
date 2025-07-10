@@ -90,7 +90,7 @@ const StaffsPage = () => {
     gender: res.gender,
     dob: res.dob,
     level: res.level,
-    specialty: res.specialty,
+    specialty: res.specialty as Specialty,
     //accountId: res.accountId,
   });
 
