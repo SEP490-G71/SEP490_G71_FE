@@ -38,6 +38,7 @@ import InvoicePage from "./pages/Admin/InvoiceManager/InvoicePage";
 import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientManagementPage";
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
+import WorkSchedulePage from "./pages/Admin/WorkSchedule/WorkSchedulePage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -71,6 +72,7 @@ export default function App() {
               path="/admin/register-medical-examination"
               element={<RegisterMedicalExaminationPage />}
             />
+            <Route path="/admin/work-schedule" element={<WorkSchedulePage />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />

@@ -90,7 +90,7 @@ export const PatientManagementPage = () => {
   const columns = [
     createColumn<Patient>({
       key: "patientCode",
-      label: "Mã bệnh nhân", // hoặc "Patient Code"
+      label: "Mã bệnh nhân",
       render: (row) => row.patientCode,
     }),
     createColumn<Patient>({
