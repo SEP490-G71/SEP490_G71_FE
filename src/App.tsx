@@ -38,6 +38,7 @@ import InvoicePage from "./pages/Admin/InvoiceManager/InvoicePage";
 import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientManagementPage";
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
+import LeaveAdminPage from "./pages/Admin/Leave/LeaveAdminPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
+            <Route path="/admin/Leave" element={<LeaveAdminPage />} />
 
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />

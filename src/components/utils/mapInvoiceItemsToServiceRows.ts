@@ -9,7 +9,7 @@ export const mapInvoiceItemsToServiceItems = (
   items: InvoiceItem[],
   medicalServices: MedicalService[]
 ): ServiceItem[] => {
-  return items.map((item, index) => {
+  return items.map((item, _) => {
     const matched = medicalServices.find(
       (s) =>
         s.serviceCode.trim().toLowerCase() ===
@@ -18,7 +18,7 @@ export const mapInvoiceItemsToServiceItems = (
 
     const departmentName = matched?.department?.name ?? "Không rõ";
     const departmentId = matched?.department?.id ?? null;
-    const serviceId = matched?.id ?? null;
+    // const serviceId = matched?.id ?? null;
 
     const result: ServiceItem = {
       code: item.serviceCode,

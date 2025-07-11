@@ -12,6 +12,7 @@ import {
   IconBusinessplan,
   IconCashRegister,
   IconHeartRateMonitor,
+  IconTimeDurationOff,
 } from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
 
@@ -95,6 +96,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
           path: "/admin/medical-examination/ent",
         },
       ],
+    },
+    {
+      name: "Đơn xin nghỉ",
+      icon: <IconTimeDurationOff />,
+      path: "/admin/Leave",
     },
   ],
   staff: [

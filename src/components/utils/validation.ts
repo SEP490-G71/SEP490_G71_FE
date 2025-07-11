@@ -59,3 +59,21 @@ export const validateDob = (value: string): string | null => {
 export const validateDepartmentType = (value: string): string | null => {
   return value ? null : "Loại phòng không được để trống";
 };
+
+export const validateDateNotFuture = (date: Date | null): string | null => {
+  if (!date) return null;
+  const today = new Date();
+  if (date > today) return "Không được chọn ngày trong tương lai";
+  return null;
+};
+
+
+export const validateFromDateToDate = (
+  from: Date | null,
+  to: Date | null
+): string | null => {
+  if (from && to && from > to) {
+    return "Ngày bắt đầu không được lớn hơn ngày kết thúc";
+  }
+  return null;
+};
