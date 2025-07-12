@@ -77,3 +77,27 @@ export const validateFromDateToDate = (
   }
   return null;
 };
+
+
+// ✅ Validate ngày phải cách hôm nay ít nhất X ngày
+export const validateMinDaysFromToday = (
+  date: Date | null,
+  minDays: number = 2
+): string | null => {
+  if (!date) return "Ngày không được để trống";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) return "Không được chọn ngày trong quá khứ";
+  if (diffDays < minDays) return `Ngày phải cách ngày hiện tại ít nhất ${minDays} ngày`;
+
+  return null;
+};

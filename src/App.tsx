@@ -39,6 +39,7 @@ import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientM
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
 import LeaveAdminPage from "./pages/Admin/Leave/LeaveAdminPage";
+import LeaveStaffPage from "./pages/Staff/LeaveStaffPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -112,6 +113,9 @@ export default function App() {
               path="/admin/medical-examination/clinical"
               element={<ClinicalPage />}
             />
+
+            {/* ✅ new staff route with same layout */}
+            <Route path="/staff/leave" element={<LeaveStaffPage />} />
           </Route>
 
           {/* Auth Layout */}
