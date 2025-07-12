@@ -8,7 +8,6 @@ export const useStatisticSchedule = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Thêm state để lưu dữ liệu tổng quan
   const [summary, setSummary] = useState({
     totalShifts: 0,
     attendedShifts: 0,
@@ -44,7 +43,6 @@ export const useStatisticSchedule = () => {
       setStatistics(details.content);
       setTotalItems(details.totalElements);
 
-      // ✅ Cập nhật dữ liệu tổng quan
       setSummary({
         totalShifts: result.totalShifts,
         attendedShifts: result.attendedShifts,
@@ -60,7 +58,6 @@ export const useStatisticSchedule = () => {
     }
   };
 
-  // ✅ Export file Excel
   const exportScheduleStatistics = async (filters?: {
     fromDate?: string;
     toDate?: string;
@@ -98,7 +95,7 @@ export const useStatisticSchedule = () => {
     loading,
     fetchScheduleStatistics,
     exportScheduleStatistics,
-    summary, // ✅ Trả ra summary để hiển thị ở FE
+    summary,
   };
 };
 

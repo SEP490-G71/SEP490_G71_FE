@@ -1,4 +1,3 @@
-// ✅ File: StatisticSchedulePage.tsx
 import { useEffect, useState } from "react";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";

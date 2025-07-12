@@ -11,12 +11,22 @@ export const useWorkSchedule = () => {
   const fetchWorkSchedules = async (
     page: number = 0,
     size: number = 10,
-    shift?: string
+    filters?: {
+      staffId?: string;
+      shift?: string;
+      fromDate?: string;
+      toDate?: string;
+      dayOfWeek?: string;
+    }
   ) => {
     setLoading(true);
     try {
       const res = await axiosInstance.get("/work-schedule", {
-        params: { page, size, shift },
+        params: {
+          page,
+          size,
+          ...filters,
+        },
       });
       setWorkSchedules(res.data.result.content);
       setTotalItems(res.data.result.totalElements);
