@@ -80,6 +80,16 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/work-schedule",
     },
     {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Báo cáo lịch làm việc",
+      icon: <IconCashRegister />,
+      path: "/admin/statistic-schedule",
+    },
+    {
       name: "Khám bệnh",
       icon: <IconHeartRateMonitor />,
       subItems: [
