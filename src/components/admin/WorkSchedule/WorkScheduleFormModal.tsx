@@ -129,7 +129,7 @@ const WorkScheduleFormModal = ({
           data={staffOptions}
           {...form.getInputProps("staffId")}
           required
-          disabled={isViewMode || !!initialData} // Không cho sửa khi đang edit
+          disabled={isViewMode || !!initialData}
         />
 
         <Select
@@ -155,7 +155,7 @@ const WorkScheduleFormModal = ({
         <DatePickerInput
           label="Từ ngày"
           placeholder="Chọn ngày bắt đầu"
-          value={form.values.startDate}
+          value={form.values.startDate ? new Date(form.values.startDate) : null}
           onChange={(value) => form.setFieldValue("startDate", value ?? "")}
           required
           disabled={isViewMode}
@@ -168,7 +168,7 @@ const WorkScheduleFormModal = ({
         <DatePickerInput
           label="Đến ngày"
           placeholder="Chọn ngày kết thúc"
-          value={form.values.endDate}
+          value={form.values.endDate ? new Date(form.values.endDate) : null}
           onChange={(value) => form.setFieldValue("endDate", value ?? "")}
           required
           disabled={isViewMode}
