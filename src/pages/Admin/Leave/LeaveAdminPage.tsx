@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Badge,
-  Button,
-  Group,
-  Input,
-  Popover,
-  Select,
-  Textarea,
-} from "@mantine/core";
+import { Badge, Button, Group, Popover, Select, Textarea } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import axiosInstance from "../../../services/axiosInstance";
@@ -29,6 +21,7 @@ import {
   validateDateNotFuture,
   validateFromDateToDate,
 } from "../../../hooks/useDateFilterValidation";
+import { useSearchStaffs } from "../../../hooks/staffs-service/useSearchStaffs";
 
 const LeaveAdminPage = () => {
   const [data, setData] = useState<LeaveRequestResponse[]>([]);
@@ -39,7 +32,6 @@ const LeaveAdminPage = () => {
   const [sortKey, setSortKey] =
     useState<keyof LeaveRequestResponse>("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-
   const [filterStatus, setFilterStatus] = useState("");
   const [filterStaffId, setFilterStaffId] = useState("");
   const [filterFromDate, setFilterFromDate] = useState<Date | null>(null);
@@ -47,11 +39,12 @@ const LeaveAdminPage = () => {
   const [fromDateError, setFromDateError] = useState<string | null>(null);
   const [toDateError, setToDateError] = useState<string | null>(null);
   const { validate } = useDateFilterValidation();
-
+  const [staffSearch, setStaffSearch] = useState("");
+  const { options: staffOptions, loading: loadingStaffSearch } =
+    useSearchStaffs(staffSearch);
   const fetchData = async () => {
     const isValid = validate(filterFromDate, filterToDate);
 
-    // Nếu không hợp lệ, tự set lỗi để hiện ở ô input
     if (!isValid) {
       const error1 = validateDateNotFuture(filterFromDate);
       const error2 = validateDateNotFuture(filterToDate);
@@ -116,7 +109,6 @@ const LeaveAdminPage = () => {
         payload.note = note;
       }
 
-      console.log("🔍 Payload gửi lên BE:", payload);
       await updateStatus(payload);
       fetchData();
     } catch {}
@@ -234,11 +226,10 @@ const LeaveAdminPage = () => {
                         await handleStatusChange(
                           row.id,
                           LeaveRequestStatus.REJECTED,
-                          rejectNote
+                          rejectNote // vẫn truyền note nếu có
                         );
                         setOpenedPopoverId(null);
                       }}
-                      disabled={!rejectNote.trim()}
                     >
                       Xác nhận
                     </Button>
@@ -291,15 +282,22 @@ const LeaveAdminPage = () => {
 
         {/* Tên nhân viên */}
         <FloatingLabelWrapper label="Nhân viên">
-          <Input
-            placeholder="Nhập tên nhân viên"
+          <Select
+            searchable
+            clearable
+            placeholder="Nhập tên hoặc mã nhân viên"
             value={filterStaffId}
-            onChange={(e) => {
+            onSearchChange={setStaffSearch}
+            onChange={(val) => {
               setPage(1);
-              setFilterStaffId(e.currentTarget.value);
+              setFilterStaffId(val || "");
             }}
+            data={staffOptions}
             className="w-full"
             styles={{ input: { height: 40, zIndex: 1 } }}
+            rightSection={
+              loadingStaffSearch ? <span className="mr-2">⏳</span> : null
+            }
           />
         </FloatingLabelWrapper>
 
