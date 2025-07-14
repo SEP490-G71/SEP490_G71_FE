@@ -16,6 +16,7 @@ import { useDownloadInvoiceById } from "../../../hooks/invoice/useDownloadInvoic
 
 import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
+import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
 
 const InvoicePage = () => {
   const [filterStatus, setFilterStatus] = useState("");
@@ -25,13 +26,15 @@ const InvoicePage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [inputCode, setInputCode] = useState("");
-  const [inputPatient, setInputPatient] = useState("");
   const [filterCode, setFilterCode] = useState("");
+  const [inputPatient, setInputPatient] = useState("");
   const [filterPatient, setFilterPatient] = useState("");
 
+  const { options: patientOptions } = useSearchPatients(inputPatient);
   const { stats, fetchInvoiceStats } = useInvoiceStatistics();
   const { exportInvoicesExcel } = useExportInvoicesExcel();
   const { downloadInvoice } = useDownloadInvoiceById();
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const { previewInvoice } = usePreviewInvoice();
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
@@ -133,7 +136,13 @@ const InvoicePage = () => {
             size="xs"
             variant="light"
             color="green"
-            onClick={() => downloadInvoice(row.invoiceId)}
+            onClick={async () => {
+              setDownloadingId(row.invoiceId);
+              await downloadInvoice(row.invoiceId);
+              setDownloadingId(null);
+            }}
+            disabled={downloadingId === row.invoiceId}
+            loading={downloadingId === row.invoiceId}
             className="p-1 w-8 h-8 flex items-center justify-center"
             title="Tải PDF"
           >
@@ -196,18 +205,19 @@ const InvoicePage = () => {
         </FloatingLabelWrapper>
 
         <FloatingLabelWrapper label="Tên bệnh nhân">
-          <Input
+          <Select
             placeholder="Nhập tên bệnh nhân"
-            value={inputPatient}
-            onChange={(e) => setInputPatient(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setPage(1);
-                setFilterPatient(inputPatient.trim());
-              }
+            searchable
+            data={patientOptions}
+            value={filterPatient}
+            onSearchChange={setInputPatient}
+            onChange={(val) => {
+              setFilterPatient(val || "");
+              setPage(1);
             }}
             className="w-full"
-            styles={{ input: { height: 40 } }}
+            clearable
+            styles={{ input: { height: 40, zIndex: 1 } }}
           />
         </FloatingLabelWrapper>
 

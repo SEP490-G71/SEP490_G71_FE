@@ -91,10 +91,6 @@ const navItemsByRole: Record<string, NavItem[]> = {
           name: "Khám lâm sàng",
           path: "/admin/medical-examination/clinical",
         },
-        {
-          name: "Tai mũi họng",
-          path: "/admin/medical-examination/ent",
-        },
       ],
     },
     {

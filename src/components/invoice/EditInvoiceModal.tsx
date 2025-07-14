@@ -17,15 +17,17 @@ interface Props {
     total: number;
   }[];
   availableServices: MedicalService[];
-  onChange: (rows: ServiceRow[]) => void;
+  onChange?: (rows: ServiceRow[]) => void; // optional
+  editable?: boolean; // mặc định false
 }
 
-const EditInvoiceServicesModal = ({
+const ViewEditInvoiceServicesModal = ({
   opened,
   onClose,
   invoiceItems,
   availableServices,
   onChange,
+  editable = false,
 }: Props) => {
   const [serviceRows, setServiceRows] = useState<ServiceRow[]>([]);
 
@@ -53,22 +55,24 @@ const EditInvoiceServicesModal = ({
       };
     });
 
-    rows.push({
-      id: rows.length + 1,
-      serviceId: null,
-      serviceCode: "",
-      name: "",
-      quantity: 1,
-      price: 0,
-      discount: 0,
-      vat: 0,
-      departmentName: "",
-      total: 0,
-    });
+    if (editable) {
+      rows.push({
+        id: rows.length + 1,
+        serviceId: null,
+        serviceCode: "",
+        name: "",
+        quantity: 1,
+        price: 0,
+        discount: 0,
+        vat: 0,
+        departmentName: "",
+        total: 0,
+      });
+    }
 
     setServiceRows(rows);
-  }, [opened, invoiceItems, availableServices]);
-
+  }, [opened, invoiceItems, availableServices, editable]);
+  const noopSetServiceRows = () => {};
   return (
     <Modal
       opened={opened}
@@ -79,7 +83,9 @@ const EditInvoiceServicesModal = ({
       title={
         <div>
           <Title order={4} c="blue.7">
-            Chỉnh sửa dịch vụ trong hóa đơn
+            {editable
+              ? "Chỉnh sửa dịch vụ trong hóa đơn"
+              : "Danh sách dịch vụ đã đăng ký"}
           </Title>
           <Divider mt="xs" />
         </div>
@@ -91,13 +97,13 @@ const EditInvoiceServicesModal = ({
             {serviceRows.length > 0 ? (
               <ServiceTable
                 serviceRows={serviceRows}
-                setServiceRows={setServiceRows}
+                setServiceRows={editable ? setServiceRows : noopSetServiceRows}
                 medicalServices={availableServices}
                 serviceOptions={availableServices.map((s) => ({
                   value: s.id,
                   label: s.name,
                 }))}
-                editable={true}
+                editable={editable}
                 showDepartment={true}
               />
             ) : (
@@ -111,20 +117,22 @@ const EditInvoiceServicesModal = ({
 
       <div className="flex justify-end gap-2 mt-4">
         <Button variant="outline" onClick={onClose}>
-          Hủy
+          Đóng
         </Button>
-        <Button
-          onClick={() => {
-            const cleanedRows = serviceRows.filter((r) => r.serviceId);
-            onChange(cleanedRows);
-            onClose();
-          }}
-        >
-          Lưu dịch vụ
-        </Button>
+        {editable && onChange && (
+          <Button
+            onClick={() => {
+              const cleanedRows = serviceRows.filter((r) => r.serviceId);
+              onChange(cleanedRows);
+              onClose();
+            }}
+          >
+            Lưu dịch vụ
+          </Button>
+        )}
       </div>
     </Modal>
   );
 };
 
-export default EditInvoiceServicesModal;
+export default ViewEditInvoiceServicesModal;
