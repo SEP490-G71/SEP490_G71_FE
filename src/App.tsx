@@ -40,6 +40,8 @@ import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPag
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
 import LeaveAdminPage from "./pages/Admin/Leave/LeaveAdminPage";
 import LeaveStaffPage from "./pages/Staff/LeaveStaffPage";
+import InvoiceTemplatesPage from "./pages/Admin/Templates/InvoiceTemplatesPage";
+import MedicalTemplatesPage from "./pages/Admin/Templates/MedicalTemplatesPage";
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -72,6 +74,14 @@ export default function App() {
             <Route
               path="/admin/register-medical-examination"
               element={<RegisterMedicalExaminationPage />}
+            />
+            <Route
+              path="/admin/invoice-templates"
+              element={<InvoiceTemplatesPage />}
+            />
+            <Route
+              path="/admin/medical-templates"
+              element={<MedicalTemplatesPage />}
             />
 
             {/* Others Page */}

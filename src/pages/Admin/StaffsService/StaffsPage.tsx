@@ -6,10 +6,11 @@ import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { StaffsResponse } from "../../../types/Admin/Staffs/StaffsTypeResponse";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
-import { Gender, Specialty, Level } from "../../../enums/Admin/StaffsEnums";
+import { Gender } from "../../../enums/Admin/StaffsEnums";
 import PageMeta from "../../../components/common/PageMeta";
 import dayjs from "dayjs";
 import CreateEditStaffModal from "../../../components/admin/Staffs/CreateEditStaffModal";
+import { RoleLabels } from "../../../enums/Role/Role";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -26,17 +27,15 @@ const StaffsPage = () => {
   const [pageSize, setPageSize] = useState(5);
   const [sortKey, setSortKey] = useState<keyof StaffsResponse>("firstName");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
+  const [filterRoles, setFilterRoles] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffsRequest | null>(
     null
   );
   const [editingId, setEditingId] = useState<string | null>(null);
-
+  const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
-  const [filterSpecialty, setFilterSpecialty] = useState("");
-  const [filterLevel, setFilterLevel] = useState("");
 
   const fetchStaffs = async () => {
     setLoading(true);
@@ -47,8 +46,7 @@ const StaffsPage = () => {
         sortBy: sortKey,
         sortDir: sortDirection,
         name: filterName || undefined,
-        specialty: filterSpecialty || undefined,
-        level: filterLevel || undefined,
+        role: filterRoles.length > 0 ? filterRoles[0] : undefined,
       };
 
       const res = await axiosInstance.get(`/staffs`, { params });
@@ -70,15 +68,7 @@ const StaffsPage = () => {
 
   useEffect(() => {
     fetchStaffs();
-  }, [
-    page,
-    pageSize,
-    sortKey,
-    sortDirection,
-    filterName,
-    filterSpecialty,
-    filterLevel,
-  ]);
+  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
 
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
     firstName: res.firstName,
@@ -89,8 +79,7 @@ const StaffsPage = () => {
     phone: res.phone,
     gender: res.gender,
     dob: res.dob,
-    level: res.level,
-    specialty: res.specialty as Specialty,
+    roleNames: res.roles,
     //accountId: res.accountId,
   });
 
@@ -133,33 +122,29 @@ const StaffsPage = () => {
   };
 
   const handleSubmit = async (data: StaffsRequest) => {
-    try {
-      const normalizedData: StaffsRequest = {
-        ...data,
-        middleName: data.middleName ?? null,
-        dob:
-          typeof data.dob === "string"
-            ? data.dob
-            : new Date(data.dob).toISOString().split("T")[0],
-      };
+    const normalizedData: StaffsRequest = {
+      ...data,
+      middleName: data.middleName ?? null,
+      dob:
+        typeof data.dob === "string"
+          ? data.dob
+          : new Date(data.dob).toISOString().split("T")[0],
+      roleNames: data.roleNames,
+    };
 
-      if (editingId) {
-        await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
-        toast.success("Cập nhật thành công");
-      } else {
-        await axiosInstance.post(`/staffs`, normalizedData);
-        toast.success("Tạo nhân viên thành công");
-      }
-
-      fetchStaffs();
-    } catch (err: any) {
-      console.error(" Submit staff error:", err.response?.data || err);
-      toast.error("Lỗi khi lưu nhân viên");
-    } finally {
-      setModalOpened(false);
-      setEditingId(null);
+    if (editingId) {
+      await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
+      toast.success("Cập nhật thành công");
+    } else {
+      await axiosInstance.post(`/staffs`, normalizedData);
+      toast.success("Tạo nhân viên thành công");
     }
+
+    fetchStaffs();
+    setModalOpened(false);
+    setEditingId(null);
   };
+
   const columns = [
     createColumn<StaffsResponse>({
       key: "fullName",
@@ -170,14 +155,10 @@ const StaffsPage = () => {
     createColumn<StaffsResponse>({ key: "email", label: "Email" }),
     createColumn<StaffsResponse>({ key: "phone", label: "SĐT" }),
     createColumn<StaffsResponse>({
-      key: "specialty",
-      label: "Chuyên môn",
-      render: (row) => getEnumLabel(Specialty, row.specialty),
-    }),
-    createColumn<StaffsResponse>({
-      key: "level",
-      label: "Cấp bậc",
-      render: (row) => getEnumLabel(Level, row.level),
+      key: "roles",
+      label: "Vai trò",
+      render: (row) =>
+        row.roles.map((role) => RoleLabels[role] || role).join(", "),
     }),
     createColumn<StaffsResponse>({
       key: "gender",
@@ -209,48 +190,33 @@ const StaffsPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
         <Select
-          placeholder="Chọn chuyên môn"
+          placeholder="Chọn vai trò"
           className="w-full"
           styles={{ input: { height: 45 } }}
-          value={filterSpecialty || ""}
+          value={filterRoles[0] || ""}
           onChange={(val) => {
             setPage(1);
-            setFilterSpecialty(val || "");
+            setFilterRoles(val ? [val] : []);
           }}
-          data={[
-            { value: "", label: "Tất cả" },
-            ...Object.entries(Specialty).map(([key, value]) => ({
-              value: key,
-              label: value,
-            })),
-          ]}
+          data={Object.entries(RoleLabels).map(([value, label]) => ({
+            value,
+            label,
+          }))}
+          searchable
+          clearable
         />
 
-        <Select
-          placeholder="Chọn cấp bậc"
-          className="w-full"
-          styles={{ input: { height: 45 } }}
-          value={filterLevel || ""}
-          onChange={(val) => {
-            setPage(1);
-            setFilterLevel(val || "");
-          }}
-          data={[
-            { value: "", label: "Tất cả" },
-            ...Object.entries(Level).map(([key, value]) => ({
-              value: key,
-              label: value,
-            })),
-          ]}
-        />
         <input
           type="text"
           placeholder="Tìm theo tên"
-          className="border rounded px-3 py-2 text-sm w-full h-[40px]"
-          value={filterName}
-          onChange={(e) => {
-            setPage(1);
-            setFilterName(e.target.value);
+          className="border rounded px-3 text-sm w-full h-[45px]"
+          value={inputName}
+          onChange={(e) => setInputName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setFilterName(inputName.trim());
+              setPage(1);
+            }
           }}
         />
       </div>

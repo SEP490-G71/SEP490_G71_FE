@@ -132,30 +132,43 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         size="lg"
         radius="md"
         yOffset={90}
-        title={initialData ? "Cập nhật phòng ban" : "Tạo mới phòng ban"}
+        title={
+          <div>
+            <h2 className="text-xl font-bold">
+              {isViewMode
+                ? "Xem Permission"
+                : initialData
+                ? "Cập nhật phòng ban"
+                : "Tạo phòng ban mới"}
+            </h2>
+            <div className="mt-2 border-b border-gray-300"></div>
+          </div>
+        }
         styles={{
-          header: {
-            backgroundColor: "#3b82f6",
-            color: "white",
-            padding: "16px",
-          },
           title: {
-            color: "white",
             fontWeight: 600,
             width: "100%",
-          },
-          close: {
-            color: "white",
           },
         }}
       >
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            const validation = form.validate();
-            if (!validation.hasErrors) {
-              onSubmit(form.values);
-              onClose();
+
+            const validation = await form.validate();
+
+            if (validation.hasErrors) {
+              // ❗ Không gọi API, không đóng modal
+              toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
+              return;
+            }
+
+            try {
+              await onSubmit(form.values); // Gọi API chỉ khi hợp lệ
+              onClose(); // Chỉ đóng modal khi API thành công
+            } catch (error) {
+              console.error("Lỗi khi lưu phòng ban", error);
+              toast.error("Lỗi khi lưu phòng ban");
             }
           }}
         >
@@ -194,15 +207,17 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
               value,
               label,
             }))}
-            value={form.values.type || ""}
+            value={form.values.type ?? null}
             onChange={(val) => {
-              if (val) form.setFieldValue("type", val as DepartmentType);
+              form.setFieldValue("type", val as DepartmentType | undefined);
             }}
             error={form.errors.type}
             mt="sm"
             required
+            clearable
             disabled={isViewMode}
           />
+
           {initialData && (
             <div className="mt-6">
               <Flex justify="space-between" align="center" mb="sm">

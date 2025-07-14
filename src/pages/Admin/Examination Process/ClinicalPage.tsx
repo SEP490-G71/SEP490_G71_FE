@@ -86,7 +86,7 @@ const ClinicalPage = () => {
 
         <Paper shadow="xs" radius="md" p="md" withBorder>
           <Title order={5} mb="md">
-            Danh sách hồ sơ TESTING
+            Danh sách hồ sơ
           </Title>
 
           {loading ? (
@@ -182,7 +182,7 @@ const ClinicalPage = () => {
                     ? `${(page - 1) * pageSize + 1}–${
                         (page - 1) * pageSize + testingRecords.length
                       } của ${pagination.totalElements}`
-                    : "Không có hồ sơ TESTING"}
+                    : "Không có hồ sơ "}
                 </Text>
 
                 <Group>

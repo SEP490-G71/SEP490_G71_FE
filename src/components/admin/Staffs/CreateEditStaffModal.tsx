@@ -1,8 +1,8 @@
-import { Modal, TextInput, Button, Select } from "@mantine/core";
+import { Modal, TextInput, Button, MultiSelect, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
-import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
+import { Gender } from "../../../enums/Admin/StaffsEnums";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
 import {
   validateName,
@@ -13,6 +13,8 @@ import {
 
 import "dayjs/locale/vi";
 import "@mantine/dates/styles.css";
+import { RoleLabels } from "../../../enums/Role/Role";
+import { toast } from "react-toastify";
 
 interface CreateEditStaffModalProps {
   opened: boolean;
@@ -35,12 +37,11 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       middleName: "",
       lastName: "",
       fullName: "",
-      specialty: Specialty.OTHER,
-      level: Level.INTERN,
       phone: "",
       email: "",
       gender: Gender.OTHER,
       dob: "",
+      roleNames: [],
     },
     validate: {
       firstName: (value) => validateName(value ?? ""),
@@ -63,23 +64,25 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={initialData ? "Cập nhật nhân viên" : "Tạo mới nhân viên"}
+      title={
+        <div>
+          <h2 className="text-xl font-bold">
+            {isViewMode
+              ? "Xem Permission"
+              : initialData
+              ? "Cập nhật nhân viên"
+              : "Tạo nhân viên mới"}
+          </h2>
+          <div className="mt-2 border-b border-gray-300"></div>
+        </div>
+      }
       size="xl"
       radius="md"
       yOffset={90}
       styles={{
-        header: {
-          backgroundColor: "#1e3a8a",
-          color: "white",
-          padding: "16px",
-        },
         title: {
-          color: "white",
           fontWeight: 600,
           width: "100%",
-        },
-        close: {
-          color: "white",
         },
         content: {
           overflowY: "scroll",
@@ -95,14 +98,36 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       }}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const { hasErrors } = form.validate();
           if (!hasErrors) {
-            console.log("Form data:", form.values);
-            onSubmit(form.values);
-            console.log("Form data2:", form.values);
-            onClose();
+            try {
+              await onSubmit(form.values); // nếu lỗi, throw ở đây
+              onClose(); // chỉ gọi nếu không lỗi
+            } catch (err: any) {
+              const resultErrors = err?.response?.data?.result;
+
+              const messageMap: Record<string, string> = {
+                email: "Email đã tồn tại",
+                phone: "Số điện thoại đã tồn tại",
+                gender: "Vui lòng chọn giới tính",
+                roleNames: "Vui lòng chọn vai trò",
+              };
+
+              if (Array.isArray(resultErrors)) {
+                resultErrors.forEach(
+                  (e: { field: string; message: string }) => {
+                    const field = e.field as keyof StaffsRequest;
+                    const translated = messageMap[field] || e.message;
+                    form.setFieldError(field, translated);
+                  }
+                );
+              } else {
+                toast.error("❗ Đã xảy ra lỗi không xác định");
+                console.error("Submit error in modal", err);
+              }
+            }
           }
         }}
       >
@@ -129,25 +154,14 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           />
         </div>
 
-        <Select
-          label="Chuyên môn"
-          data={Object.entries(Specialty).map(([value, label]) => ({
+        <MultiSelect
+          label="Vai trò"
+          placeholder="Chọn vai trò"
+          data={Object.entries(RoleLabels).map(([value, label]) => ({
             value,
             label,
           }))}
-          {...form.getInputProps("specialty")}
-          required
-          mt="sm"
-          disabled={isViewMode}
-        />
-
-        <Select
-          label="Cấp bậc"
-          data={Object.entries(Level).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          {...form.getInputProps("level")}
+          {...form.getInputProps("roleNames")}
           required
           mt="sm"
           disabled={isViewMode}
@@ -186,7 +200,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         <DatePickerInput
           label="Ngày sinh"
           placeholder="Chọn ngày sinh"
-          valueFormat="YYYY-MM-DD"
+          valueFormat="DD/MM/YYYY"
           locale="vi"
           {...form.getInputProps("dob")}
           required
