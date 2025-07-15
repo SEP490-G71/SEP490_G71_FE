@@ -4,7 +4,7 @@ export interface Patient {
   firstName: string;
   middleName: string;
   lastName: string;
-  fullName: string;
+  fullName?: string;
   dob: string; // Date of birth (ISO format)
   gender: "MALE" | "FEMALE" | string;
   phone: string;

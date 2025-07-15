@@ -40,9 +40,45 @@ import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPag
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
 import LeaveAdminPage from "./pages/Admin/Leave/LeaveAdminPage";
 import LeaveStaffPage from "./pages/Staff/LeaveStaffPage";
+import WorkSchedulePage from "./pages/Admin/WorkSchedule/WorkSchedulePage";
+import WorkScheduleDetailStaff from "./pages/Admin/WorkScheduleDetailStaff/WorkScheduleDetailStaff";
+// Mock schedules for test
+import { WorkScheduleDetail } from "./types/Admin/WorkSchedule/WorkSchedule";
+import { StatisticSchedulePage } from "./pages/Admin/StatisticSchedule/StatisticSchedulePage";
+
+const mockSchedules: WorkScheduleDetail[] = [
+  {
+    id: "1",
+    staffId: "abc123",
+    staffName: "Nguyễn Văn A",
+    shift: "MORNING", // ✅ TS hiểu đây là "MORNING" literal
+    shiftDate: "2025-07-12",
+    status: "COMPLETED",
+    note: "Trực buổi sáng",
+  },
+  {
+    id: "2",
+    staffId: "abc123",
+    staffName: "Nguyễn Văn A",
+    shift: "AFTERNOON",
+    shiftDate: "2025-07-15",
+    status: "PENDING",
+    note: "Chưa xác nhận",
+  },
+  {
+    id: "3",
+    staffId: "abc123",
+    staffName: "Nguyễn Văn A",
+    shift: "FULL_DAY",
+    shiftDate: "2025-07-20",
+    status: "CANCELLED",
+    note: "Nghỉ trực",
+  },
+];
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
+
 export default function App() {
   return (
     <MantineProvider theme={theme}>
@@ -72,6 +108,15 @@ export default function App() {
             <Route
               path="/admin/register-medical-examination"
               element={<RegisterMedicalExaminationPage />}
+            />
+            <Route path="/admin/work-schedule" element={<WorkSchedulePage />} />
+            <Route
+              path="/admin/statistic-schedule"
+              element={<StatisticSchedulePage />}
+            />
+            <Route
+              path="/admin/work-schedule-staff"
+              element={<WorkScheduleDetailStaff schedules={mockSchedules} />}
             />
 
             {/* Others Page */}

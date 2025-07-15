@@ -63,13 +63,12 @@ const useMedicalRecord = () => {
         responseType: "blob",
       });
 
-      const blob = new Blob([res.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
+      const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
+
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `medical-record-${id}.docx`);
+      link.setAttribute("download", `medical-record-${id}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
