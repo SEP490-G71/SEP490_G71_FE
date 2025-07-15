@@ -8,10 +8,19 @@ import TemplateVariablesTable from "../../../components/admin/Template/TemplateV
 import CreateEditTemplateModal, {
   FormValues,
 } from "../../../components/admin/Template/CreateEditTemplateModal";
+import { TemplateFileRequest } from "../../../types/Admin/Templates/TemplateFileRequest";
+import { TemplateFileType } from "../../../enums/Admin/TemplateFileType";
+import { toast } from "react-toastify";
 
 const InvoiceTemplatesPage = () => {
-  const { templates, loading, totalItems, fetchTemplates, deleteTemplate } =
-    useTemplateFiles();
+  const {
+    templates,
+    loading,
+    fetchTemplates,
+    deleteTemplate,
+    createTemplate,
+    updateTemplate,
+  } = useTemplateFiles();
   const invoiceTemplates = templates.filter((t) => t.type === "INVOICE");
 
   const [page, setPage] = useState(1);
@@ -19,6 +28,10 @@ const InvoiceTemplatesPage = () => {
   const [sortKey, setSortKey] = useState<keyof TemplateFileResponse>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [modalOpened, setModalOpened] = useState(false);
+  const paginatedTemplates = invoiceTemplates.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
   const [editingTemplate, setEditingTemplate] =
     useState<TemplateFileResponse | null>(null);
   useEffect(() => {
@@ -30,10 +43,79 @@ const InvoiceTemplatesPage = () => {
     setModalOpened(true);
   };
 
-  const handleSubmitTemplate = (data: FormValues) => {
-    console.log("Submit data:", data);
-    // TODO: Gọi API tạo mới template ở đây
-    setModalOpened(false);
+  const handleSubmitTemplate = async (form: FormValues) => {
+    const isEditMode = !!editingTemplate;
+
+    const info: TemplateFileRequest = {
+      name: form.name,
+      isDefault: form.isDefault,
+      type: TemplateFileType.INVOICE,
+    };
+
+    // ⛔ Không được tắt mẫu mặc định cuối cùng
+    if (isEditMode && editingTemplate?.isDefault && !form.isDefault) {
+      const hasOtherDefault = invoiceTemplates.some(
+        (t) => t.isDefault && t.id !== editingTemplate.id
+      );
+
+      if (!hasOtherDefault) {
+        toast.error("❗ Không thể tắt mẫu mặc định cuối cùng.");
+        return;
+      }
+    }
+
+    // 🧠 Nếu bật mẫu mới là mặc định => đồng thời cập nhật mẫu cũ về false
+    const updates: Promise<any>[] = [];
+
+    if (isEditMode && form.isDefault) {
+      const currentDefault = invoiceTemplates.find(
+        (t) => t.isDefault && t.id !== editingTemplate?.id
+      );
+
+      if (currentDefault) {
+        updates.push(
+          updateTemplate(currentDefault.id, {
+            file: new File([], "dummy.pdf"),
+            info: {
+              name: currentDefault.name,
+              type: TemplateFileType.INVOICE,
+              isDefault: false,
+            },
+          })
+        );
+      }
+    }
+
+    if (!form.file && !editingTemplate) {
+      toast.error("❗ Vui lòng chọn file.");
+      return;
+    }
+
+    // 🔄 Update mẫu hiện tại
+    if (isEditMode && form.file) {
+      updates.push(
+        updateTemplate(editingTemplate.id, { file: form.file, info })
+      );
+    } else if (!isEditMode && form.file) {
+      info.isDefault = false; // khi tạo mới mặc định là false
+      updates.push(createTemplate({ file: form.file, info }));
+    }
+
+    try {
+      const results = await Promise.allSettled(updates);
+
+      const hasFailure = results.some((res) => res.status === "rejected");
+
+      if (hasFailure) {
+        toast.error("❗ Có lỗi xảy ra khi cập nhật mẫu.");
+      } else {
+        toast.success("✅ Cập nhật thành công");
+        setModalOpened(false);
+        setEditingTemplate(null);
+      }
+    } catch (err) {
+      toast.error("❗ Gặp lỗi không xác định.");
+    }
   };
 
   const handleDelete = async (row: TemplateFileResponse) => {
@@ -88,12 +170,12 @@ const InvoiceTemplatesPage = () => {
       </div>
 
       <CustomTable
-        data={invoiceTemplates}
+        data={paginatedTemplates}
         columns={columns}
         loading={loading}
         page={page}
         pageSize={pageSize}
-        totalItems={totalItems}
+        totalItems={invoiceTemplates.length}
         onPageChange={setPage}
         onPageSizeChange={(newSize) => {
           setPageSize(newSize);
@@ -127,9 +209,8 @@ const InvoiceTemplatesPage = () => {
           editingTemplate
             ? {
                 name: editingTemplate.name,
-                // description: editingTemplate.description,
                 isDefault: editingTemplate.isDefault,
-                file: null, // file cũ không cần truyền vào
+                file: null,
               }
             : null
         }

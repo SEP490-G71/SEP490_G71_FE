@@ -45,6 +45,8 @@ import WorkScheduleDetailStaff from "./pages/Admin/WorkScheduleDetailStaff/WorkS
 // Mock schedules for test
 import { WorkScheduleDetail } from "./types/Admin/WorkSchedule/WorkSchedule";
 import { StatisticSchedulePage } from "./pages/Admin/StatisticSchedule/StatisticSchedulePage";
+import MedicalTemplatesPage from "./pages/Admin/Templates/MedicalTemplatesPage";
+import InvoiceTemplatesPage from "./pages/Admin/Templates/InvoiceTemplatesPage";
 
 const mockSchedules: WorkScheduleDetail[] = [
   {
@@ -117,6 +119,14 @@ export default function App() {
             <Route
               path="/admin/work-schedule-staff"
               element={<WorkScheduleDetailStaff schedules={mockSchedules} />}
+            />
+            <Route
+              path="/admin/invoice-templates"
+              element={<InvoiceTemplatesPage />}
+            />
+            <Route
+              path="/admin/medical-templates"
+              element={<MedicalTemplatesPage />}
             />
 
             {/* Others Page */}
