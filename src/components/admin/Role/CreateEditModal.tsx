@@ -47,7 +47,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     initialValues: {
       name: "",
       description: "",
-      permissions: [] as { name: string }[],
+      permissions: [] as string[],
     },
     validate: {
       name: (value) =>
@@ -59,6 +59,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     },
   });
 
+  // Load permission khi mở modal
   useEffect(() => {
     const loadPermissions = async () => {
       setLoading(true);
@@ -78,32 +79,25 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     }
   }, [opened]);
 
+  // ✅ Chờ groupedPermissions xong mới set giá trị ban đầu
   useEffect(() => {
-    if (initialData) {
+    if (initialData && groupedPermissions.length > 0) {
       form.setValues({
         name: initialData.name || "",
         description: initialData.description || "",
-        permissions: initialData.permissions.map((p) => ({ name: p.name })),
+        permissions: initialData.permissions.map((p) => p.name),
       });
-    } else {
+    } else if (!initialData) {
       form.reset();
     }
-  }, [initialData, opened]);
+  }, [initialData, groupedPermissions, opened]);
 
   const togglePermission = useCallback(
     (permission: PermissionResponse) => {
-      const exists = form.values.permissions.some(
-        (p) => p.name === permission.name
-      );
+      const exists = form.values.permissions.includes(permission.name);
       const updated = exists
-        ? form.values.permissions.filter((p) => p.name !== permission.name)
-        : [...form.values.permissions, { name: permission.name }];
-
-      console.log(
-        `[TOGGLE] ${exists ? "Unchecked" : "Checked"} permission:`,
-        permission.name
-      );
-      console.log("🔄 Updated permissions:", updated);
+        ? form.values.permissions.filter((name) => name !== permission.name)
+        : [...form.values.permissions, permission.name];
 
       form.setFieldValue("permissions", updated);
     },
@@ -114,12 +108,18 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     const payload: RoleRequest = {
       name: values.name,
       description: values.description,
-      permissions: [...new Set(values.permissions.map((p) => p.name))],
+      permissions: [...new Set(values.permissions)],
     };
 
-    console.log("🚀 Submitting RoleRequest:", payload);
     onSubmit(payload);
     onClose();
+  };
+
+  const actionMap: Record<string, string> = {
+    view: "READ",
+    create: "CREATE",
+    update: "UPDATE",
+    delete: "DELETE",
   };
 
   return (
@@ -179,15 +179,16 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
                     >
                       <td className="p-2 font-medium">{group.groupName}</td>
                       {["view", "create", "update", "delete"].map((action) => {
+                        const actionCode = actionMap[action];
                         const perm = group.permissions.find((p) =>
-                          p.name.startsWith(`${action}:`)
+                          p.name.endsWith(`:${actionCode}`)
                         );
                         return (
                           <td key={action} className="p-2 text-center">
                             {perm ? (
                               <Checkbox
-                                checked={form.values.permissions.some(
-                                  (p) => p.name === perm.name
+                                checked={form.values.permissions.includes(
+                                  perm.name
                                 )}
                                 onChange={() => togglePermission(perm)}
                                 disabled={isViewMode}
