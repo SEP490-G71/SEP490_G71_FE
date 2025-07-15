@@ -7,7 +7,7 @@ import { TextInput, Select, Button } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { LuEye, LuDownload } from "react-icons/lu";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
-
+import { format } from "date-fns";
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -47,12 +47,9 @@ export const MedicalRecordPage = () => {
 
   const { options: patientOptions, searchPatients } = usePatientSearch();
 
-  const formatLocalDateTime = (date: Date): string =>
-    date
-      .toLocaleString("sv-SE", {
-        hour12: false,
-      })
-      .replace(" ", "T");
+  const formatLocalDateTime = (date: Date): string => {
+    return format(date, "yyyy-MM-dd"); //
+  };
 
   const {
     medicalRecords,
@@ -202,6 +199,7 @@ export const MedicalRecordPage = () => {
           placeholder="Từ ngày"
           value={filterInput.fromDate}
           valueFormat="DD/MM/YYYY"
+          maxDate={new Date()}
           onChange={(value) => {
             const date = value ? new Date(value) : null;
             if (date) date.setHours(0, 0, 0, 0);
@@ -214,6 +212,7 @@ export const MedicalRecordPage = () => {
             setPage(1);
           }}
         />
+
         <DatePickerInput
           placeholder="Đến ngày"
           value={filterInput.toDate}

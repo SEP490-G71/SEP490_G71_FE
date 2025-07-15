@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
 import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
@@ -81,29 +81,6 @@ export default function RegisterMedicalExaminationPage() {
     },
   ];
 
-  const sortedData = useMemo(() => {
-    if (!sortKey || !sortDirection) return patientsToday;
-
-    return [...patientsToday].sort((a, b) => {
-      const valA = a[sortKey];
-      const valB = b[sortKey];
-
-      // So sánh có kiểm tra null/undefined kỹ
-      if (valA == null && valB == null) return 0;
-      if (valA == null) return 1;
-      if (valB == null) return -1;
-
-      if (valA === valB) return 0;
-      if (sortDirection === "asc") return valA > valB ? 1 : -1;
-      return valA < valB ? 1 : -1;
-    });
-  }, [patientsToday, sortKey, sortDirection]);
-
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return sortedData.slice(start, start + pageSize);
-  }, [sortedData, page, pageSize]);
-
   const handleReset = () => {
     setConfirmedPatient(null);
     setSelectedDate(null);
@@ -159,21 +136,26 @@ export default function RegisterMedicalExaminationPage() {
     );
     setConfirmedPatient(updatedPatient);
 
-    // ✅ Gọi API đăng ký khám + cập nhật danh sách hôm nay
-    await queuePatient(updatedPatient.id.toString(), registerType, async () => {
-      const { content, totalElements } = await fetchTodayRegisteredPatients(
-        page - 1,
-        pageSize
-      );
-      const safePatients: Patient[] = content.map((p) => ({
-        ...p,
-        ngayDangKy: p.ngayDangKy ?? null,
-        stt: p.stt ?? "",
-        phongKham: p.phongKham ?? "",
-      }));
-      setPatientsToday(safePatients);
-      setTotalTodayPatients(totalElements);
-    });
+    // API đăng ký khám + cập nhật danh sách hôm nay
+    await queuePatient(
+      updatedPatient.id.toString(),
+      registerType,
+      `${isoDate}T00:00:00`,
+      async () => {
+        const { content, totalElements } = await fetchTodayRegisteredPatients(
+          page - 1,
+          pageSize
+        );
+        const safePatients: Patient[] = content.map((p) => ({
+          ...p,
+          ngayDangKy: p.ngayDangKy ?? null,
+          stt: p.stt ?? "",
+          phongKham: p.phongKham ?? "",
+        }));
+        setPatientsToday(safePatients);
+        setTotalTodayPatients(totalElements);
+      }
+    );
   };
 
   const openModal = async () => {
@@ -213,11 +195,11 @@ export default function RegisterMedicalExaminationPage() {
       ) {
         setSelectedDate(new Date(confirmedPatient.ngayDangKy));
       } else {
-        setSelectedDate(null);
+        setSelectedDate(new Date());
       }
     } catch (error) {
       console.error("❌ Lỗi khi xử lý ngày đăng ký:", error);
-      setSelectedDate(null);
+      setSelectedDate(new Date());
     }
   }, [confirmedPatient]);
 
@@ -455,6 +437,7 @@ export default function RegisterMedicalExaminationPage() {
                       }}
                       valueFormat="DD/MM/YYYY"
                       placeholder="DD/MM/YYYY"
+                      minDate={new Date()}
                     />
                   </Grid.Col>
                 </Grid>
