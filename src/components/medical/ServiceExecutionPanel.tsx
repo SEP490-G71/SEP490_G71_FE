@@ -13,7 +13,7 @@ const ServiceExecutionPanel = ({
   doneServices = [],
   onAction,
 }: Props) => {
-  const mappedDoneServices = doneServices.map((order, index) => ({
+  const mappedDoneServices = doneServices.map((order, _) => ({
     ...order,
     completedBy: order.results?.[0]?.completedBy ?? order.createdBy,
   }));

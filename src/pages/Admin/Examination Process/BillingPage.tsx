@@ -31,6 +31,8 @@ import {
   InvoiceStatusMap,
 } from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { toast } from "react-toastify";
+import ViewEditInvoiceServicesModal from "../../../components/invoice/EditInvoiceModal";
+import { useDownloadInvoiceById } from "../../../hooks/invoice/useDownloadInvoiceById";
 
 const BillingPage = () => {
   const {
@@ -42,19 +44,28 @@ const BillingPage = () => {
     fetchInvoiceDetail,
     pagination,
   } = useFilteredInvoices();
-
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
-    null
-  );
+  const [selectedInvoiceInfo, setSelectedInvoiceInfo] = useState<{
+    id: string;
+    status: InvoiceStatus;
+  } | null>(null);
 
   const [viewModalOpened, setViewModalOpened] = useState(false);
-
+  const { previewInvoice } = usePreviewInvoice();
+  const { downloadInvoice } = useDownloadInvoiceById();
+  const [isDownloading, setIsDownloading] = useState(false);
   useEffect(() => {
     fetchInvoices();
   }, []);
 
   const handleSelectInvoice = (invoiceId: string) => {
-    setSelectedInvoiceId(invoiceId);
+    const selected = invoices.find((i) => i.invoiceId === invoiceId);
+    if (!selected) return;
+
+    setSelectedInvoiceInfo({
+      id: selected.invoiceId,
+      status: selected.status,
+    });
+
     fetchInvoiceDetail(invoiceId);
   };
 
@@ -117,6 +128,16 @@ const BillingPage = () => {
   const handleSavePendingInvoice = async () => {
     if (!invoiceDetail) return;
 
+    if (!editableInvoiceDetail.confirmedBy) {
+      toast.error("Vui lòng chọn người thu trước");
+      return;
+    }
+
+    if (!editableInvoiceDetail.paymentType) {
+      toast.error("Vui lòng chọn hình thức thanh toán");
+      return;
+    }
+
     try {
       await markInvoicePending(
         invoiceDetail,
@@ -126,26 +147,24 @@ const BillingPage = () => {
 
       toast.success("Hóa đơn đã được thanh toán");
 
-      // Load lại danh sách
       fetchInvoices({ status: InvoiceStatus.UNPAID }, page - 1, pageSize);
-
-      // Reset lựa chọn nếu muốn
-      setSelectedInvoiceId(null);
+      setSelectedInvoiceInfo(null);
     } catch (error: any) {
       const messageMap: Record<string, string> = {
-        MISSING_STAFF_ID: "❗ Vui lòng chọn người thu trước",
-        MISSING_PAYMENT_TYPE: "❗ Vui lòng chọn hình thức thanh toán",
-        MISSING_INVOICE_DETAIL: "❗ Không tìm thấy thông tin hóa đơn",
+        MISSING_STAFF_ID: " Vui lòng chọn người thu trước",
+        MISSING_PAYMENT_TYPE: " Vui lòng chọn hình thức thanh toán",
+        MISSING_INVOICE_DETAIL: " Không tìm thấy thông tin hóa đơn",
+        MISSING_REQUIRED_FIELDS:
+          "Thiếu thông tin cần thiết để thanh toán hóa đơn",
       };
 
-      const rawMessage = error?.message || "❗ Đã có lỗi xảy ra";
+      const rawMessage = error?.message || "Đã có lỗi xảy ra";
       const message = messageMap[rawMessage] || rawMessage;
 
       toast.error(message);
     }
   };
 
-  const { previewInvoice } = usePreviewInvoice();
   return (
     <Grid>
       {/* Cột trái: Danh sách hóa đơn */}
@@ -187,7 +206,8 @@ const BillingPage = () => {
 
                   <tbody>
                     {invoices.map((inv, index) => {
-                      const isSelected = selectedInvoiceId === inv.invoiceId;
+                      const isSelected =
+                        selectedInvoiceInfo?.id === inv.invoiceId;
                       return (
                         <tr
                           key={inv.invoiceId}
@@ -250,11 +270,11 @@ const BillingPage = () => {
                 <Group>
                   <Select
                     data={["5", "10", "20"]}
-                    value={pageSize.toString()} // 👈 dùng state thật sự
+                    value={pageSize.toString()}
                     onChange={(value) => {
                       if (value) {
-                        setPageSize(Number(value)); // cập nhật pageSize
-                        setPage(1); // reset về trang đầu khi thay đổi
+                        setPageSize(Number(value));
+                        setPage(1);
                       }
                     }}
                     w={100}
@@ -291,9 +311,14 @@ const BillingPage = () => {
                 size="md"
                 color="red"
                 onClick={handleSavePendingInvoice}
-                disabled={!editableInvoiceDetail.confirmedBy}
-                title={
+                disabled={
+                  selectedInvoiceInfo?.status === "PAID" ||
                   !editableInvoiceDetail.confirmedBy
+                }
+                title={
+                  selectedInvoiceInfo?.status === "PAID"
+                    ? "Hóa đơn đã thanh toán"
+                    : !editableInvoiceDetail.confirmedBy
                     ? "Vui lòng chọn người thu trước"
                     : ""
                 }
@@ -436,16 +461,32 @@ const BillingPage = () => {
                   >
                     xem trước
                   </Button>
-                  <Button color="cyan" size="xs">
-                    in pdf
+                  <Button
+                    color="cyan"
+                    size="xs"
+                    onClick={async () => {
+                      setIsDownloading(true);
+                      await downloadInvoice(invoiceDetail.invoiceId);
+                      setIsDownloading(false);
+                    }}
+                    disabled={isDownloading}
+                    loading={isDownloading}
+                  >
+                    tải xuống
                   </Button>
+
                   <Button
                     color="cyan"
                     size="xs"
                     onClick={() => setViewModalOpened(true)}
-                    disabled={!editableInvoiceDetail.confirmedBy}
-                    title={
+                    disabled={
+                      selectedInvoiceInfo?.status === "PAID" ||
                       !editableInvoiceDetail.confirmedBy
+                    }
+                    title={
+                      selectedInvoiceInfo?.status === "PAID"
+                        ? "Hóa đơn đã thanh toán"
+                        : !editableInvoiceDetail.confirmedBy
                         ? "Vui lòng chọn người thu trước"
                         : ""
                     }
@@ -476,14 +517,15 @@ const BillingPage = () => {
         </Paper>
       </Grid.Col>
 
-      {/* {invoiceDetail && (
-        <ViewInvoiceServicesModal
+      {invoiceDetail && (
+        <ViewEditInvoiceServicesModal
           opened={viewModalOpened}
           onClose={() => setViewModalOpened(false)}
           invoiceItems={invoiceDetail.items}
-          availableServices={medicalServices}
+          availableServices={[]}
+          editable={false}
         />
-      )} */}
+      )}
     </Grid>
   );
 };

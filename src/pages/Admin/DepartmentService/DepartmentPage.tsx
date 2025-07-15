@@ -29,7 +29,7 @@ const DepartmentPage = () => {
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentResponse | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-
+  const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
 
@@ -95,12 +95,12 @@ const DepartmentPage = () => {
         await axiosInstance.post(`/departments`, data);
         toast.success("Tạo phòng ban thành công");
       }
+
       fetchDepartments();
-    } catch {
-      toast.error("Lỗi khi lưu phòng ban");
-    } finally {
       setModalOpened(false);
       setEditingId(null);
+    } catch {
+      toast.error("Lỗi khi lưu phòng ban");
     }
   };
 
@@ -162,10 +162,13 @@ const DepartmentPage = () => {
             type="text"
             placeholder="Tìm theo tên"
             className="border rounded px-3 py-2 text-sm w-full h-[40px]"
-            value={filterName}
-            onChange={(e) => {
-              setPage(1);
-              setFilterName(e.target.value);
+            value={inputName}
+            onChange={(e) => setInputName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setPage(1);
+                setFilterName(inputName.trim());
+              }
             }}
           />
         </div>

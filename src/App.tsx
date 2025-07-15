@@ -38,6 +38,8 @@ import InvoicePage from "./pages/Admin/InvoiceManager/InvoicePage";
 import { PatientManagementPage } from "./pages/Admin/Patient-Management/PatientManagementPage";
 import { MedicalRecordPage } from "./pages/Admin/Medical-Record/MedicalRecordPage";
 import UserViewMedicalExaminationPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationPage";
+import LeaveAdminPage from "./pages/Admin/Leave/LeaveAdminPage";
+import LeaveStaffPage from "./pages/Staff/LeaveStaffPage";
 import WorkSchedulePage from "./pages/Admin/WorkSchedule/WorkSchedulePage";
 import WorkScheduleDetailStaff from "./pages/Admin/WorkScheduleDetailStaff/WorkScheduleDetailStaff";
 // Mock schedules for test
@@ -73,7 +75,6 @@ const mockSchedules: WorkScheduleDetail[] = [
     note: "Nghỉ trực",
   },
 ];
-
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
 });
@@ -122,6 +123,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
+            <Route path="/admin/Leave" element={<LeaveAdminPage />} />
 
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
@@ -156,6 +158,9 @@ export default function App() {
               path="/admin/medical-examination/clinical"
               element={<ClinicalPage />}
             />
+
+            {/* ✅ new staff route with same layout */}
+            <Route path="/staff/leave" element={<LeaveStaffPage />} />
           </Route>
 
           {/* Auth Layout */}

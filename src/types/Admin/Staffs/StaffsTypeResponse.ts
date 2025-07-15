@@ -1,16 +1,16 @@
-import { Gender, Level, Specialty } from "../../../enums/Admin/StaffsEnums";
+import { Gender } from "../../../enums/Admin/StaffsEnums";
 
 export interface StaffsResponse {
   id: string;
   firstName: string;
   middleName: string | null;
   lastName: string;
-   fullName:string;
-    specialty: keyof typeof Specialty; // enum
-  level: Level; // enum
+  fullName: string;
+  staffCode: string;
   phone: string;
   email: string;
-  gender: Gender; // enum
-  dob: string;
+  gender: Gender; 
+  dob: string; 
+  roles: string[];
   accountId: string;
 }

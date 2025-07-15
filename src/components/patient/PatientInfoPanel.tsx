@@ -1,6 +1,5 @@
 import { Paper, Title, Grid, Group, Text } from "@mantine/core";
 import { Patient } from "../../types/Patient/Patient";
-import { useNavigate } from "react-router";
 import React from "react";
 import dayjs from "dayjs";
 
@@ -9,13 +8,7 @@ interface Props {
   onEndExamination?: () => void;
 }
 
-const PatientInfoPanel = ({ patient, onEndExamination }: Props) => {
-  const navigate = useNavigate();
-
-  // ⚠️ Tạm mock trạng thái nếu chưa có trường này trong dữ liệu
-  const mockStatus = "đang khám"; // hoặc "hoàn thành", "chờ khám"
-  const canEndExamination = mockStatus.toLowerCase() === "đang khám";
-
+const PatientInfoPanel = ({ patient }: Props) => {
   return (
     <>
       <Group mb="xs" gap="xs" style={{ fontSize: "14px" }}></Group>

@@ -10,6 +10,7 @@ import {
   IconBusinessplan,
   IconCashRegister,
   IconHeartRateMonitor,
+  IconTimeDurationOff,
 } from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
 
@@ -55,6 +56,12 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/register-medical-examination",
     },
     {
+      name: "khám lâm sàng",
+      icon: <FaUserPlus />,
+      path: "/admin/medical-examination",
+    },
+
+    {
       name: "Quản lý bệnh nhân",
       icon: <FaUsers />,
       path: "/admin/patients",
@@ -97,11 +104,17 @@ const navItemsByRole: Record<string, NavItem[]> = {
           name: "Khám lâm sàng",
           path: "/admin/medical-examination/clinical",
         },
-        {
-          name: "Tai mũi họng",
-          path: "/admin/medical-examination/ent",
-        },
       ],
+    },
+    {
+      name: "Đơn xin nghỉ",
+      icon: <IconTimeDurationOff />,
+      path: "/admin/Leave",
+    },
+    {
+      name: "Đơn xin nghỉ nhân viên",
+      icon: <IconTimeDurationOff />,
+      path: "/staff/leave",
     },
   ],
   staff: [

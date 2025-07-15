@@ -19,7 +19,7 @@ import { toast } from "react-toastify";
 import useStaffs from "../../hooks/staffs-service/useStaffs";
 
 interface Props {
-  resultId: string;
+  medicalOrderId: string;
   serviceName: string;
   onSubmit: (result: {
     resultText: string;
@@ -33,7 +33,7 @@ interface Props {
 }
 
 const ServiceResultPanel = ({
-  resultId,
+  medicalOrderId,
   serviceName,
   onSubmit,
   onCancel,
@@ -64,8 +64,13 @@ const ServiceResultPanel = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const urls = files.map((file) => URL.createObjectURL(file));
+
     setImagePreviews((prev) => [...prev, ...urls]);
     setUploadedFiles((prev) => [...prev, ...files]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -89,8 +94,30 @@ const ServiceResultPanel = ({
       return;
     }
 
+    console.log("🧾 Đang chuẩn bị upload:");
+    console.log("🩺 Bác sĩ:", doctor);
+    console.log("📝 Mô tả:", description.trim());
+    console.log("📅 Ngày:", date.toISOString());
+    console.log("✅ Kết luận:", conclusion);
+    console.log("📁 Số file:", uploadedFiles.length);
+    uploadedFiles.forEach((file, index) => {
+      console.log(`📂 File ${index + 1}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        isFile: file instanceof File,
+      });
+    });
+
     try {
-      await uploadMedicalResult(resultId, uploadedFiles, doctor, conclusion);
+      console.log("🆔 MedicalOrderId:", medicalOrderId);
+
+      await uploadMedicalResult(
+        medicalOrderId,
+        uploadedFiles,
+        doctor,
+        conclusion
+      );
       toast.success("Đã lưu kết quả và upload file thành công.");
 
       onSubmit({
@@ -102,6 +129,7 @@ const ServiceResultPanel = ({
         images: imagePreviews,
       });
     } catch (error) {
+      console.error("❌ Upload lỗi:", error);
       toast.error("Không thể lưu kết quả khám hoặc upload file.");
     }
   };
