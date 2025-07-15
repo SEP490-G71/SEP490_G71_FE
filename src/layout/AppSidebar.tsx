@@ -1,9 +1,7 @@
-// 🔁 File: src/components/AppSidebar.tsx
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
-import { FaUserPlus, FaFileMedical, FaUsers } from "react-icons/fa";
+import { FaUserPlus, FaFileMedical, FaUsers, FaClock } from "react-icons/fa";
 import { FaBriefcaseMedical } from "react-icons/fa6";
 import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
@@ -75,14 +73,29 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/medical-records",
     },
     {
-      name: "Xem Bệnh án",
-      icon: <FaFileMedical />,
+      name: "Xem Hàng Chờ",
+      icon: <FaClock />,
       path: "/admin/view-medical-records",
     },
     {
       name: "Thu chi",
       icon: <IconCashRegister />,
       path: "/admin/medical-examination/billing",
+    },
+    {
+      name: "Lịch làm việc",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule",
+    },
+    {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Báo cáo lịch làm việc",
+      icon: <IconCashRegister />,
+      path: "/admin/statistic-schedule",
     },
     {
       name: "Khám bệnh",
@@ -121,6 +134,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
     },
+    {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
   ],
   user: [
     {
@@ -141,17 +159,19 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // ✅ Xác định role từ JWT
+  // Xác định role từ JWT
   const token = localStorage.getItem("token");
   let role = "user";
   if (token) {
     const payload = parseJwt(token);
-    if (payload?.scope === "ROLE_ADMIN") role = "admin";
-    else if (payload?.scope === "ROLE_STAFF") role = "staff";
-    else if (payload?.scope === "ROLE_USER") role = "user";
+    const scopes = payload?.scope?.split(" ") || [];
+
+    if (scopes.includes("ROLE_ADMIN")) role = "admin";
+    else if (scopes.includes("ROLE_STAFF")) role = "staff";
+    else if (scopes.includes("ROLE_USER")) role = "user";
   }
 
-  // ✅ Lấy danh sách menu theo role
+  // Lấy danh sách menu theo role
   const allNavItems = navItemsByRole[role] || [];
 
   const isActive = useCallback(

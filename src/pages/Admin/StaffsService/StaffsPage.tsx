@@ -121,6 +121,48 @@ const StaffsPage = () => {
     }
   };
 
+  // const handleSubmit = async (data: StaffsRequest) => {
+  //   try {
+  //     const normalizedData: StaffsRequest = {
+  //       ...data,
+  //       middleName: data.middleName ?? null,
+  //       dob:
+  //         typeof data.dob === "string"
+  //           ? data.dob
+  //           : new Date(data.dob).toISOString().split("T")[0],
+  //       roleNames: data.roleNames,
+  //     };
+
+  //     if (editingId) {
+  //       await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
+  //       toast.success("Cập nhật thành công");
+  //     } else {
+  //       await axiosInstance.post(`/staffs`, normalizedData);
+  //       toast.success("Tạo nhân viên thành công");
+  //     }
+
+  //     fetchStaffs();
+  //     setModalOpened(false);
+  //     setEditingId(null);
+  //   } catch (err: any) {
+  //     const raw = err?.response?.data;
+
+  //     if (Array.isArray(raw?.result)) {
+  //       raw.result.forEach((e: { field: string; message: string }) => {
+  //         toast.error(` ${e.message}`);
+  //         console.error(`[Field: ${e.field}] ${e.message}`);
+  //       });
+  //     } else if (typeof raw?.message === "string") {
+  //       //toast.error(` ${raw.message}`);
+  //       console.error(" Message:", raw.message);
+  //     } else {
+  //       toast.error("Lỗi khi lưu nhân viên");
+  //       console.error("Unknown Error:", err);
+  //     }
+
+  //     throw err;
+  //   }
+  // };
   const handleSubmit = async (data: StaffsRequest) => {
     const normalizedData: StaffsRequest = {
       ...data,
