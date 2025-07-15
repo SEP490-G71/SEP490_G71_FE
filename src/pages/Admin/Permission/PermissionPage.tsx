@@ -1,4 +1,3 @@
-// pages/admin/PermissionPage.tsx
 import { useEffect, useState } from "react";
 import { Button, TextInput } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
@@ -7,6 +6,7 @@ import { toast } from "react-toastify";
 import usePermissionService from "../../../hooks/permisson/usePermissionService";
 import CreateEditModal from "../../../components/admin/Permission/CreateEditModal";
 import { PermissionWithGroup } from "../../../types/Admin/Role/RolePage";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const PermissionPage = () => {
   const {
@@ -23,7 +23,7 @@ const PermissionPage = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [searchName, setSearchName] = useState<string>("");
   const [searchNameInput, setSearchNameInput] = useState<string>("");
-
+  const { setting } = useSettingAdminService();
   const loadPermissions = async () => {
     const groupedPermissions = await fetchGroupedPermissions();
     const flattenedPermissions: PermissionWithGroup[] =
@@ -153,6 +153,7 @@ const PermissionPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditModal

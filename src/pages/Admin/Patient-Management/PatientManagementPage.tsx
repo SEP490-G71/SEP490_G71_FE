@@ -12,6 +12,7 @@ import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { normalizePatient } from "../../../types/Admin/Patient-Management/patientUtils";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 export const PatientManagementPage = () => {
   const {
@@ -34,7 +35,7 @@ export const PatientManagementPage = () => {
   const [searchPatientCodeInput, setSearchPatientCodeInput] = useState("");
   const [searchFullNameInput, setSearchFullNameInput] = useState("");
   const [searchPhoneInput, setSearchPhoneInput] = useState("");
-
+  const { setting } = useSettingAdminService();
   useEffect(() => {
     fetchAllPatients(page - 1, pageSize, {
       name: searchFullName || undefined,
@@ -182,6 +183,7 @@ export const PatientManagementPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreatePatientModal

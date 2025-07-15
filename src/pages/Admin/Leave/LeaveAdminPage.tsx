@@ -22,6 +22,7 @@ import {
   validateFromDateToDate,
 } from "../../../hooks/useDateFilterValidation";
 import { useSearchStaffs } from "../../../hooks/staffs-service/useSearchStaffs";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const LeaveAdminPage = () => {
   const [data, setData] = useState<LeaveRequestResponse[]>([]);
@@ -40,6 +41,7 @@ const LeaveAdminPage = () => {
   const [toDateError, setToDateError] = useState<string | null>(null);
   const { validate } = useDateFilterValidation();
   const [staffSearch, setStaffSearch] = useState("");
+  const { setting } = useSettingAdminService();
   const { options: staffOptions, loading: loadingStaffSearch } =
     useSearchStaffs(staffSearch);
   const fetchData = async () => {
@@ -382,6 +384,7 @@ const LeaveAdminPage = () => {
         sortDirection={sortDirection}
         loading={loading}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </>
   );

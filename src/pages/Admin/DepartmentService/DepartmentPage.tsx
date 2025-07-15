@@ -8,6 +8,7 @@ import axiosInstance from "../../../services/axiosInstance";
 import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
 import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -32,7 +33,7 @@ const DepartmentPage = () => {
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
-
+  const { setting } = useSettingAdminService();
   const fetchDepartments = async () => {
     setLoading(true);
     try {
@@ -194,6 +195,7 @@ const DepartmentPage = () => {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditDepartmentModal

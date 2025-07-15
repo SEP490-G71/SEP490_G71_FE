@@ -3,6 +3,7 @@ import useUserViewMedicalExamination from "../../../hooks/UserViewMedicalExamina
 import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExamination/UserViewMedicalExamination";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const statusColor = (status: string): string => {
   switch (status) {
@@ -108,6 +109,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
   };
 
   const groupedPatients = getProcessedQueuePatients();
+  const { setting } = useSettingAdminService();
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -164,6 +166,9 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                     backgroundColor: statusColor(row.status),
                     color: statusTextColor(row.status),
                   })}
+                  pageSizeOptions={
+                    setting?.paginationSizeList || [5, 10, 20, 50]
+                  }
                 />
               </div>
             </div>

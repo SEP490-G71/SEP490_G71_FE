@@ -12,11 +12,12 @@ import { Button, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 export const WorkSchedulePage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
+  const { setting } = useSettingAdminService();
   const {
     workSchedules,
     loading,
@@ -274,6 +275,7 @@ export const WorkSchedulePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <WorkScheduleListModal
