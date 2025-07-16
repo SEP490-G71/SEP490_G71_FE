@@ -13,6 +13,7 @@ import CreateEditLeaveModal, {
   CreateEditLeaveFormValues,
 } from "../../components/staff/EditLeaveModal";
 import { useCreateLeaveRequest } from "../../hooks/leave/staff/useCreateLeaveRequest";
+import { useSettingAdminService } from "../../hooks/setting/useSettingAdminService";
 
 const LeaveStaffPage = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
@@ -20,6 +21,7 @@ const LeaveStaffPage = () => {
   const [editingLeave, setEditingLeave] = useState<LeaveRequestResponse | null>(
     null
   );
+  const { setting } = useSettingAdminService();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -91,7 +93,6 @@ const LeaveStaffPage = () => {
         if (!created) return false;
       }
 
-      // ✅ reset state nếu thành công
       setEditingLeave(null);
       fetchLeaves({}, page - 1, pageSize, sortKey, sortDirection);
       return true;
@@ -222,6 +223,7 @@ const LeaveStaffPage = () => {
         sortDirection={sortDirection}
         loading={loading}
         showActions={false}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditLeaveModal
