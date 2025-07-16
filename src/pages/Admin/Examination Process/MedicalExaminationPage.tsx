@@ -23,7 +23,7 @@ import DiagnosisForm from "../../../components/medical-examination/DiagnosisForm
 import ServiceTable from "../../../components/medical-examination/MedicalServiceTable";
 import { usePatientManagement } from "../../../hooks/Patient-Management/usePatientManagement";
 import useMedicalRecord from "../../../hooks/medicalRecord/useMedicalRecord";
-
+import { Patient as PatientPanelType } from "../../../types/Patient/Patient";
 const MedicalExaminationPage = () => {
   const { selectedPatient, setSelectedPatient } = usePatientStore();
   const { patients: patientList, fetchAllPatients } = usePatientManagement();
@@ -108,13 +108,18 @@ const MedicalExaminationPage = () => {
       services: serviceRows,
     });
   };
+  const normalizedPatientList: PatientPanelType[] = patientList.map((p) => ({
+    ...p,
+    patientCode: p.patientCode ?? "",
+    middleName: p.middleName ?? "", // ép undefined thành ""
+  }));
 
   return (
     <Grid p="md" gutter="md" align="start">
       <PatientPanel
         selectedPatient={selectedPatient}
         onSelectPatient={setSelectedPatient}
-        patientList={patientList}
+        patientList={normalizedPatientList}
         setPatientList={() => {}}
       />
 

@@ -28,7 +28,6 @@ const PatientPanel = ({
   onSelectPatient,
   patientList,
 }: Props) => {
-  // Nếu chưa có API thì sau này có thể fetch ở đây, tạm thời không cần useEffect
   return (
     <Grid.Col span={{ base: 12, md: 4 }}>
       <Flex direction="column">
