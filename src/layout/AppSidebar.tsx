@@ -87,11 +87,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <IconCashRegister />,
       path: "/admin/work-schedule",
     },
-    {
-      name: "Lịch làm việc staff",
-      icon: <IconCashRegister />,
-      path: "/admin/work-schedule-staff",
-    },
+    // {
+    //   name: "Lịch làm việc staff",
+    //   icon: <IconCashRegister />,
+    //   path: "/admin/work-schedule-staff",
+    // },
     {
       name: "Báo cáo lịch làm việc",
       icon: <IconCashRegister />,
@@ -126,6 +126,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Mẫu in bệnh án",
       icon: <IconPrinter />,
       path: "/admin/medical-templates",
+    },
+    {
+      name: "Settings",
+      icon: <FaUserPlus />,
+      path: "/admin/settings",
     },
   ],
   staff: [

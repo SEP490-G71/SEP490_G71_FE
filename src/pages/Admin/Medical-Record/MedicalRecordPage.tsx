@@ -8,11 +8,12 @@ import { DatePickerInput } from "@mantine/dates";
 import { LuEye, LuDownload } from "react-icons/lu";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 import { format } from "date-fns";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-
+  const { setting } = useSettingAdminService();
   const [filterInput, setFilterInput] = useState<{
     medicalRecordCode: string;
     patientId: string;
@@ -246,6 +247,7 @@ export const MedicalRecordPage = () => {
         onSortChange={(_, dir) => setSortDir(dir)}
         loading={loading}
         showActions={false}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </div>
   );

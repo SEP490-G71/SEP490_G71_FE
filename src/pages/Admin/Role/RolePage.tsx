@@ -7,13 +7,14 @@ import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/Role/CreateEditModal";
 import { Role, RoleRequest } from "../../../types/Admin/Role/RolePage";
 import axiosInstance from "../../../services/axiosInstance";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const RolePage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [sortKey, setSortKey] = useState<keyof Role | undefined>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
+  const { setting } = useSettingAdminService();
   const {
     roles,
     totalItems,
@@ -143,6 +144,7 @@ const RolePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditModal
