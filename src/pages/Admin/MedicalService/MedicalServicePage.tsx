@@ -11,6 +11,7 @@ import {
   Department,
   MedicalService,
 } from "../../../types/Admin/MedicalService/MedicalService";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -46,6 +47,8 @@ const MedicalServicePage = () => {
   const [, setServiceNameOptions] = useState<
     { label: string; value: string }[]
   >([]);
+
+  const { setting } = useSettingAdminService();
 
   useEffect(() => {
     fetchAllMedicalServices(
@@ -251,6 +254,7 @@ const MedicalServicePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditModal

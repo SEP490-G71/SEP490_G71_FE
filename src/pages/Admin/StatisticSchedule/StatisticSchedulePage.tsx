@@ -8,6 +8,7 @@ import { Button, Select } from "@mantine/core";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
 import { LuDownload } from "react-icons/lu";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 export const StatisticSchedulePage = () => {
   const [page, setPage] = useState(1);
@@ -15,7 +16,7 @@ export const StatisticSchedulePage = () => {
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [staffId, setStaffId] = useState<string | null>(null);
-
+  const { setting } = useSettingAdminService();
   const { options: staffOptions, searchStaffs } = useStaffSearch();
 
   const {
@@ -170,6 +171,7 @@ export const StatisticSchedulePage = () => {
         }}
         loading={loading}
         showActions={false}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </>
   );

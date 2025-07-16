@@ -116,6 +116,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <IconTimeDurationOff />,
       path: "/staff/leave",
     },
+    {
+      name: "Settings",
+      icon: <FaUserPlus />,
+      path: "/admin/settings",
+    },
   ],
   staff: [
     {

@@ -17,6 +17,7 @@ import { useDownloadInvoiceById } from "../../../hooks/invoice/useDownloadInvoic
 import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
 import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const InvoicePage = () => {
   const [filterStatus, setFilterStatus] = useState("");
@@ -29,7 +30,7 @@ const InvoicePage = () => {
   const [filterCode, setFilterCode] = useState("");
   const [inputPatient, setInputPatient] = useState("");
   const [filterPatient, setFilterPatient] = useState("");
-
+  const { setting } = useSettingAdminService();
   const { options: patientOptions } = useSearchPatients(inputPatient);
   const { stats, fetchInvoiceStats } = useInvoiceStatistics();
   const { exportInvoicesExcel } = useExportInvoicesExcel();
@@ -288,6 +289,7 @@ const InvoicePage = () => {
         sortDirection={sortDirection}
         loading={loadingList}
         showActions={false}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </>
   );

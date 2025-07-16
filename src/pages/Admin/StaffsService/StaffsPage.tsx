@@ -11,6 +11,7 @@ import PageMeta from "../../../components/common/PageMeta";
 import dayjs from "dayjs";
 import CreateEditStaffModal from "../../../components/admin/Staffs/CreateEditStaffModal";
 import { RoleLabels } from "../../../enums/Role/Role";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -36,7 +37,7 @@ const StaffsPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
-
+  const { setting } = useSettingAdminService();
   const fetchStaffs = async () => {
     setLoading(true);
     try {
@@ -121,48 +122,6 @@ const StaffsPage = () => {
     }
   };
 
-  // const handleSubmit = async (data: StaffsRequest) => {
-  //   try {
-  //     const normalizedData: StaffsRequest = {
-  //       ...data,
-  //       middleName: data.middleName ?? null,
-  //       dob:
-  //         typeof data.dob === "string"
-  //           ? data.dob
-  //           : new Date(data.dob).toISOString().split("T")[0],
-  //       roleNames: data.roleNames,
-  //     };
-
-  //     if (editingId) {
-  //       await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
-  //       toast.success("Cập nhật thành công");
-  //     } else {
-  //       await axiosInstance.post(`/staffs`, normalizedData);
-  //       toast.success("Tạo nhân viên thành công");
-  //     }
-
-  //     fetchStaffs();
-  //     setModalOpened(false);
-  //     setEditingId(null);
-  //   } catch (err: any) {
-  //     const raw = err?.response?.data;
-
-  //     if (Array.isArray(raw?.result)) {
-  //       raw.result.forEach((e: { field: string; message: string }) => {
-  //         toast.error(` ${e.message}`);
-  //         console.error(`[Field: ${e.field}] ${e.message}`);
-  //       });
-  //     } else if (typeof raw?.message === "string") {
-  //       //toast.error(` ${raw.message}`);
-  //       console.error(" Message:", raw.message);
-  //     } else {
-  //       toast.error("Lỗi khi lưu nhân viên");
-  //       console.error("Unknown Error:", err);
-  //     }
-
-  //     throw err;
-  //   }
-  // };
   const handleSubmit = async (data: StaffsRequest) => {
     const normalizedData: StaffsRequest = {
       ...data,
@@ -284,6 +243,7 @@ const StaffsPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
 
       <CreateEditStaffModal

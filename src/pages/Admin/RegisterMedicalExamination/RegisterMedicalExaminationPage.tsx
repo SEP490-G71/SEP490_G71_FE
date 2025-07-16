@@ -21,6 +21,7 @@ import { Column } from "../../../types/table";
 import { useRegisterMedicalExamination } from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
@@ -39,7 +40,7 @@ export default function RegisterMedicalExaminationPage() {
   const [sortDirection, setSortDirection] = useState<
     "asc" | "desc" | undefined
   >();
-
+  const { setting } = useSettingAdminService();
   const [registerType, setRegisterType] = useState<string>("CONSULTATION");
   const [totalTodayPatients, setTotalTodayPatients] = useState(0);
 
@@ -270,6 +271,7 @@ export default function RegisterMedicalExaminationPage() {
                 setSortDirection(dir);
               }}
               showActions={false}
+              pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
             />
           </Paper>
         </div>
