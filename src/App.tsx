@@ -44,6 +44,8 @@ import WorkSchedulePage from "./pages/Admin/WorkSchedule/WorkSchedulePage";
 import WorkScheduleDetailStaff from "./pages/Admin/WorkScheduleDetailStaff/WorkScheduleDetailStaff";
 // Mock schedules for test
 import { StatisticSchedulePage } from "./pages/Admin/StatisticSchedule/StatisticSchedulePage";
+import MedicalTemplatesPage from "./pages/Admin/Templates/MedicalTemplatesPage";
+import InvoiceTemplatesPage from "./pages/Admin/Templates/InvoiceTemplatesPage";
 import { SettingAdminPage } from "./pages/Admin/setting/SettingAdminPage";
 
 const theme = createTheme({
@@ -88,6 +90,14 @@ export default function App() {
             <Route
               path="/admin/work-schedule-staff"
               element={<WorkScheduleDetailStaff />}
+            />
+            <Route
+              path="/admin/invoice-templates"
+              element={<InvoiceTemplatesPage />}
+            />
+            <Route
+              path="/admin/medical-templates"
+              element={<MedicalTemplatesPage />}
             />
 
             <Route path="/admin/settings" element={<SettingAdminPage />} />

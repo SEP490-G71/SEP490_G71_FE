@@ -10,6 +10,7 @@ import {
   IconBusinessplan,
   IconCashRegister,
   IconHeartRateMonitor,
+  IconPrinter,
   IconTimeDurationOff,
 } from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
@@ -115,6 +116,16 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Đơn xin nghỉ nhân viên",
       icon: <IconTimeDurationOff />,
       path: "/staff/leave",
+    },
+    {
+      name: "Mẫu in hoá đơn",
+      icon: <IconPrinter />,
+      path: "/admin/invoice-templates",
+    },
+    {
+      name: "Mẫu in bệnh án",
+      icon: <IconPrinter />,
+      path: "/admin/medical-templates",
     },
     {
       name: "Settings",
