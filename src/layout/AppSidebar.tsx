@@ -7,7 +7,6 @@ import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  IconBusinessplan,
   IconCashRegister,
   IconHeartRateMonitor,
   IconPrinter,
@@ -47,11 +46,6 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/departments",
     },
     {
-      name: "Quản lý hoá đơn",
-      icon: <IconBusinessplan />,
-      path: "/admin/invoice",
-    },
-    {
       name: "Đăng ký khám",
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
@@ -87,15 +81,27 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <IconCashRegister />,
       path: "/admin/work-schedule",
     },
-    // {
-    //   name: "Lịch làm việc staff",
-    //   icon: <IconCashRegister />,
-    //   path: "/admin/work-schedule-staff",
-    // },
     {
-      name: "Báo cáo lịch làm việc",
-      icon: <IconCashRegister />,
-      path: "/admin/statistic-schedule",
+      name: "Báo cáo",
+      icon: <IconHeartRateMonitor />,
+      subItems: [
+        {
+          name: "Doanh thu",
+          path: "/admin/invoice",
+        },
+        {
+          name: "Lịch làm việc tổng quan",
+          path: "/admin/statistic-schedule",
+        },
+        {
+          name: "Theo dịch vụ",
+          path: "/admin/statistic-schedule",
+        },
+        {
+          name: "Khách hàng trong tháng",
+          path: "/admin/statistic-schedule",
+        },
+      ],
     },
     {
       name: "Khám bệnh",

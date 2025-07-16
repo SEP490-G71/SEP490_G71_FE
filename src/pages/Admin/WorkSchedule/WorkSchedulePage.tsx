@@ -50,7 +50,6 @@ export const WorkSchedulePage = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchWorkSchedules(page - 1, pageSize, {
-        // ❌ Không gửi staffId lên BE
         shift: filterInput.shift || undefined,
         fromDate: filterInput.fromDate
           ? dayjs(filterInput.fromDate).format("YYYY-MM-DD")
@@ -112,7 +111,6 @@ export const WorkSchedulePage = () => {
     fetchWorkSchedules(page - 1, pageSize);
   };
 
-  // ✅ Lọc staffId ở FE
   const filteredData = workSchedules.filter(
     (item) => !filterInput.staffId || item.staffId === filterInput.staffId
   );

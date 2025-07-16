@@ -4,16 +4,16 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
-import { useSignIn } from "../../hooks/auth/useSignIn"; // <-- thêm dòng này
+import { useSignIn } from "../../hooks/auth/useSignIn";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, loading } = useSignIn(); // <-- hook đăng nhập
+  const { signIn, loading } = useSignIn();
 
   const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault(); // Nếu e có thì chặn reload
+    e?.preventDefault();
     try {
       await signIn(email, password);
     } catch (err: any) {
