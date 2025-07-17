@@ -47,6 +47,8 @@ import { StatisticSchedulePage } from "./pages/Admin/StatisticSchedule/Statistic
 import MedicalTemplatesPage from "./pages/Admin/Templates/MedicalTemplatesPage";
 import InvoiceTemplatesPage from "./pages/Admin/Templates/InvoiceTemplatesPage";
 import { SettingAdminPage } from "./pages/Admin/setting/SettingAdminPage";
+import MedicalServiceStatisticsPage from "./pages/Admin/Statistics/MedicalServiceStatisticsPage";
+import PatientStatisticsPage from "./pages/Admin/Statistics/PatientStatisticsPage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -86,6 +88,14 @@ export default function App() {
             <Route
               path="/admin/statistic-schedule"
               element={<StatisticSchedulePage />}
+            />
+            <Route
+              path="/admin/statistic-medical-service"
+              element={<MedicalServiceStatisticsPage />}
+            />
+            <Route
+              path="/admin/statistic-patient"
+              element={<PatientStatisticsPage />}
             />
             <Route
               path="/admin/work-schedule-staff"
