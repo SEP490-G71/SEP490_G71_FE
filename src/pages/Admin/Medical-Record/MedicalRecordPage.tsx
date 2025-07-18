@@ -9,11 +9,13 @@ import { LuEye, LuDownload } from "react-icons/lu";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 import { format } from "date-fns";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const { setting } = useSettingAdminService();
+
   const [filterInput, setFilterInput] = useState<{
     medicalRecordCode: string;
     patientId: string;
@@ -49,7 +51,7 @@ export const MedicalRecordPage = () => {
   const { options: patientOptions, searchPatients } = usePatientSearch();
 
   const formatLocalDateTime = (date: Date): string => {
-    return format(date, "yyyy-MM-dd"); //
+    return format(date, "yyyy-MM-dd");
   };
 
   const {
@@ -64,6 +66,42 @@ export const MedicalRecordPage = () => {
   useEffect(() => {
     fetchAllMedicalRecords(page - 1, pageSize, sortDir, filters);
   }, [page, pageSize, sortDir, filters]);
+
+  const handleSearch = () => {
+    setFilters({
+      medicalRecordCode: filterInput.medicalRecordCode.trim(),
+      patientId: filterInput.patientId,
+      createdById: filterInput.createdById,
+      status: filterInput.status,
+      fromDate: filterInput.fromDate
+        ? formatLocalDateTime(filterInput.fromDate)
+        : null,
+      toDate: filterInput.toDate
+        ? formatLocalDateTime(filterInput.toDate)
+        : null,
+    });
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilterInput({
+      medicalRecordCode: "",
+      patientId: "",
+      createdById: "",
+      status: "",
+      fromDate: null,
+      toDate: null,
+    });
+    setFilters({
+      medicalRecordCode: "",
+      patientId: "",
+      createdById: "",
+      status: "",
+      fromDate: null,
+      toDate: null,
+    });
+    setPage(1);
+  };
 
   const columns = [
     createColumn<MedicalRecord>({
@@ -92,11 +130,10 @@ export const MedicalRecordPage = () => {
         return statusMap[row.status] || row.status;
       },
     }),
-
     createColumn<MedicalRecord>({
       key: "createdAt",
       label: "Ngày tạo",
-      render: (row) => new Date(row.createdAt).toLocaleString(),
+      render: (row) => format(new Date(row.createdAt), "dd/MM/yyyy"),
     }),
     createColumn<MedicalRecord>({
       key: "actions",
@@ -143,15 +180,6 @@ export const MedicalRecordPage = () => {
               medicalRecordCode: e.currentTarget.value,
             })
           }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters((prev) => ({
-                ...prev,
-                medicalRecordCode: filterInput.medicalRecordCode.trim(),
-              }));
-              setPage(1);
-            }
-          }}
           className="flex-1 min-w-[200px]"
         />
 
@@ -160,14 +188,9 @@ export const MedicalRecordPage = () => {
           placeholder="Tìm tên bệnh nhân"
           data={patientOptions}
           onSearchChange={(query) => searchPatients(query)}
-          onChange={(value) => {
-            setFilterInput({ ...filterInput, patientId: value || "" });
-            setFilters((prev) => ({
-              ...prev,
-              patientId: value || "",
-            }));
-            setPage(1);
-          }}
+          onChange={(value) =>
+            setFilterInput({ ...filterInput, patientId: value || "" })
+          }
           value={filterInput.patientId}
           className="flex-1 min-w-[250px]"
           clearable
@@ -184,18 +207,12 @@ export const MedicalRecordPage = () => {
           ]}
           placeholder="Trạng thái"
           value={filterInput.status}
-          onChange={(value) => {
-            setFilterInput({ ...filterInput, status: value || "" });
-            setFilters((prev) => {
-              const newFilters = { ...prev };
-              if (!value) delete newFilters.status;
-              else newFilters.status = value;
-              return newFilters;
-            });
-            setPage(1);
-          }}
+          onChange={(value) =>
+            setFilterInput({ ...filterInput, status: value || "" })
+          }
           className="flex-1 min-w-[200px]"
         />
+
         <DatePickerInput
           placeholder="Từ ngày"
           value={filterInput.fromDate}
@@ -204,13 +221,7 @@ export const MedicalRecordPage = () => {
           onChange={(value) => {
             const date = value ? new Date(value) : null;
             if (date) date.setHours(0, 0, 0, 0);
-
             setFilterInput((prev) => ({ ...prev, fromDate: date }));
-            setFilters((prev) => ({
-              ...prev,
-              fromDate: date ? formatLocalDateTime(date) : null,
-            }));
-            setPage(1);
           }}
         />
 
@@ -221,15 +232,18 @@ export const MedicalRecordPage = () => {
           onChange={(value) => {
             const date = value ? new Date(value) : null;
             if (date) date.setHours(23, 59, 59, 999);
-
             setFilterInput((prev) => ({ ...prev, toDate: date }));
-            setFilters((prev) => ({
-              ...prev,
-              toDate: date ? formatLocalDateTime(date) : null,
-            }));
-            setPage(1);
           }}
         />
+
+        <div className="flex items-end gap-2">
+          <Button variant="filled" color="blue" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -247,9 +261,12 @@ export const MedicalRecordPage = () => {
         onSortChange={(_, dir) => setSortDir(dir)}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
     </div>
   );
 };
+
 export default MedicalRecordPage;

@@ -15,6 +15,7 @@ const RolePage = () => {
   const [sortKey, setSortKey] = useState<keyof Role | undefined>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { setting } = useSettingAdminService();
+
   const {
     roles,
     totalItems,
@@ -27,6 +28,7 @@ const RolePage = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
   const [searchNameInput, setSearchNameInput] = useState<string>("");
   const [searchName, setSearchName] = useState<string>("");
 
@@ -70,20 +72,31 @@ const RolePage = () => {
     try {
       if (selectedRole) {
         await axiosInstance.put(`/roles/${selectedRole.name}`, formData);
-        toast.success("Updated successfully");
+        toast.success("Cập nhật thành công");
       } else {
         await axiosInstance.post("/roles", formData);
-        toast.success("Created successfully");
+        toast.success("Tạo mới thành công");
       }
       fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
         name: searchName,
       });
     } catch (error: any) {
       console.error("Error saving role", error);
-      toast.error(error.response?.data?.message || "Failed to save role");
+      toast.error(error.response?.data?.message || "Lỗi khi lưu vai trò");
     } finally {
       setModalOpened(false);
     }
+  };
+
+  const handleSearch = () => {
+    setSearchName(searchNameInput.trim());
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchNameInput("");
+    setSearchName("");
+    setPage(1);
   };
 
   const columns = [
@@ -113,14 +126,16 @@ const RolePage = () => {
           placeholder="Nhập tên vai trò"
           value={searchNameInput}
           onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchName(searchNameInput.trim());
-              setPage(1);
-            }
-          }}
           className="flex-1 min-w-[150px]"
         />
+        <div className="flex items-end gap-2">
+          <Button variant="filled" color="blue" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -144,7 +159,9 @@ const RolePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreateEditModal

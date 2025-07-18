@@ -30,11 +30,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/medical-service",
     },
     { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
-    {
-      name: "Quản lý permission",
-      icon: <MdManageAccounts />,
-      path: "/admin/permission",
-    },
+    // {
+    //   name: "Quản lý permission",
+    //   icon: <MdManageAccounts />,
+    //   path: "/admin/permission",
+    // },
     {
       name: "Quản lý nhân viên",
       icon: <AiOutlineAudit />,

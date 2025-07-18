@@ -45,42 +45,45 @@ export const WorkSchedulePage = () => {
     dayOfWeek: "",
   });
 
+  const [filters, setFilters] = useState({
+    staffId: "",
+    shift: "",
+    fromDate: null as Date | null,
+    toDate: null as Date | null,
+    dayOfWeek: "",
+  });
+
   const { options: staffOptions, searchStaffs } = useStaffSearch();
 
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchWorkSchedules(page - 1, pageSize, {
-        shift: filterInput.shift || undefined,
-        fromDate: filterInput.fromDate
-          ? dayjs(filterInput.fromDate).format("YYYY-MM-DD")
-          : undefined,
-        toDate: filterInput.toDate
-          ? dayjs(filterInput.toDate).format("YYYY-MM-DD")
-          : undefined,
-        dayOfWeek: filterInput.dayOfWeek || undefined,
-      });
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [
-    filterInput.shift,
-    filterInput.fromDate,
-    filterInput.toDate,
-    filterInput.dayOfWeek,
-    page,
-    pageSize,
-  ]);
+    fetchWorkSchedules(page - 1, pageSize, {
+      shift: filters.shift || undefined,
+      fromDate: filters.fromDate
+        ? dayjs(filters.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: filters.toDate
+        ? dayjs(filters.toDate).format("YYYY-MM-DD")
+        : undefined,
+      dayOfWeek: filters.dayOfWeek || undefined,
+    });
+  }, [filters, page, pageSize]);
 
   const handleReset = () => {
-    setFilterInput({
+    const resetValue = {
       staffId: "",
       shift: "",
       fromDate: null,
       toDate: null,
       dayOfWeek: "",
-    });
+    };
+    setFilterInput(resetValue);
+    setFilters(resetValue);
     setPage(1);
-    fetchWorkSchedules(0, pageSize);
+  };
+
+  const handleSearch = () => {
+    setFilters(filterInput);
+    setPage(1);
   };
 
   const handleView = async (row: WorkSchedule) => {
@@ -112,7 +115,7 @@ export const WorkSchedulePage = () => {
   };
 
   const filteredData = workSchedules.filter(
-    (item) => !filterInput.staffId || item.staffId === filterInput.staffId
+    (item) => !filters.staffId || item.staffId === filters.staffId
   );
   const paginatedData = filteredData.slice(
     (page - 1) * pageSize,
@@ -162,11 +165,6 @@ export const WorkSchedulePage = () => {
       key: "endDate",
       label: "Đến ngày",
       render: (row) => new Date(row.endDate).toLocaleDateString(),
-    }),
-    createColumn<WorkSchedule>({
-      key: "note",
-      label: "Ghi chú",
-      render: (row) => row.note,
     }),
   ];
 
@@ -254,6 +252,9 @@ export const WorkSchedulePage = () => {
           <Button color="blue" variant="filled" onClick={handleReset}>
             Reset
           </Button>
+          <Button color="blue" variant="filled" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
         </div>
       </div>
 
@@ -273,7 +274,9 @@ export const WorkSchedulePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <WorkScheduleListModal

@@ -271,7 +271,9 @@ export default function RegisterMedicalExaminationPage() {
                 setSortDirection(dir);
               }}
               showActions={false}
-              pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+              pageSizeOptions={setting?.paginationSizeList
+                .slice()
+                .sort((a, b) => a - b)}
             />
           </Paper>
         </div>
