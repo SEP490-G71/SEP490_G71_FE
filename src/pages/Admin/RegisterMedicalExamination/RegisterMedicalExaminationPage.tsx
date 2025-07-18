@@ -48,12 +48,12 @@ export default function RegisterMedicalExaminationPage() {
     {
       key: "patientCode",
       label: "Mã BN",
-      sortable: true,
+      sortable: false,
     },
     {
       key: "fullName",
       label: "Họ tên",
-      sortable: true,
+      sortable: false,
     },
     {
       key: "gender",

@@ -9,6 +9,7 @@ import { LuEye, LuDownload } from "react-icons/lu";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 import { format } from "date-fns";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
@@ -171,70 +172,80 @@ export const MedicalRecordPage = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 my-4">
-        <TextInput
-          placeholder="Mã hồ sơ"
-          value={filterInput.medicalRecordCode}
-          onChange={(e) =>
-            setFilterInput({
-              ...filterInput,
-              medicalRecordCode: e.currentTarget.value,
-            })
-          }
-          className="flex-1 min-w-[200px]"
-        />
+        <FloatingLabelWrapper label="Mã hồ sơ">
+          <TextInput
+            placeholder="Mã hồ sơ"
+            value={filterInput.medicalRecordCode}
+            onChange={(e) =>
+              setFilterInput({
+                ...filterInput,
+                medicalRecordCode: e.currentTarget.value,
+              })
+            }
+            className="flex-1 min-w-[200px]"
+          />
+        </FloatingLabelWrapper>
 
-        <Select
-          searchable
-          placeholder="Tìm tên bệnh nhân"
-          data={patientOptions}
-          onSearchChange={(query) => searchPatients(query)}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, patientId: value || "" })
-          }
-          value={filterInput.patientId}
-          className="flex-1 min-w-[250px]"
-          clearable
-        />
+        <FloatingLabelWrapper label="Tìm tên bệnh nhân">
+          <Select
+            searchable
+            placeholder="Tìm tên bệnh nhân"
+            data={patientOptions}
+            onSearchChange={(query) => searchPatients(query)}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, patientId: value || "" })
+            }
+            value={filterInput.patientId}
+            className="flex-1 min-w-[250px]"
+            clearable
+          />
+        </FloatingLabelWrapper>
 
-        <Select
-          data={[
-            { value: "", label: "Tất cả trạng thái" },
-            { value: "TESTING", label: "Đang xét nghiệm" },
-            { value: "WAITING_FOR_PAYMENT", label: "Chờ thanh toán" },
-            { value: "TESTING_COMPLETED", label: "Đã xét nghiệm" },
-            { value: "WAITING_FOR_RESULT", label: "Chờ kết quả" },
-            { value: "RESULT_COMPLETED", label: "Hoàn thành kết quả" },
-          ]}
-          placeholder="Trạng thái"
-          value={filterInput.status}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, status: value || "" })
-          }
-          className="flex-1 min-w-[200px]"
-        />
+        <FloatingLabelWrapper label="Trạng thái">
+          <Select
+            data={[
+              { value: "", label: "Tất cả trạng thái" },
+              { value: "TESTING", label: "Đang xét nghiệm" },
+              { value: "WAITING_FOR_PAYMENT", label: "Chờ thanh toán" },
+              { value: "TESTING_COMPLETED", label: "Đã xét nghiệm" },
+              { value: "WAITING_FOR_RESULT", label: "Chờ kết quả" },
+              { value: "RESULT_COMPLETED", label: "Hoàn thành kết quả" },
+            ]}
+            placeholder="Trạng thái"
+            value={filterInput.status}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, status: value || "" })
+            }
+            className="flex-1 min-w-[200px]"
+          />
+        </FloatingLabelWrapper>
 
-        <DatePickerInput
-          placeholder="Từ ngày"
-          value={filterInput.fromDate}
-          valueFormat="DD/MM/YYYY"
-          maxDate={new Date()}
-          onChange={(value) => {
-            const date = value ? new Date(value) : null;
-            if (date) date.setHours(0, 0, 0, 0);
-            setFilterInput((prev) => ({ ...prev, fromDate: date }));
-          }}
-        />
+        <FloatingLabelWrapper label="Từ ngày">
+          <DatePickerInput
+            placeholder="Từ ngày"
+            value={filterInput.fromDate}
+            valueFormat="DD/MM/YYYY"
+            maxDate={new Date()}
+            onChange={(value) => {
+              const date = value ? new Date(value) : null;
+              if (date) date.setHours(0, 0, 0, 0);
+              setFilterInput((prev) => ({ ...prev, fromDate: date }));
+            }}
+          />
+        </FloatingLabelWrapper>
 
-        <DatePickerInput
-          placeholder="Đến ngày"
-          value={filterInput.toDate}
-          valueFormat="DD/MM/YYYY"
-          onChange={(value) => {
-            const date = value ? new Date(value) : null;
-            if (date) date.setHours(23, 59, 59, 999);
-            setFilterInput((prev) => ({ ...prev, toDate: date }));
-          }}
-        />
+        <FloatingLabelWrapper label="Đến ngày">
+          <DatePickerInput
+            placeholder="Đến ngày"
+            value={filterInput.toDate}
+            valueFormat="DD/MM/YYYY"
+            onChange={(value) => {
+              const date = value ? new Date(value) : null;
+              if (date) date.setHours(23, 59, 59, 999);
+              setFilterInput((prev) => ({ ...prev, toDate: date }));
+            }}
+          />
+        </FloatingLabelWrapper>
 
         <div className="flex items-end gap-2">
           <Button variant="filled" color="blue" onClick={handleReset}>

@@ -12,6 +12,7 @@ import {
   MedicalService,
 } from "../../../types/Admin/MedicalService/MedicalService";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -185,7 +186,7 @@ const MedicalServicePage = () => {
     createColumn<MedicalService>({
       key: "name",
       label: "Tên Dịch Vụ",
-      sortable: true,
+      sortable: false,
     }),
     createColumn<MedicalService>({
       key: "description",
@@ -201,13 +202,13 @@ const MedicalServicePage = () => {
     createColumn<MedicalService>({
       key: "price",
       label: "Giá",
-      sortable: true,
+      sortable: false,
       render: (row) => `${row.price.toLocaleString()} VND`,
     }),
     createColumn<MedicalService>({
       key: "vat",
       label: "VAT (%)",
-      sortable: true,
+      sortable: false,
     }),
   ];
 
@@ -221,24 +222,28 @@ const MedicalServicePage = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 my-4">
-        <Select
-          placeholder="Chọn phòng ban"
-          data={departments}
-          value={departmentFilterInput}
-          onChange={(value) => {
-            setDepartmentFilterInput(value || undefined);
-          }}
-          clearable
-          searchable
-          className="flex-1 min-w-[150px]"
-        />
+        <FloatingLabelWrapper label="Chọn phòng ban">
+          <Select
+            placeholder="Chọn phòng ban"
+            data={departments}
+            value={departmentFilterInput}
+            onChange={(value) => {
+              setDepartmentFilterInput(value || undefined);
+            }}
+            clearable
+            searchable
+            className="flex-1 min-w-[150px]"
+          />
+        </FloatingLabelWrapper>
 
-        <TextInput
-          placeholder="Nhập tên dịch vụ"
-          value={searchNameInput}
-          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-          className="flex-1 min-w-[150px]"
-        />
+        <FloatingLabelWrapper label="Nhập tên dịch vụ">
+          <TextInput
+            placeholder="Nhập tên dịch vụ"
+            value={searchNameInput}
+            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+            className="flex-1 min-w-[150px]"
+          />
+        </FloatingLabelWrapper>
 
         <div className="flex items-end gap-2">
           <Button variant="filled" color="blue" onClick={handleReset}>

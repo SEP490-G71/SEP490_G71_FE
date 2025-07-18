@@ -8,6 +8,7 @@ import CreateEditModal from "../../../components/admin/Role/CreateEditModal";
 import { Role, RoleRequest } from "../../../types/Admin/Role/RolePage";
 import axiosInstance from "../../../services/axiosInstance";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 const RolePage = () => {
   const [page, setPage] = useState(1);
@@ -103,7 +104,7 @@ const RolePage = () => {
     createColumn<Role>({
       key: "name",
       label: "Vai trò",
-      sortable: true,
+      sortable: false,
     }),
     createColumn<Role>({
       key: "description",
@@ -122,12 +123,14 @@ const RolePage = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 my-4">
-        <TextInput
-          placeholder="Nhập tên vai trò"
-          value={searchNameInput}
-          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-          className="flex-1 min-w-[150px]"
-        />
+        <FloatingLabelWrapper label="Mã hồ sơ">
+          <TextInput
+            placeholder="Nhập tên vai trò"
+            value={searchNameInput}
+            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+            className="flex-1 min-w-[150px]"
+          />
+        </FloatingLabelWrapper>
         <div className="flex items-end gap-2">
           <Button variant="filled" color="blue" onClick={handleReset}>
             Reset
