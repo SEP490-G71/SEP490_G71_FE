@@ -47,6 +47,7 @@ import { StatisticSchedulePage } from "./pages/Admin/StatisticSchedule/Statistic
 import MedicalTemplatesPage from "./pages/Admin/Templates/MedicalTemplatesPage";
 import InvoiceTemplatesPage from "./pages/Admin/Templates/InvoiceTemplatesPage";
 import { SettingAdminPage } from "./pages/Admin/setting/SettingAdminPage";
+import DivideShiftPage from "./pages/Admin/DivideShift/DivideShiftPage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -83,6 +84,7 @@ export default function App() {
               element={<RegisterMedicalExaminationPage />}
             />
             <Route path="/admin/work-schedule" element={<WorkSchedulePage />} />
+            <Route path="/admin/divide-shift" element={<DivideShiftPage />} />
             <Route
               path="/admin/statistic-schedule"
               element={<StatisticSchedulePage />}
