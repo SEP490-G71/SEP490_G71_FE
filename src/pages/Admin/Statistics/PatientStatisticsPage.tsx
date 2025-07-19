@@ -48,11 +48,14 @@ const PatientStatisticsPage = () => {
   };
 
   const handleSendMail = () => {
-    if (!selectedMonth) {
-      toast.warning("Vui lòng chọn tháng để gửi email sinh nhật");
-      return;
-    }
-    sendBirthdayEmail(Number(selectedMonth));
+    const currentMonth = new Date().getMonth() + 1;
+
+    if (loading) return;
+
+    sendBirthdayEmail(currentMonth);
+    toast.success(
+      `Đã gửi email sinh nhật cho bệnh nhân sinh vào tháng ${currentMonth}`
+    );
   };
 
   const columns = [
@@ -87,8 +90,9 @@ const PatientStatisticsPage = () => {
         </Button>
       </div>
 
-      <div className="flex items-end gap-2 mb-4">
-        <div className="w-[200px]">
+      <div className="flex items-end gap-2 mb-4 w-full">
+        {/* Chọn tháng */}
+        <div className="flex-grow">
           <FloatingLabelWrapper label="Chọn tháng">
             <Select
               placeholder="Chọn tháng"
@@ -99,12 +103,17 @@ const PatientStatisticsPage = () => {
               }}
               data={monthOptions}
               clearable
+              className="w-full"
             />
           </FloatingLabelWrapper>
         </div>
-        <Button color="teal" onClick={handleSendMail}>
-          Gửi email chúc mừng sinh nhật
-        </Button>
+
+        {/* Gửi email chúc mừng sinh nhật button */}
+        <div className="ml-2">
+          <Button color="teal" onClick={handleSendMail}>
+            Gửi email sinh nhật
+          </Button>
+        </div>
       </div>
 
       <CustomTable

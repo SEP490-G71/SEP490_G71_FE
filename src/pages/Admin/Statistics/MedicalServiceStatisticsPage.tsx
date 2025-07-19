@@ -11,7 +11,7 @@ const MedicalServiceStatisticsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState(""); // trigger thực thi khi nhấn Enter
+  const [submittedQuery, setSubmittedQuery] = useState("");
 
   const { statistics, summary, loading, fetchStatistics, exportStatistics } =
     useMedicalServiceStatistic();
@@ -26,11 +26,9 @@ const MedicalServiceStatisticsPage = () => {
     fetchStatistics(page - 1, pageSize);
   }, [page, pageSize]);
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      setSubmittedQuery(searchQuery.trim().toLowerCase());
-      setPage(1);
-    }
+  const handleSearch = () => {
+    setSubmittedQuery(searchQuery.trim().toLowerCase());
+    setPage(1);
   };
 
   const handleReload = () => {
@@ -120,20 +118,27 @@ const MedicalServiceStatisticsPage = () => {
               leftSection={<LuSearch size={16} />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              onKeyDown={handleSearch}
               className="w-full"
             />
           </FloatingLabelWrapper>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end space-x-4">
+          <Button
+            variant="filled"
+            color="gray"
+            onClick={handleReload}
+            className="rounded-md bg-gray-500 text-white px-4 h-10 hover:bg-gray-600 transition"
+          >
+            Tải lại
+          </Button>
           <Button
             variant="filled"
             color="blue"
-            onClick={handleReload}
-            className="w-full"
+            onClick={handleSearch}
+            className="rounded-md bg-gray-400 text-white px-4 h-10 hover:bg-gray-500 transition"
           >
-            Tải lại
+            Tìm kiếm
           </Button>
         </div>
       </div>

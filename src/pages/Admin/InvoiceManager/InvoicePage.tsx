@@ -13,7 +13,6 @@ import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWr
 import { useInvoiceStatistics } from "../../../hooks/invoice/useInvoiceStatistics";
 import { useExportInvoicesExcel } from "../../../hooks/invoice/useExportInvoicesExcel";
 import { useDownloadInvoiceById } from "../../../hooks/invoice/useDownloadInvoiceById";
-
 import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
 import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
@@ -39,11 +38,34 @@ const InvoicePage = () => {
   const { previewInvoice } = usePreviewInvoice();
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
+
+  const applyFilter = () => {
+    fetchInvoices(
+      {
+        status: filterStatus || undefined,
+        patientId: filterPatient || undefined,
+        invoiceCode: filterCode || undefined,
+        fromDate: filterFromDate
+          ? dayjs(filterFromDate).format("YYYY-MM-DD")
+          : undefined,
+        toDate: filterToDate
+          ? dayjs(filterToDate).format("YYYY-MM-DD")
+          : undefined,
+      },
+      0,
+      pageSize,
+      "createdAt",
+      sortDirection
+    );
+    setPage(1);
+  };
+
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
       setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
     }
   }, [setting]);
+
   useEffect(() => {
     fetchInvoices(
       {
@@ -62,16 +84,7 @@ const InvoicePage = () => {
       "createdAt",
       sortDirection
     );
-  }, [
-    page,
-    pageSize,
-    sortDirection,
-    filterStatus,
-    filterCode,
-    filterFromDate,
-    filterToDate,
-    filterPatient,
-  ]);
+  }, [page, pageSize, sortDirection]);
 
   useEffect(() => {
     fetchInvoiceStats();
@@ -198,12 +211,6 @@ const InvoicePage = () => {
             placeholder="Nhập mã hóa đơn"
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setPage(1);
-                setFilterCode(inputCode.trim());
-              }
-            }}
             className="w-full"
             styles={{ input: { height: 40 } }}
           />
@@ -216,10 +223,7 @@ const InvoicePage = () => {
             data={patientOptions}
             value={filterPatient}
             onSearchChange={setInputPatient}
-            onChange={(val) => {
-              setFilterPatient(val || "");
-              setPage(1);
-            }}
+            onChange={(val) => setFilterPatient(val || "")}
             className="w-full"
             clearable
             styles={{ input: { height: 40, zIndex: 1 } }}
@@ -230,11 +234,9 @@ const InvoicePage = () => {
           <DatePickerInput
             placeholder="Từ ngày"
             value={filterFromDate}
-            onChange={(date) => {
-              setPage(1);
-              const parsed = dayjs(date).toDate();
-              setFilterFromDate(date ? parsed : null);
-            }}
+            onChange={(date) =>
+              setFilterFromDate(date ? dayjs(date).toDate() : null)
+            }
             className="w-full"
             styles={{ input: { height: 40 } }}
             valueFormat="DD/MM/YYYY"
@@ -245,18 +247,16 @@ const InvoicePage = () => {
           <DatePickerInput
             placeholder="Đến ngày"
             value={filterToDate}
-            onChange={(date) => {
-              setPage(1);
-              const parsed = dayjs(date).toDate();
-              setFilterToDate(date ? parsed : null);
-            }}
+            onChange={(date) =>
+              setFilterToDate(date ? dayjs(date).toDate() : null)
+            }
             className="w-full"
             styles={{ input: { height: 40 } }}
             valueFormat="DD/MM/YYYY"
           />
         </FloatingLabelWrapper>
 
-        <div className="flex items-end col-span-1">
+        <div className="flex items-end col-span-1 gap-2">
           <button
             onClick={() => {
               setFilterStatus("");
@@ -268,10 +268,19 @@ const InvoicePage = () => {
               setFilterToDate(null);
               setPage(1);
             }}
-            className="rounded-md bg-blue-400 text-white border border-blue-400 hover:bg-blue-500 transition w-16 h-10 flex items-center justify-center"
+            className="rounded-md bg-gray-400 text-white px-4 h-10 hover:bg-gray-500 transition"
             title="Tải lại bộ lọc"
           >
-            tải lại
+            Tải lại
+          </button>
+          <button
+            onClick={() => {
+              setFilterCode(inputCode.trim());
+              applyFilter();
+            }}
+            className="rounded-md bg-blue-500 text-white px-4 h-10 hover:bg-blue-600 transition"
+          >
+            Tìm kiếm
           </button>
         </div>
       </div>
