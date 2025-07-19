@@ -14,7 +14,7 @@ const uploadMedicalResult = async (
   formData.append("note", note);
 
   return axiosInstance.post(
-    `/medical-result/${resultId}/upload`,
+    `/medical-results/${resultId}/upload`,
     formData,
     {
       headers: {

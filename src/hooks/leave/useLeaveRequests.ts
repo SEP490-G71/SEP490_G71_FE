@@ -39,7 +39,7 @@ export const useLeaveRequests = () => {
       };
 
       const res = await axiosInstance.get(
-        "/leave-request",
+        "/leave-requests",
         { params }
       );
 

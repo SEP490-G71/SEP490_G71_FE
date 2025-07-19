@@ -21,7 +21,7 @@ export const useCreateLeaveRequest = () => {
   ): Promise<LeaveRequestResponse | null> => {
     setLoading(true);
     try {
-      const res = await axiosInstance.post("/leave-request", dto);
+      const res = await axiosInstance.post("/leave-requests", dto);
       toast.success("Tạo đơn nghỉ phép thành công");
       return res.data.result as LeaveRequestResponse;
     } catch (err: any) {

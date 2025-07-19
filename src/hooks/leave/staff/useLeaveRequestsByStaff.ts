@@ -42,7 +42,7 @@ export const useLeaveRequestsByStaff = (staffId: string) => {
       };
 
       const res = await axiosInstance.get(
-        `/leave-request/staff/${staffId}`,
+        `/leave-requests/staff/${staffId}`,
         { params }
       );
 

@@ -22,7 +22,7 @@ export const useUpdateLeaveRequest = () => {
     setLoading(true);
     try {
       const res = await axiosInstance.put(
-        `/leave-request/${leaveRequestId}`,
+        `/leave-requests/${leaveRequestId}`,
         dto
       );
       toast.success("Cập nhật đơn nghỉ thành công");

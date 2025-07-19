@@ -78,7 +78,7 @@ const LeaveAdminPage = () => {
           : undefined,
       };
 
-      const res = await axiosInstance.get(`/leave-request`, { params });
+      const res = await axiosInstance.get(`/leave-requests`, { params });
       const result = res.data?.result;
 
       setData(result?.content || []);

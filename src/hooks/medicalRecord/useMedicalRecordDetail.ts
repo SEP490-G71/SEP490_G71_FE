@@ -10,7 +10,7 @@ const useMedicalRecordDetail = () => {
   const fetchMedicalRecordDetail = async (id: string) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/medical-record/${id}`);
+      const response = await axiosInstance.get(`/medical-records/${id}`);
       const result = response.data?.result;
       if (result) {
         setRecordDetail(result);

@@ -17,7 +17,7 @@ export const useTemplateFiles = () => {
   const fetchTemplates = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/template-file");
+      const res = await axiosInstance.get("/template-files");
       const result = res.data.result;
 
       if (Array.isArray(result?.content)) {
@@ -37,7 +37,7 @@ export const useTemplateFiles = () => {
 
   const fetchTemplateById = async (id: string) => {
     try {
-      const res = await axiosInstance.get(`/template-file/${id}`);
+      const res = await axiosInstance.get(`/template-files/${id}`);
       return res.data.result as TemplateFileResponse;
     } catch (error) {
       console.error("Lỗi khi lấy template theo ID:", error);
@@ -56,7 +56,7 @@ export const useTemplateFiles = () => {
       isDefault: info.isDefault, // ✅ đúng chuẩn
     }));
 
-    await axiosInstance.post("/template-file", formData, {
+    await axiosInstance.post("/template-files", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -79,7 +79,7 @@ export const useTemplateFiles = () => {
         isDefault: info.isDefault,
       }));
 
-      await axiosInstance.put(`/template-file/${id}`, formData, {
+      await axiosInstance.put(`/template-files/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -95,7 +95,7 @@ export const useTemplateFiles = () => {
 
   const deleteTemplate = async (id: string) => {
     try {
-      await axiosInstance.delete(`/template-file/${id}`);
+      await axiosInstance.delete(`/template-files/${id}`);
       toast.success("Xóa mẫu thành công");
       await fetchTemplates();
     } catch (error) {
