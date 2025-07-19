@@ -50,6 +50,7 @@ import { SettingAdminPage } from "./pages/Admin/setting/SettingAdminPage";
 import DivideShiftPage from "./pages/Admin/DivideShift/DivideShiftPage";
 import MedicalServiceStatisticsPage from "./pages/Admin/Statistics/MedicalServiceStatisticsPage";
 import PatientStatisticsPage from "./pages/Admin/Statistics/PatientStatisticsPage";
+import { SpecializationsPages } from "./pages/Admin/Specializations/SpecializationsPages";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -80,6 +81,10 @@ export default function App() {
             <Route
               path="/admin/medical-records"
               element={<MedicalRecordPage />}
+            />
+            <Route
+              path="/admin/specializations"
+              element={<SpecializationsPages />}
             />
             <Route
               path="/admin/register-medical-examination"
@@ -154,7 +159,6 @@ export default function App() {
               element={<ClinicalPage />}
             />
 
-            {/* ✅ new staff route with same layout */}
             <Route path="/staff/leave" element={<LeaveStaffPage />} />
           </Route>
 

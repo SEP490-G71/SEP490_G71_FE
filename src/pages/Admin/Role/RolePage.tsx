@@ -130,7 +130,7 @@ const RolePage = () => {
 
       <div className="grid grid-cols-12 gap-4 my-4">
         <div className="col-span-12 md:col-span-10">
-          <FloatingLabelWrapper label="Mã hồ sơ">
+          <FloatingLabelWrapper label="Vai trò">
             <TextInput
               placeholder="Nhập tên vai trò"
               value={searchNameInput}
@@ -142,10 +142,15 @@ const RolePage = () => {
         </div>
 
         <div className="col-span-12 md:col-span-2 flex items-end gap-2">
-          <Button variant="light" color="gray" onClick={handleReset}>
+          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
             Tải lại
           </Button>
-          <Button variant="filled" color="blue" onClick={handleSearch}>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            fullWidth
+          >
             Tìm kiếm
           </Button>
         </div>
