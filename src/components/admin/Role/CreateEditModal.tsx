@@ -127,10 +127,15 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
       opened={opened}
       onClose={onClose}
       size="lg"
+      centered
       title={
         <div>
           <h2 className="text-xl font-bold">
-            {initialData ? "Cập nhật vai trò" : "Tạo vai trò"}
+            {isViewMode
+              ? "Xem ca làm"
+              : initialData
+              ? "Chỉnh sửa ca làm"
+              : "Tạo ca làm"}
           </h2>
           <div className="mt-2 border-b border-gray-300" />
         </div>

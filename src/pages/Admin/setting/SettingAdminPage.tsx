@@ -142,7 +142,9 @@ export const SettingAdminPage: React.FC = () => {
             </Grid.Col>
             <Grid.Col span={12}>
               <PaginationSizeInput
-                values={form.values.paginationSizeList}
+                values={form.values.paginationSizeList
+                  .slice()
+                  .sort((a, b) => a - b)}
                 onChange={(val) =>
                   form.setFieldValue("paginationSizeList", val)
                 }

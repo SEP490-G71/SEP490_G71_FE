@@ -13,6 +13,7 @@ import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 export const WorkSchedulePage = () => {
   const [page, setPage] = useState(1);
@@ -45,42 +46,45 @@ export const WorkSchedulePage = () => {
     dayOfWeek: "",
   });
 
+  const [filters, setFilters] = useState({
+    staffId: "",
+    shift: "",
+    fromDate: null as Date | null,
+    toDate: null as Date | null,
+    dayOfWeek: "",
+  });
+
   const { options: staffOptions, searchStaffs } = useStaffSearch();
 
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      fetchWorkSchedules(page - 1, pageSize, {
-        shift: filterInput.shift || undefined,
-        fromDate: filterInput.fromDate
-          ? dayjs(filterInput.fromDate).format("YYYY-MM-DD")
-          : undefined,
-        toDate: filterInput.toDate
-          ? dayjs(filterInput.toDate).format("YYYY-MM-DD")
-          : undefined,
-        dayOfWeek: filterInput.dayOfWeek || undefined,
-      });
-    }, 300);
-
-    return () => clearTimeout(delayDebounce);
-  }, [
-    filterInput.shift,
-    filterInput.fromDate,
-    filterInput.toDate,
-    filterInput.dayOfWeek,
-    page,
-    pageSize,
-  ]);
+    fetchWorkSchedules(page - 1, pageSize, {
+      shift: filters.shift || undefined,
+      fromDate: filters.fromDate
+        ? dayjs(filters.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: filters.toDate
+        ? dayjs(filters.toDate).format("YYYY-MM-DD")
+        : undefined,
+      dayOfWeek: filters.dayOfWeek || undefined,
+    });
+  }, [filters, page, pageSize]);
 
   const handleReset = () => {
-    setFilterInput({
+    const resetValue = {
       staffId: "",
       shift: "",
       fromDate: null,
       toDate: null,
       dayOfWeek: "",
-    });
+    };
+    setFilterInput(resetValue);
+    setFilters(resetValue);
     setPage(1);
-    fetchWorkSchedules(0, pageSize);
+  };
+
+  const handleSearch = () => {
+    setFilters(filterInput);
+    setPage(1);
   };
 
   const handleView = async (row: WorkSchedule) => {
@@ -112,7 +116,7 @@ export const WorkSchedulePage = () => {
   };
 
   const filteredData = workSchedules.filter(
-    (item) => !filterInput.staffId || item.staffId === filterInput.staffId
+    (item) => !filters.staffId || item.staffId === filters.staffId
   );
   const paginatedData = filteredData.slice(
     (page - 1) * pageSize,
@@ -163,11 +167,6 @@ export const WorkSchedulePage = () => {
       label: "Đến ngày",
       render: (row) => new Date(row.endDate).toLocaleDateString(),
     }),
-    createColumn<WorkSchedule>({
-      key: "note",
-      label: "Ghi chú",
-      render: (row) => row.note,
-    }),
   ];
 
   return (
@@ -185,74 +184,86 @@ export const WorkSchedulePage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-        <Select
-          label="Nhân viên"
-          placeholder="Tìm tên nhân viên"
-          data={staffOptions}
-          value={filterInput.staffId || null}
-          onChange={(value) =>
-            setFilterInput({
-              ...filterInput,
-              staffId: typeof value === "string" ? value : "",
-            })
-          }
-          onSearchChange={(query) => searchStaffs(query)}
-          clearable
-          searchable
-        />
-        <Select
-          label="Ca trực"
-          data={[
-            { value: "MORNING", label: "Sáng" },
-            { value: "AFTERNOON", label: "Chiều" },
-            { value: "NIGHT", label: "Tối" },
-          ]}
-          value={filterInput.shift}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, shift: value || "" })
-          }
-          placeholder="Chọn ca trực"
-          clearable
-        />
-        <DatePickerInput
-          label="Từ ngày"
-          value={filterInput.fromDate}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, fromDate: value as Date | null })
-          }
-          placeholder="Từ ngày"
-          valueFormat="DD/MM/YYYY"
-        />
-        <DatePickerInput
-          label="Đến ngày"
-          value={filterInput.toDate}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, toDate: value as Date | null })
-          }
-          placeholder="Đến ngày"
-          valueFormat="DD/MM/YYYY"
-        />
-        <Select
-          label="Thứ"
-          data={[
-            { value: "MONDAY", label: "Thứ 2" },
-            { value: "TUESDAY", label: "Thứ 3" },
-            { value: "WEDNESDAY", label: "Thứ 4" },
-            { value: "THURSDAY", label: "Thứ 5" },
-            { value: "FRIDAY", label: "Thứ 6" },
-            { value: "SATURDAY", label: "Thứ 7" },
-            { value: "SUNDAY", label: "Chủ nhật" },
-          ]}
-          value={filterInput.dayOfWeek}
-          onChange={(value) =>
-            setFilterInput({ ...filterInput, dayOfWeek: value || "" })
-          }
-          placeholder="Chọn thứ"
-          clearable
-        />
+        <FloatingLabelWrapper label="Nhân viên">
+          <Select
+            placeholder="Tìm tên nhân viên"
+            data={staffOptions}
+            value={filterInput.staffId || null}
+            onChange={(value) =>
+              setFilterInput({
+                ...filterInput,
+                staffId: typeof value === "string" ? value : "",
+              })
+            }
+            onSearchChange={(query) => searchStaffs(query)}
+            clearable
+            searchable
+          />
+        </FloatingLabelWrapper>
+
+        <FloatingLabelWrapper label="Ca trực">
+          <Select
+            data={[
+              { value: "MORNING", label: "Sáng" },
+              { value: "AFTERNOON", label: "Chiều" },
+              { value: "NIGHT", label: "Tối" },
+            ]}
+            value={filterInput.shift}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, shift: value || "" })
+            }
+            placeholder="Chọn ca trực"
+            clearable
+          />
+        </FloatingLabelWrapper>
+
+        <FloatingLabelWrapper label="Từ ngày">
+          <DatePickerInput
+            value={filterInput.fromDate}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, fromDate: value as Date | null })
+            }
+            placeholder="Từ ngày"
+            valueFormat="DD/MM/YYYY"
+          />
+        </FloatingLabelWrapper>
+
+        <FloatingLabelWrapper label="Đến ngày">
+          <DatePickerInput
+            value={filterInput.toDate}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, toDate: value as Date | null })
+            }
+            placeholder="Đến ngày"
+            valueFormat="DD/MM/YYYY"
+          />
+        </FloatingLabelWrapper>
+
+        <FloatingLabelWrapper label="Thứ">
+          <Select
+            data={[
+              { value: "MONDAY", label: "Thứ 2" },
+              { value: "TUESDAY", label: "Thứ 3" },
+              { value: "WEDNESDAY", label: "Thứ 4" },
+              { value: "THURSDAY", label: "Thứ 5" },
+              { value: "FRIDAY", label: "Thứ 6" },
+              { value: "SATURDAY", label: "Thứ 7" },
+              { value: "SUNDAY", label: "Chủ nhật" },
+            ]}
+            value={filterInput.dayOfWeek}
+            onChange={(value) =>
+              setFilterInput({ ...filterInput, dayOfWeek: value || "" })
+            }
+            placeholder="Chọn thứ"
+            clearable
+          />
+        </FloatingLabelWrapper>
         <div className="flex gap-2 items-end">
           <Button color="blue" variant="filled" onClick={handleReset}>
             Reset
+          </Button>
+          <Button color="blue" variant="filled" onClick={handleSearch}>
+            Tìm kiếm
           </Button>
         </div>
       </div>
@@ -273,7 +284,9 @@ export const WorkSchedulePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <WorkScheduleListModal

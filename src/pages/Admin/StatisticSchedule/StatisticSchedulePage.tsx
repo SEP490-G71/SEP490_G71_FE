@@ -4,21 +4,42 @@ import { createColumn } from "../../../components/utils/tableUtils";
 import { useStatisticSchedule } from "../../../hooks/StatisticSchedule/useStatisticSchedule";
 import { ScheduleStatisticItem } from "../../../types/Admin/StatisticSchedule/StatisticSchedule";
 import { DatePickerInput } from "@mantine/dates";
-import { Button, Select } from "@mantine/core";
+import { Button, Select, TextInput } from "@mantine/core";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
 import { LuDownload } from "react-icons/lu";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+
+// ✅ Thêm type rõ ràng để tránh lỗi TS
+interface SearchFilters {
+  fromDate: Date | null;
+  toDate: Date | null;
+  staffId: string | null;
+  staffCodeSearch: string;
+}
+
+interface AppliedFilters {
+  fromDate?: string;
+  toDate?: string;
+  staffId?: string;
+}
 
 export const StatisticSchedulePage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [fromDate, setFromDate] = useState<Date | null>(null);
-  const [toDate, setToDate] = useState<Date | null>(null);
-  const [staffId, setStaffId] = useState<string | null>(null);
+
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    fromDate: null,
+    toDate: null,
+    staffId: null,
+    staffCodeSearch: "",
+  });
+
+  const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
+
   const { setting } = useSettingAdminService();
   const { options: staffOptions, searchStaffs } = useStaffSearch();
-
   const {
     statistics,
     loading,
@@ -29,27 +50,57 @@ export const StatisticSchedulePage = () => {
 
   useEffect(() => {
     fetchScheduleStatistics(page - 1, pageSize, {
-      fromDate: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
-      toDate: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+      fromDate: appliedFilters.fromDate,
+      toDate: appliedFilters.toDate,
+      staffId: appliedFilters.staffId,
     });
-  }, [page, pageSize, fromDate, toDate]);
+  }, [page, pageSize, appliedFilters]);
 
   const filteredStatistics = statistics.filter(
-    (item) => !staffId || item.staffId === staffId
+    (item) =>
+      !searchFilters.staffCodeSearch ||
+      item.staffCode
+        .toLowerCase()
+        .includes(searchFilters.staffCodeSearch.toLowerCase())
   );
 
   const paginatedData = filteredStatistics.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
+
   const totalItems = filteredStatistics.length;
 
   const handleExport = () => {
     exportScheduleStatistics({
-      fromDate: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
-      toDate: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
-      staffId: staffId || undefined,
+      fromDate: appliedFilters.fromDate,
+      toDate: appliedFilters.toDate,
+      staffId: appliedFilters.staffId,
     });
+  };
+
+  const handleSearch = () => {
+    setAppliedFilters({
+      fromDate: searchFilters.fromDate
+        ? dayjs(searchFilters.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: searchFilters.toDate
+        ? dayjs(searchFilters.toDate).format("YYYY-MM-DD")
+        : undefined,
+      staffId: searchFilters.staffId || undefined,
+    });
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchFilters({
+      fromDate: null,
+      toDate: null,
+      staffId: null,
+      staffCodeSearch: "",
+    });
+    setAppliedFilters({});
+    setPage(1);
   };
 
   const columns = [
@@ -116,44 +167,73 @@ export const StatisticSchedulePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 w-full">
-        <DatePickerInput
-          placeholder="Từ ngày"
-          value={fromDate}
-          onChange={(value) => setFromDate(value ? new Date(value) : null)}
-          className="w-full"
-          valueFormat="DD/MM/YYYY"
-        />
-        <DatePickerInput
-          placeholder="Đến ngày"
-          value={toDate}
-          onChange={(value) => setToDate(value ? new Date(value) : null)}
-          className="w-full"
-          valueFormat="DD/MM/YYYY"
-        />
-        <Select
-          placeholder="Tìm tên nhân viên"
-          data={staffOptions}
-          value={staffId}
-          onChange={setStaffId}
-          onSearchChange={(query) => searchStaffs(query)}
-          clearable
-          searchable
-          className="w-full"
-        />
-        <div className="flex items-end">
-          <Button
-            variant="filled"
-            color="blue"
-            onClick={() => {
-              setFromDate(null);
-              setToDate(null);
-              setStaffId(null);
-              setPage(1);
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+        <FloatingLabelWrapper label="Từ ngày">
+          <DatePickerInput
+            placeholder="Từ ngày"
+            value={searchFilters.fromDate}
+            onChange={(value) =>
+              setSearchFilters({
+                ...searchFilters,
+                fromDate: value as Date | null,
+              })
+            }
+            className="w-full"
+            valueFormat="DD/MM/YYYY"
+          />
+        </FloatingLabelWrapper>
+        <FloatingLabelWrapper label="Đến ngày">
+          <DatePickerInput
+            placeholder="Đến ngày"
+            value={searchFilters.toDate}
+            onChange={(value) =>
+              setSearchFilters({
+                ...searchFilters,
+                toDate: value as Date | null,
+              })
+            }
+            className="w-full"
+            valueFormat="DD/MM/YYYY"
+          />
+        </FloatingLabelWrapper>
+        <FloatingLabelWrapper label="Tìm nhân viên">
+          <Select
+            placeholder="Tìm tên nhân viên"
+            data={staffOptions}
+            value={searchFilters.staffId || null}
+            onChange={(value) =>
+              setSearchFilters({
+                ...searchFilters,
+                staffId: typeof value === "string" ? value : "",
+              })
+            }
+            onSearchChange={(query) => {
+              searchStaffs(query);
             }}
-            className="px-4 py-2 text-sm"
-          >
+            clearable
+            searchable
+            className="w-full"
+          />
+        </FloatingLabelWrapper>
+        <FloatingLabelWrapper label="Tìm mã nhân viên">
+          <TextInput
+            placeholder="Tìm mã nhân viên"
+            value={searchFilters.staffCodeSearch}
+            onChange={(event) =>
+              setSearchFilters({
+                ...searchFilters,
+                staffCodeSearch: event.currentTarget.value,
+              })
+            }
+            className="w-full"
+          />
+        </FloatingLabelWrapper>
+        <div className="flex items-end gap-2">
+          <Button variant="filled" color="blue" onClick={handleReset}>
             Reset
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
           </Button>
         </div>
       </div>
@@ -171,7 +251,9 @@ export const StatisticSchedulePage = () => {
         }}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
     </>
   );

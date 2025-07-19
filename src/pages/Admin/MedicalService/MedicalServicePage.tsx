@@ -12,6 +12,7 @@ import {
   MedicalService,
 } from "../../../types/Admin/MedicalService/MedicalService";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -35,10 +36,13 @@ const MedicalServicePage = () => {
   const [selectedService, setSelectedService] = useState<MedicalService | null>(
     null
   );
-  const [searchNameInput, setSearchNameInput] = useState<string>("");
 
+  const [searchNameInput, setSearchNameInput] = useState<string>("");
   const [searchName, setSearchName] = useState<string>("");
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    string | undefined
+  >(undefined);
+  const [departmentFilterInput, setDepartmentFilterInput] = useState<
     string | undefined
   >(undefined);
   const [departments, setDepartments] = useState<
@@ -73,30 +77,28 @@ const MedicalServicePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch departments
         const departmentsRes = await axiosInstance.get("/departments/all");
-        const departmentsOptions: { label: string; value: string }[] =
-          departmentsRes.data.result.map((d: Department) => ({
+        const departmentsOptions = departmentsRes.data.result.map(
+          (d: Department) => ({
             label: d.name,
             value: d.id,
-          }));
+          })
+        );
         setDepartments(departmentsOptions);
 
-        // Fetch medical service names
         const servicesRes = await axiosInstance.get("/medical-service", {
           params: { page: 0, size: 1000 },
         });
-        const serviceNameOptions: { label: string; value: string }[] =
-          Array.from(
-            new Set(
-              (servicesRes.data.result.content as MedicalService[]).map(
-                (s: MedicalService) => s.name
-              )
+        const serviceNameOptions = Array.from(
+          new Set(
+            (servicesRes.data.result.content as MedicalService[]).map(
+              (s) => s.name
             )
-          ).map((name) => ({
-            label: name,
-            value: name,
-          }));
+          )
+        ).map((name) => ({
+          label: name,
+          value: name,
+        }));
         setServiceNameOptions(serviceNameOptions);
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -166,11 +168,25 @@ const MedicalServicePage = () => {
     }
   };
 
+  const handleSearch = () => {
+    setSearchName(searchNameInput.trim());
+    setSelectedDepartmentId(departmentFilterInput);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchNameInput("");
+    setSearchName("");
+    setDepartmentFilterInput(undefined);
+    setSelectedDepartmentId(undefined);
+    setPage(1);
+  };
+
   const columns = [
     createColumn<MedicalService>({
       key: "name",
       label: "Tên Dịch Vụ",
-      sortable: true,
+      sortable: false,
     }),
     createColumn<MedicalService>({
       key: "description",
@@ -186,13 +202,13 @@ const MedicalServicePage = () => {
     createColumn<MedicalService>({
       key: "price",
       label: "Giá",
-      sortable: true,
+      sortable: false,
       render: (row) => `${row.price.toLocaleString()} VND`,
     }),
     createColumn<MedicalService>({
       key: "vat",
       label: "VAT (%)",
-      sortable: true,
+      sortable: false,
     }),
   ];
 
@@ -206,31 +222,37 @@ const MedicalServicePage = () => {
       </div>
 
       <div className="flex flex-wrap gap-2 my-4">
-        <Select
-          placeholder="Chọn phòng ban"
-          data={departments}
-          value={selectedDepartmentId}
-          onChange={(value) => {
-            setSelectedDepartmentId(value || undefined);
-            setPage(1);
-          }}
-          clearable
-          searchable
-          className="flex-1 min-w-[150px]"
-        />
+        <FloatingLabelWrapper label="Chọn phòng ban">
+          <Select
+            placeholder="Chọn phòng ban"
+            data={departments}
+            value={departmentFilterInput}
+            onChange={(value) => {
+              setDepartmentFilterInput(value || undefined);
+            }}
+            clearable
+            searchable
+            className="flex-1 min-w-[150px]"
+          />
+        </FloatingLabelWrapper>
 
-        <TextInput
-          placeholder="Nhập tên dịch vụ"
-          value={searchNameInput}
-          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchName(searchNameInput.trim());
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[150px]"
-        />
+        <FloatingLabelWrapper label="Nhập tên dịch vụ">
+          <TextInput
+            placeholder="Nhập tên dịch vụ"
+            value={searchNameInput}
+            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
+            className="flex-1 min-w-[150px]"
+          />
+        </FloatingLabelWrapper>
+
+        <div className="flex items-end gap-2">
+          <Button variant="filled" color="blue" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -254,7 +276,9 @@ const MedicalServicePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreateEditModal

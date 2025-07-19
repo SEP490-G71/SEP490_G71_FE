@@ -11,6 +11,9 @@ import {
   IconHeartRateMonitor,
   IconPrinter,
   IconTimeDurationOff,
+  IconCalendarTime,
+  IconCalendarEvent,
+  IconReportMedical,
 } from "@tabler/icons-react";
 import { parseJwt } from "../../src/components/utils/jwt";
 
@@ -30,11 +33,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/medical-service",
     },
     { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
-    {
-      name: "Quản lý permission",
-      icon: <MdManageAccounts />,
-      path: "/admin/permission",
-    },
+
     {
       name: "Quản lý nhân viên",
       icon: <AiOutlineAudit />,
@@ -78,8 +77,13 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
     {
       name: "Lịch làm việc",
-      icon: <IconCashRegister />,
+      icon: <IconCalendarEvent />,
       path: "/admin/work-schedule",
+    },
+    {
+      name: "Chia ca làm việc",
+      icon: <IconCalendarTime />,
+      path: "/admin/divide-shift",
     },
     {
       name: "Báo cáo",
@@ -108,16 +112,6 @@ const navItemsByRole: Record<string, NavItem[]> = {
       ],
     },
     {
-      name: "Khám bệnh",
-      icon: <IconHeartRateMonitor />,
-      subItems: [
-        {
-          name: "Khám lâm sàng",
-          path: "/admin/medical-examination/clinical",
-        },
-      ],
-    },
-    {
       name: "Đơn xin nghỉ",
       icon: <IconTimeDurationOff />,
       path: "/admin/Leave",
@@ -134,7 +128,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
     {
       name: "Mẫu in bệnh án",
-      icon: <IconPrinter />,
+      icon: <IconReportMedical />,
       path: "/admin/medical-templates",
     },
     {

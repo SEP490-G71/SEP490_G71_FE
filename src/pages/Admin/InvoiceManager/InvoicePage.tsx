@@ -289,7 +289,9 @@ const InvoicePage = () => {
         sortDirection={sortDirection}
         loading={loadingList}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
     </>
   );
