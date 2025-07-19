@@ -126,10 +126,15 @@ export const DivideShiftPage = () => {
 
         {/* Nút hành động - 2/12 */}
         <div className="col-span-12 md:col-span-2 flex items-end gap-2">
-          <Button variant="light" color="gray" onClick={handleReset}>
+          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
             Tải lại
           </Button>
-          <Button variant="filled" color="blue" onClick={handleSearch}>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            fullWidth
+          >
             Tìm kiếm
           </Button>
         </div>

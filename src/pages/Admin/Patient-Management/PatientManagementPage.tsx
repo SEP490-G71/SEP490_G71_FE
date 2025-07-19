@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { normalizePatient } from "../../../types/Admin/Patient-Management/patientUtils";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 export const PatientManagementPage = () => {
   const {
@@ -29,19 +30,23 @@ export const PatientManagementPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+
+  // Tách input và search state
   const [searchFullName, setSearchFullName] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
   const [searchPatientCode, setSearchPatientCode] = useState("");
   const [searchPatientCodeInput, setSearchPatientCodeInput] = useState("");
   const [searchFullNameInput, setSearchFullNameInput] = useState("");
   const [searchPhoneInput, setSearchPhoneInput] = useState("");
+
   const { setting } = useSettingAdminService();
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
+
   useEffect(() => {
     fetchAllPatients(page - 1, pageSize, {
       name: searchFullName || undefined,
@@ -51,6 +56,23 @@ export const PatientManagementPage = () => {
       setTotalItems(total);
     });
   }, [page, pageSize, searchFullName, searchPhone, searchPatientCode]);
+
+  const handleSearch = () => {
+    setSearchPatientCode(searchPatientCodeInput.trim());
+    setSearchFullName(searchFullNameInput.trim());
+    setSearchPhone(searchPhoneInput.trim());
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchPatientCodeInput("");
+    setSearchFullNameInput("");
+    setSearchPhoneInput("");
+    setSearchPatientCode("");
+    setSearchFullName("");
+    setSearchPhone("");
+    setPage(1);
+  };
 
   const handleAdd = () => {
     setSelectedPatient(null);
@@ -129,49 +151,50 @@ export const PatientManagementPage = () => {
         <Button onClick={handleAdd}>Tạo bệnh nhân</Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <TextInput
-          placeholder="Tìm theo mã bệnh nhân"
-          value={searchPatientCodeInput}
-          onChange={(event) =>
-            setSearchPatientCodeInput(event.currentTarget.value)
-          }
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchPatientCode(searchPatientCodeInput.trim());
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[150px]"
-        />
+      <div className="grid grid-cols-12 gap-4 my-4">
+        <div className="col-span-12 md:col-span-4">
+          <FloatingLabelWrapper label="Tìm theo mã bệnh nhân">
+            <TextInput
+              placeholder="Mã bệnh nhân"
+              value={searchPatientCodeInput}
+              onChange={(e) => setSearchPatientCodeInput(e.currentTarget.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <TextInput
-          placeholder="Tìm theo họ tên"
-          value={searchFullNameInput}
-          onChange={(event) =>
-            setSearchFullNameInput(event.currentTarget.value)
-          }
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchFullName(searchFullNameInput.trimStart());
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[150px]"
-        />
+        <div className="col-span-12 md:col-span-4">
+          <FloatingLabelWrapper label="Tìm theo họ tên">
+            <TextInput
+              placeholder="Họ tên"
+              value={searchFullNameInput}
+              onChange={(e) => setSearchFullNameInput(e.currentTarget.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <TextInput
-          placeholder="Tìm theo SĐT"
-          value={searchPhoneInput}
-          onChange={(event) => setSearchPhoneInput(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchPhone(searchPhoneInput.trim());
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[150px]"
-        />
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Tìm theo SĐT">
+            <TextInput
+              placeholder="Số điện thoại"
+              value={searchPhoneInput}
+              onChange={(e) => setSearchPhoneInput(e.currentTarget.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
+            Tải lại
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            fullWidth
+          >
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -190,7 +213,7 @@ export const PatientManagementPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         pageSizeOptions={setting?.paginationSizeList
-          .slice()
+          ?.slice()
           .sort((a, b) => a - b)}
       />
 
