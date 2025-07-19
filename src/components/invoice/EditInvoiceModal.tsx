@@ -97,13 +97,13 @@ const ViewEditInvoiceServicesModal = ({
             {serviceRows.length > 0 ? (
               <ServiceTable
                 serviceRows={serviceRows}
-                setServiceRows={editable ? setServiceRows : noopSetServiceRows}
+                setServiceRows={setServiceRows}
                 medicalServices={availableServices}
                 serviceOptions={availableServices.map((s) => ({
                   value: s.id,
                   label: s.name,
                 }))}
-                editable={editable}
+                editable={true}
                 showDepartment={true}
               />
             ) : (
@@ -122,7 +122,7 @@ const ViewEditInvoiceServicesModal = ({
         {editable && onChange && (
           <Button
             onClick={() => {
-              const cleanedRows = serviceRows.filter((r) => r.serviceId);
+              const cleanedRows = serviceRows.filter((r) => r.serviceId); // bỏ dòng rỗng
               onChange(cleanedRows);
               onClose();
             }}

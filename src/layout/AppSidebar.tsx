@@ -98,12 +98,16 @@ const navItemsByRole: Record<string, NavItem[]> = {
           path: "/admin/statistic-schedule",
         },
         {
-          name: "Theo dịch vụ",
-          path: "/admin/statistic-schedule",
+          name: " Dịch vụ",
+          path: "/admin/statistic-medical-service",
         },
         {
-          name: "Khách hàng trong tháng",
-          path: "/admin/statistic-schedule",
+          name: "Bệnh nhân",
+          path: "/admin/statistic-patient",
+        },
+        {
+          name: "Hoá đơn",
+          path: "/admin/statistic-invoice",
         },
       ],
     },
