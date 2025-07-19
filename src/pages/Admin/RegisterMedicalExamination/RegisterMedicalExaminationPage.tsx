@@ -94,6 +94,11 @@ export default function RegisterMedicalExaminationPage() {
   } = useRegisterMedicalExamination();
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+  useEffect(() => {
     const loadTodayPatients = async () => {
       const { content, totalElements } = await fetchTodayRegisteredPatients(
         page - 1,

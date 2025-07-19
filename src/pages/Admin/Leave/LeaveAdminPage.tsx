@@ -44,6 +44,12 @@ const LeaveAdminPage = () => {
   const { setting } = useSettingAdminService();
   const { options: staffOptions, loading: loadingStaffSearch } =
     useSearchStaffs(staffSearch);
+
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   const fetchData = async () => {
     const isValid = validate(filterFromDate, filterToDate);
 

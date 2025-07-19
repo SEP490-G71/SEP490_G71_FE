@@ -39,7 +39,11 @@ const InvoicePage = () => {
   const { previewInvoice } = usePreviewInvoice();
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
-
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     fetchInvoices(
       {

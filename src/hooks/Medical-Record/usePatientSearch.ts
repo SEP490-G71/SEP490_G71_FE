@@ -20,7 +20,7 @@ const usePatientSearch = () => {
 
       const mapped = res.data.result.map((patient: any) => ({
         value: patient.id,
-        label: `${patient.fullName}`,
+        label: `${patient.fullName} (${patient.patientCode})`,
       }));
       setOptions(mapped);
     } catch (error) {

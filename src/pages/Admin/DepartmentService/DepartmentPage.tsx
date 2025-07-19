@@ -62,6 +62,12 @@ const DepartmentPage = () => {
   };
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchDepartments();
   }, [
     page,

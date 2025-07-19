@@ -29,7 +29,11 @@ export const DivideShiftPage = () => {
     deleteShiftById,
     handleSubmitShift,
   } = useDivideShift();
-
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     fetchAllShifts({
       page: page - 1,
@@ -106,19 +110,24 @@ export const DivideShiftPage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <FloatingLabelWrapper label="Ca làm việc">
-          <TextInput
-            placeholder="Nhập tên ca làm"
-            value={searchNameInput}
-            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-            className="flex-1 min-w-[150px]"
-          />
-        </FloatingLabelWrapper>
+      <div className="grid grid-cols-12 gap-4 my-4">
+        {/* Ca làm việc - 10/12 */}
+        <div className="col-span-12 md:col-span-10">
+          <FloatingLabelWrapper label="Ca làm việc">
+            <TextInput
+              placeholder="Nhập tên ca làm"
+              value={searchNameInput}
+              onChange={(event) =>
+                setSearchNameInput(event.currentTarget.value)
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <div className="flex items-end gap-2">
-          <Button variant="filled" color="blue" onClick={handleReset}>
-            Reset
+        {/* Nút hành động - 2/12 */}
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
           </Button>
           <Button variant="filled" color="blue" onClick={handleSearch}>
             Tìm kiếm

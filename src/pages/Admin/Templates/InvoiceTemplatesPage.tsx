@@ -11,6 +11,7 @@ import CreateEditTemplateModal, {
 import { TemplateFileRequest } from "../../../types/Admin/Templates/TemplateFileRequest";
 import { TemplateFileType } from "../../../enums/Admin/TemplateFileType";
 import { toast } from "react-toastify";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const InvoiceTemplatesPage = () => {
   const {
@@ -28,6 +29,7 @@ const InvoiceTemplatesPage = () => {
   const [sortKey, setSortKey] = useState<keyof TemplateFileResponse>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [modalOpened, setModalOpened] = useState(false);
+  const { setting } = useSettingAdminService();
   const paginatedTemplates = invoiceTemplates.slice(
     (page - 1) * pageSize,
     page * pageSize
@@ -189,6 +191,9 @@ const InvoiceTemplatesPage = () => {
         sortDirection={sortDirection}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
       <div className="mt-4 p-4 rounded bg-green-100 text-green-700 text-sm flex items-start gap-2">
         <span>⭐</span>
