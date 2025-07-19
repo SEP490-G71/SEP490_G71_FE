@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select } from "@mantine/core";
+import { Button, Select } from "@mantine/core";
 import { toast } from "react-toastify";
 import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
@@ -210,8 +210,9 @@ const DepartmentPage = () => {
 
         {/* Nút tìm và tải lại */}
         <div className="sm:col-span-3 flex justify-end gap-2">
-          <button
-            className="bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded hover:bg-gray-400"
+          <Button
+            variant="light"
+            color="gray"
             onClick={() => {
               setInputName("");
               setFilterName("");
@@ -222,11 +223,18 @@ const DepartmentPage = () => {
               setSortDirection("asc");
               setPage(1);
             }}
+            style={{
+              height: 45,
+              lineHeight: "45px",
+              padding: "0 12px",
+            }}
+            fullWidth
           >
             Tải lại
-          </button>
-          <button
-            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
             onClick={() => {
               const normalizeText = (text: string) =>
                 text.trim().replace(/\s+/g, " ");
@@ -234,9 +242,15 @@ const DepartmentPage = () => {
               setFilterName(normalizeText(inputName));
               setFilterRoom(normalizeText(inputRoom));
             }}
+            style={{
+              height: 45,
+              lineHeight: "45px",
+              padding: "0 12px",
+            }}
+            fullWidth
           >
             Tìm kiếm
-          </button>
+          </Button>
         </div>
       </div>
 

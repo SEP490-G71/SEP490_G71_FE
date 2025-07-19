@@ -6,13 +6,11 @@ import {
   Text,
   Checkbox,
   Flex,
-  Select,
+  TextInput,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
-
 import useAssignStaffsToDepartment from "../../../hooks/department-Staffs/useAssignStaffsToDepartment";
 import useUnassignedStaffs from "../../../hooks/department-Staffs/useUnassignedStaffs";
-import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 
 interface AssignStaffModalProps {
   opened: boolean;
@@ -35,11 +33,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   const { assignStaffs, loading: assigning } = useAssignStaffsToDepartment();
 
   const [selectedStaffs, setSelectedStaffs] = useState<AssignStaff[]>([]);
-  const [selectedDepartmentType, setSelectedDepartmentType] =
-    useState<DepartmentType | null>(null);
-  const [selectedSpecialization, setSelectedSpecialization] = useState<
-    string | null
-  >(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredStaffs, setFilteredStaffs] = useState(staffs);
 
   const toggleSelection = (staffId: string) => {
     setSelectedStaffs((prev) => {
@@ -62,14 +57,39 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     }
   };
 
+  const handleSearch = () => {
+    setFilteredStaffs(
+      staffs.filter((staff) =>
+        `${staff.firstName} ${staff.middleName} ${staff.lastName}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    );
+  };
+
+  const handleReset = () => {
+    setSearchTerm("");
+    setFilteredStaffs(staffs);
+    setSelectedStaffs([]);
+  };
+
   useEffect(() => {
     if (opened) {
       fetchUnassignedStaffs();
+      setSearchTerm("");
       setSelectedStaffs([]);
-      setSelectedDepartmentType(null); // Reset the department type
-      setSelectedSpecialization(null); // Reset specialization when modal opens
     }
   }, [opened]);
+
+  useEffect(() => {
+    setFilteredStaffs(
+      staffs.filter((staff) =>
+        `${staff.firstName} ${staff.middleName} ${staff.lastName}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [staffs]);
 
   return (
     <Modal
@@ -84,46 +104,6 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
         <Text>Không có nhân viên nào chưa gán phòng.</Text>
       ) : (
         <>
-          {/* Department Type Select */}
-          <Select
-            label="Chọn loại phòng"
-            value={selectedDepartmentType}
-            onChange={(value) => {
-              setSelectedDepartmentType(value as DepartmentType); // Ensure casting
-              setSelectedSpecialization(null); // Reset Chuyên khoa selection when type changes
-            }}
-            data={[
-              {
-                value: DepartmentType.CONSULTATION,
-                label: DepartmentType.CONSULTATION,
-              },
-              {
-                value: DepartmentType.LABORATORY,
-                label: DepartmentType.LABORATORY,
-              },
-              {
-                value: DepartmentType.ADMINISTRATION,
-                label: DepartmentType.ADMINISTRATION,
-              },
-            ]}
-            clearable
-          />
-
-          {/* Chuyên khoa only visible for CONSULTATION */}
-          {selectedDepartmentType === DepartmentType.CONSULTATION && (
-            <Select
-              label="Chuyên khoa"
-              value={selectedSpecialization}
-              onChange={setSelectedSpecialization}
-              data={[
-                { value: "Khoa A", label: "Khoa A" },
-                { value: "Khoa B", label: "Khoa B" },
-                { value: "Khoa C", label: "Khoa C" },
-              ]}
-              clearable
-            />
-          )}
-
           <Flex justify="space-between" align="center" mb="sm">
             <Text size="sm" fw={500}>
               Đã chọn: {selectedStaffs.length} nhân viên
@@ -137,6 +117,49 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
               Gán vào phòng
             </Button>
           </Flex>
+          <Flex mb="sm" gap="sm" justify="flex-start" align="flex-start">
+            <TextInput
+              placeholder="Tìm kiếm nhân viên theo tên"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              mb="sm"
+              style={{
+                flex: 1,
+                height: 36,
+                lineHeight: "36px",
+                marginRight: "10px",
+                marginTop: "1px",
+              }}
+            />
+            <Button
+              variant="light"
+              color="gray"
+              onClick={handleReset}
+              size="sm"
+              style={{
+                width: "auto",
+                height: 36,
+                lineHeight: "36px",
+                padding: "0 12px",
+              }}
+            >
+              Tải lại
+            </Button>
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={handleSearch}
+              size="sm"
+              style={{
+                width: "auto",
+                height: 36,
+                lineHeight: "36px",
+                padding: "0 12px",
+              }}
+            >
+              Tìm kiếm
+            </Button>
+          </Flex>
 
           <div
             style={{
@@ -148,7 +171,6 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
           >
             <style>
               {`
-                /* Chrome, Safari, Edge */
                 div::-webkit-scrollbar {
                   display: none;
                 }
@@ -177,7 +199,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {staffs.map((staff) => {
+                {filteredStaffs.map((staff) => {
                   const isSelected = selectedStaffs.some(
                     (s) => s.staffId === staff.id
                   );

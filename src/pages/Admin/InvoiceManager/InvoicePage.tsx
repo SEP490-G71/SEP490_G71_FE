@@ -60,6 +60,23 @@ const InvoicePage = () => {
     setPage(1);
   };
 
+  const handleReset = () => {
+    setFilterStatus("");
+    setInputCode("");
+    setFilterCode("");
+    setInputPatient("");
+    setFilterPatient("");
+    setFilterFromDate(null);
+    setFilterToDate(null);
+    setPage(1); // Đặt lại trang về 1
+    applyFilter(); // Gọi applyFilter ngay lập tức sau khi reset
+  };
+
+  const handleSearch = () => {
+    setFilterCode(inputCode.trim());
+    applyFilter(); // Gọi applyFilter ngay lập tức sau khi tìm kiếm
+  };
+
   useEffect(() => {
     fetchInvoices(
       {
@@ -251,31 +268,28 @@ const InvoicePage = () => {
         </FloatingLabelWrapper>
 
         <div className="flex items-end col-span-1 gap-2">
-          <button
-            onClick={() => {
-              setFilterStatus("");
-              setInputCode("");
-              setFilterCode("");
-              setInputPatient("");
-              setFilterPatient("");
-              setFilterFromDate(null);
-              setFilterToDate(null);
-              setPage(1);
+          <Button
+            variant="light"
+            color="gray"
+            onClick={handleReset}
+            style={{
+              height: 40,
             }}
-            className="rounded-md bg-gray-400 text-white px-4 h-10 hover:bg-gray-500 transition"
-            title="Tải lại bộ lọc"
+            fullWidth
           >
             Tải lại
-          </button>
-          <button
-            onClick={() => {
-              setFilterCode(inputCode.trim());
-              applyFilter();
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            style={{
+              height: 40,
             }}
-            className="rounded-md bg-blue-500 text-white px-4 h-10 hover:bg-blue-600 transition"
+            fullWidth
           >
             Tìm kiếm
-          </button>
+          </Button>
         </div>
       </div>
 
