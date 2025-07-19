@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select } from "@mantine/core";
+import { Button, Select } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import axiosInstance from "../../../services/axiosInstance";
@@ -260,19 +260,28 @@ const StaffsPage = () => {
 
         {/* 2 nút - chiếm 2/12 */}
         <div className="sm:col-span-2 flex justify-end gap-2">
-          <button
-            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
-            onClick={handleSearch}
-          >
-            Tìm kiếm
-          </button>
-
-          <button
-            className="bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded hover:bg-gray-400"
+          <Button
+            variant="light"
+            color="gray"
             onClick={handleReset}
+            style={{
+              height: 45, // Chỉ thay đổi chiều cao của nút
+            }}
+            fullWidth
           >
             Tải lại
-          </button>
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            style={{
+              height: 45, // Chỉ thay đổi chiều cao của nút
+            }}
+            fullWidth
+          >
+            Tìm kiếm
+          </Button>
         </div>
       </div>
 
