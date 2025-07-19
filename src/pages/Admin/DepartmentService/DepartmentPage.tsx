@@ -211,19 +211,6 @@ const DepartmentPage = () => {
         {/* Nút tìm và tải lại */}
         <div className="sm:col-span-3 flex justify-end gap-2">
           <button
-            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
-            onClick={() => {
-              const normalizeText = (text: string) =>
-                text.trim().replace(/\s+/g, " ");
-              setPage(1);
-              setFilterName(normalizeText(inputName));
-              setFilterRoom(normalizeText(inputRoom));
-            }}
-          >
-            Tìm
-          </button>
-
-          <button
             className="bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded hover:bg-gray-400"
             onClick={() => {
               setInputName("");
@@ -237,6 +224,18 @@ const DepartmentPage = () => {
             }}
           >
             Tải lại
+          </button>
+          <button
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
+            onClick={() => {
+              const normalizeText = (text: string) =>
+                text.trim().replace(/\s+/g, " ");
+              setPage(1);
+              setFilterName(normalizeText(inputName));
+              setFilterRoom(normalizeText(inputRoom));
+            }}
+          >
+            Tìm kiếm
           </button>
         </div>
       </div>

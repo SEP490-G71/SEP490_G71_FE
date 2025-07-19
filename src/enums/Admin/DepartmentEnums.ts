@@ -1,5 +1,5 @@
 export  enum DepartmentType {
-    CONSULTATION="TƯ VẤN",
+    CONSULTATION="KHÁM BỆNH",
     LABORATORY="PHÒNG THÍ NGHIỆM",
     ADMINISTRATION="QUẢN LÝ",
 }

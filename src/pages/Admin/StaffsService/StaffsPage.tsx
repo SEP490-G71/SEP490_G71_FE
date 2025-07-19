@@ -254,7 +254,7 @@ const StaffsPage = () => {
             className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
             onClick={handleSearch}
           >
-            Tìm
+            Tìm kiếm
           </button>
 
           <button

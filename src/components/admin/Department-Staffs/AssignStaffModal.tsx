@@ -6,10 +6,13 @@ import {
   Text,
   Checkbox,
   Flex,
+  Select,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
+
 import useAssignStaffsToDepartment from "../../../hooks/department-Staffs/useAssignStaffsToDepartment";
 import useUnassignedStaffs from "../../../hooks/department-Staffs/useUnassignedStaffs";
+import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 
 interface AssignStaffModalProps {
   opened: boolean;
@@ -32,6 +35,11 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   const { assignStaffs, loading: assigning } = useAssignStaffsToDepartment();
 
   const [selectedStaffs, setSelectedStaffs] = useState<AssignStaff[]>([]);
+  const [selectedDepartmentType, setSelectedDepartmentType] =
+    useState<DepartmentType | null>(null);
+  const [selectedSpecialization, setSelectedSpecialization] = useState<
+    string | null
+  >(null);
 
   const toggleSelection = (staffId: string) => {
     setSelectedStaffs((prev) => {
@@ -58,6 +66,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     if (opened) {
       fetchUnassignedStaffs();
       setSelectedStaffs([]);
+      setSelectedDepartmentType(null); // Reset the department type
+      setSelectedSpecialization(null); // Reset specialization when modal opens
     }
   }, [opened]);
 
@@ -74,6 +84,46 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
         <Text>Không có nhân viên nào chưa gán phòng.</Text>
       ) : (
         <>
+          {/* Department Type Select */}
+          <Select
+            label="Chọn loại phòng"
+            value={selectedDepartmentType}
+            onChange={(value) => {
+              setSelectedDepartmentType(value as DepartmentType); // Ensure casting
+              setSelectedSpecialization(null); // Reset Chuyên khoa selection when type changes
+            }}
+            data={[
+              {
+                value: DepartmentType.CONSULTATION,
+                label: DepartmentType.CONSULTATION,
+              },
+              {
+                value: DepartmentType.LABORATORY,
+                label: DepartmentType.LABORATORY,
+              },
+              {
+                value: DepartmentType.ADMINISTRATION,
+                label: DepartmentType.ADMINISTRATION,
+              },
+            ]}
+            clearable
+          />
+
+          {/* Chuyên khoa only visible for CONSULTATION */}
+          {selectedDepartmentType === DepartmentType.CONSULTATION && (
+            <Select
+              label="Chuyên khoa"
+              value={selectedSpecialization}
+              onChange={setSelectedSpecialization}
+              data={[
+                { value: "Khoa A", label: "Khoa A" },
+                { value: "Khoa B", label: "Khoa B" },
+                { value: "Khoa C", label: "Khoa C" },
+              ]}
+              clearable
+            />
+          )}
+
           <Flex justify="space-between" align="center" mb="sm">
             <Text size="sm" fw={500}>
               Đã chọn: {selectedStaffs.length} nhân viên
@@ -92,8 +142,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
             style={{
               maxHeight: 400,
               overflowY: "auto",
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
             <style>

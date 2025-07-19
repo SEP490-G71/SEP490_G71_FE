@@ -16,7 +16,7 @@ const useDepartmentStaffs = (departmentId?: string) => {
 
     try {
       const res = await axiosInstance.get(
-        `/medical-diagnosis/departments/${departmentId}`
+        `/departments/${departmentId}`
       );
       setData(res.data.result ?? null);
     } catch (err) {
