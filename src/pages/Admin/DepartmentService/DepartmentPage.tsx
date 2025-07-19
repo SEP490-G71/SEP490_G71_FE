@@ -62,6 +62,12 @@ const DepartmentPage = () => {
   };
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchDepartments();
   }, [
     page,
@@ -260,7 +266,9 @@ const DepartmentPage = () => {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreateEditDepartmentModal

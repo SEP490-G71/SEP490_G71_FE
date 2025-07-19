@@ -68,6 +68,16 @@ const StaffsPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
+    fetchStaffs();
+  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
+
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
     firstName: res.firstName,
     middleName: res.middleName,
@@ -287,7 +297,9 @@ const StaffsPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreateEditStaffModal

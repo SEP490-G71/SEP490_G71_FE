@@ -166,9 +166,9 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                     backgroundColor: statusColor(row.status),
                     color: statusTextColor(row.status),
                   })}
-                  pageSizeOptions={
-                    setting?.paginationSizeList || [5, 10, 20, 50]
-                  }
+                  pageSizeOptions={setting?.paginationSizeList
+                    .slice()
+                    .sort((a, b) => a - b)}
                 />
               </div>
             </div>

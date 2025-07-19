@@ -61,6 +61,12 @@ const InvoicePage = () => {
   };
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchInvoices(
       {
         status: filterStatus || undefined,
@@ -296,7 +302,9 @@ const InvoicePage = () => {
         sortDirection={sortDirection}
         loading={loadingList}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
     </>
   );

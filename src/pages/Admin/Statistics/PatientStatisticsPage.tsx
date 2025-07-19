@@ -30,7 +30,11 @@ const PatientStatisticsPage = () => {
     fetchPatients,
     fetchBirthdayPatientsByMonth,
   } = useBirthdayPatients();
-
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     if (selectedMonth) {
       fetchBirthdayPatientsByMonth(Number(selectedMonth), page - 1, pageSize);

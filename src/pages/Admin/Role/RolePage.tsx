@@ -8,6 +8,7 @@ import CreateEditModal from "../../../components/admin/Role/CreateEditModal";
 import { Role, RoleRequest } from "../../../types/Admin/Role/RolePage";
 import axiosInstance from "../../../services/axiosInstance";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 const RolePage = () => {
   const [page, setPage] = useState(1);
@@ -15,6 +16,7 @@ const RolePage = () => {
   const [sortKey, setSortKey] = useState<keyof Role | undefined>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { setting } = useSettingAdminService();
+
   const {
     roles,
     totalItems,
@@ -27,8 +29,15 @@ const RolePage = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
   const [searchNameInput, setSearchNameInput] = useState<string>("");
   const [searchName, setSearchName] = useState<string>("");
+
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
 
   useEffect(() => {
     fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
@@ -70,27 +79,38 @@ const RolePage = () => {
     try {
       if (selectedRole) {
         await axiosInstance.put(`/roles/${selectedRole.name}`, formData);
-        toast.success("Updated successfully");
+        toast.success("Cập nhật thành công");
       } else {
         await axiosInstance.post("/roles", formData);
-        toast.success("Created successfully");
+        toast.success("Tạo mới thành công");
       }
       fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
         name: searchName,
       });
     } catch (error: any) {
       console.error("Error saving role", error);
-      toast.error(error.response?.data?.message || "Failed to save role");
+      toast.error(error.response?.data?.message || "Lỗi khi lưu vai trò");
     } finally {
       setModalOpened(false);
     }
+  };
+
+  const handleSearch = () => {
+    setSearchName(searchNameInput.trim());
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchNameInput("");
+    setSearchName("");
+    setPage(1);
   };
 
   const columns = [
     createColumn<Role>({
       key: "name",
       label: "Vai trò",
-      sortable: true,
+      sortable: false,
     }),
     createColumn<Role>({
       key: "description",
@@ -108,19 +128,27 @@ const RolePage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <TextInput
-          placeholder="Nhập tên vai trò"
-          value={searchNameInput}
-          onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSearchName(searchNameInput.trim());
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[150px]"
-        />
+      <div className="grid grid-cols-12 gap-4 my-4">
+        <div className="col-span-12 md:col-span-10">
+          <FloatingLabelWrapper label="Mã hồ sơ">
+            <TextInput
+              placeholder="Nhập tên vai trò"
+              value={searchNameInput}
+              onChange={(event) =>
+                setSearchNameInput(event.currentTarget.value)
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -144,7 +172,9 @@ const RolePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreateEditModal

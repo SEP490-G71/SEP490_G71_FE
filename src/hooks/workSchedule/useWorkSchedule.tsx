@@ -21,7 +21,7 @@ export const useWorkSchedule = () => {
   ) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/work-schedule", {
+      const res = await axiosInstance.get("/work-schedules", {
         params: {
           page,
           size,
@@ -40,7 +40,7 @@ export const useWorkSchedule = () => {
 
   const fetchWorkScheduleDetailByStaffId = async (staffId: string) => {
     try {
-      const res = await axiosInstance.get(`/work-schedule/staff/${staffId}`);
+      const res = await axiosInstance.get(`/work-schedules/staff/${staffId}`);
       const result = res.data.result;
       return Array.isArray(result) ? result : [];
     } catch (err) {
@@ -52,7 +52,7 @@ export const useWorkSchedule = () => {
 
   const deleteWorkScheduleDetailById = async (id: string) => {
     try {
-      await axiosInstance.delete(`/medical-diagnosis/work-schedule/${id}`);
+      await axiosInstance.delete(`/medical-diagnosis/work-schedules/${id}`);
       toast.success("Xoá ca làm việc thành công");
     } catch (error) {
       console.error("Failed to delete work schedule detail", error);
@@ -70,7 +70,7 @@ export const useWorkSchedule = () => {
     }
   ) => {
     try {
-      await axiosInstance.put(`/work-schedule/update-detail/${id}`, data);
+      await axiosInstance.put(`/work-schedules/update-detail/${id}`, data);
       toast.success("Cập nhật ca làm việc thành công");
     } catch (error) {
       console.error("Failed to update work schedule detail", error);
@@ -87,7 +87,7 @@ export const useWorkSchedule = () => {
     note?: string;
   }) => {
     try {
-      await axiosInstance.post("/work-schedule", data);
+      await axiosInstance.post("/work-schedules", data);
       toast.success("Tạo lịch làm việc thành công");
     } catch (error) {
       console.error("Failed to create work schedule", error);
@@ -104,7 +104,7 @@ export const useWorkSchedule = () => {
     note?: string;
   }) => {
     try {
-      await axiosInstance.put("/work-schedule", data);
+      await axiosInstance.put("/work-schedules", data);
       toast.success("Cập nhật lịch làm việc thành công");
     } catch (error) {
       console.error("Failed to update work schedule", error);
@@ -114,7 +114,7 @@ export const useWorkSchedule = () => {
 
   const deleteWorkScheduleByStaff = async (staffId: string) => {
     try {
-      await axiosInstance.delete(`/work-schedule/by-staff/${staffId}`);
+      await axiosInstance.delete(`/work-schedules/by-staff/${staffId}`);
       toast.success("Xoá lịch làm việc thành công");
     } catch (error) {
       console.error("Failed to delete work schedule", error);
