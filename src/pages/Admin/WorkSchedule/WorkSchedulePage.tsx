@@ -285,10 +285,15 @@ export const WorkSchedulePage = () => {
 
         {/* Nút hành động - 2/12 */}
         <div className="col-span-12 lg:col-span-2 flex items-end gap-2">
-          <Button color="gray" variant="light" onClick={handleReset}>
+          <Button color="gray" variant="light" onClick={handleReset} fullWidth>
             Tải lại
           </Button>
-          <Button color="blue" variant="filled" onClick={handleSearch}>
+          <Button
+            color="blue"
+            variant="filled"
+            onClick={handleSearch}
+            fullWidth
+          >
             Tìm kiếm
           </Button>
         </div>

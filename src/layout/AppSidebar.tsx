@@ -15,7 +15,8 @@ import {
   IconCalendarEvent,
   IconReportMedical,
 } from "@tabler/icons-react";
-import { parseJwt } from "../../src/components/utils/jwt";
+
+import { useUserInfo } from "../hooks/auth/useUserInfo";
 
 type NavItem = {
   name: string;
@@ -25,7 +26,7 @@ type NavItem = {
 };
 
 const navItemsByRole: Record<string, NavItem[]> = {
-  admin: [
+  ADMIN: [
     { icon: <GridIcon />, name: "Thống kê", path: "/admin/dashboard" },
     {
       name: "Quản lý dịch vụ khám",
@@ -33,7 +34,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/medical-service",
     },
     { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
-
+    {
+      name: "Quản lý permission",
+      icon: <MdManageAccounts />,
+      path: "/admin/permission",
+    },
     {
       name: "Quản lý nhân viên",
       icon: <AiOutlineAudit />,
@@ -45,6 +50,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/departments",
     },
     {
+      name: "Quản lý chuyên khoa",
+      icon: <AiOutlineApartment />,
+      path: "/admin/specializations",
+    },
+    {
       name: "Đăng ký khám",
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
@@ -54,12 +64,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUserPlus />,
       path: "/admin/medical-examination",
     },
-
-    {
-      name: "Quản lý bệnh nhân",
-      icon: <FaUsers />,
-      path: "/admin/patients",
-    },
+    { name: "Quản lý bệnh nhân", icon: <FaUsers />, path: "/admin/patients" },
     {
       name: "Quản Lý Bệnh án",
       icon: <FaFileMedical />,
@@ -77,34 +82,29 @@ const navItemsByRole: Record<string, NavItem[]> = {
     },
     {
       name: "Lịch làm việc",
-      icon: <IconCalendarEvent />,
+      icon: <IconCalendarTime />,
       path: "/admin/work-schedule",
     },
     {
-      name: "Chia ca làm việc",
+      name: "Quản lý ca làm",
       icon: <IconCalendarTime />,
       path: "/admin/divide-shift",
     },
     {
       name: "Báo cáo",
+      icon: <IconCalendarEvent />,
+      subItems: [
+        { name: "Doanh thu", path: "/admin/invoice" },
+        { name: "Lịch làm việc tổng quan", path: "/admin/statistic-schedule" },
+        { name: "Theo dịch vụ", path: "/admin/statistic-schedule" },
+        { name: "Khách hàng trong tháng", path: "/admin/statistic-schedule" },
+      ],
+    },
+    {
+      name: "Khám bệnh",
       icon: <IconHeartRateMonitor />,
       subItems: [
-        {
-          name: "Doanh thu",
-          path: "/admin/invoice",
-        },
-        {
-          name: "Lịch làm việc tổng quan",
-          path: "/admin/statistic-schedule",
-        },
-        {
-          name: " Dịch vụ",
-          path: "/admin/statistic-medical-service",
-        },
-        {
-          name: "Bệnh nhân",
-          path: "/admin/statistic-patient",
-        },
+        { name: "Khám lâm sàng", path: "/admin/medical-examination/clinical" },
       ],
     },
     {
@@ -127,22 +127,96 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <IconReportMedical />,
       path: "/admin/medical-templates",
     },
+    { name: "Cài đặt hệ thống", icon: <FaUserPlus />, path: "/admin/settings" },
+  ],
+  CASHIER: [
     {
-      name: "Settings",
-      icon: <FaUserPlus />,
-      path: "/admin/settings",
+      name: "Thu chi",
+      icon: <IconCashRegister />,
+      path: "/admin/medical-examination/billing",
+    },
+    {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Đơn xin nghỉ nhân viên",
+      icon: <IconTimeDurationOff />,
+      path: "/staff/leave",
     },
   ],
-  staff: [
+  DOCTOR: [
+    {
+      name: "Khám lâm sàng",
+      icon: <FaUserPlus />,
+      path: "/admin/medical-examination/clinical",
+    },
+    {
+      name: "Bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/medical-records",
+    },
+    {
+      name: "Xem hàng chờ",
+      icon: <FaClock />,
+      path: "/admin/view-medical-records",
+    },
+    {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Đơn xin nghỉ nhân viên",
+      icon: <IconTimeDurationOff />,
+      path: "/staff/leave",
+    },
+  ],
+  RECEPTIONIST: [
     {
       name: "Đăng ký khám",
       icon: <FaUserPlus />,
       path: "/admin/register-medical-examination",
     },
     {
+      name: "Xem hàng chờ",
+      icon: <FaClock />,
+      path: "/admin/view-medical-records",
+    },
+    {
       name: "Lịch làm việc staff",
       icon: <IconCashRegister />,
       path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Đơn xin nghỉ nhân viên",
+      icon: <IconTimeDurationOff />,
+      path: "/staff/leave",
+    },
+  ],
+  TECHNICIAN: [
+    {
+      name: "Khám lâm sàng",
+      icon: <FaUserPlus />,
+      path: "/admin/medical-examination/clinical",
+    },
+    {
+      name: "Lịch làm việc staff",
+      icon: <IconCashRegister />,
+      path: "/admin/work-schedule-staff",
+    },
+    {
+      name: "Đơn xin nghỉ nhân viên",
+      icon: <IconTimeDurationOff />,
+      path: "/staff/leave",
+    },
+  ],
+  PATIENT: [
+    {
+      name: "Xem bệnh án",
+      icon: <FaFileMedical />,
+      path: "/admin/medical-examination",
     },
   ],
   user: [
@@ -157,6 +231,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { userInfo } = useUserInfo(); // ✅ SỬA 2: Lấy danh sách role từ API
 
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -164,20 +239,27 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Xác định role từ JWT
-  const token = localStorage.getItem("token");
-  let role = "user";
-  if (token) {
-    const payload = parseJwt(token);
-    const scopes = payload?.scope?.split(" ") || [];
-
-    if (scopes.includes("ROLE_ADMIN")) role = "admin";
-    else if (scopes.includes("ROLE_STAFF")) role = "staff";
-    else if (scopes.includes("ROLE_USER")) role = "user";
+  // ✅ SỬA 3: Gộp menu của tất cả role, loại trùng path và tên submenu
+  const mergedNavItemsMap = new Map<string, NavItem>();
+  if (userInfo?.roles) {
+    userInfo.roles.forEach((role) => {
+      const roleNavItems = navItemsByRole[role] || [];
+      roleNavItems.forEach((item) => {
+        if (item.subItems && !item.path) {
+          const existing = Array.from(mergedNavItemsMap.values()).find(
+            (v) => v.name === item.name
+          );
+          if (!existing) {
+            mergedNavItemsMap.set(`submenu-${item.name}`, item);
+          }
+        } else if (item.path && !mergedNavItemsMap.has(item.path)) {
+          mergedNavItemsMap.set(item.path, item);
+        }
+      });
+    });
   }
 
-  // Lấy danh sách menu theo role
-  const allNavItems = navItemsByRole[role] || [];
+  const allNavItems = Array.from(mergedNavItemsMap.values());
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -201,10 +283,7 @@ const AppSidebar: React.FC = () => {
       const key = `submenu-${openSubmenu}`;
       const ref = subMenuRefs.current[key];
       if (ref) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: ref.scrollHeight || 0,
-        }));
+        setSubMenuHeight((prev) => ({ ...prev, [key]: ref.scrollHeight || 0 }));
       }
     }
   }, [openSubmenu]);

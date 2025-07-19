@@ -176,7 +176,6 @@ export const MedicalRecordPage = () => {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">Hồ sơ bệnh án</h1>
       </div>
-
       <div className="grid grid-cols-12 gap-4 my-4">
         {/* Mã hồ sơ - 2/12 */}
         <div className="col-span-12 md:col-span-2">
@@ -268,15 +267,20 @@ export const MedicalRecordPage = () => {
 
         {/* Nút hành động - 1/12 */}
         <div className="col-span-12 md:col-span-2 flex items-end gap-2">
-          <Button variant="light" color="gray" onClick={handleReset}>
+          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
             Tải lại
           </Button>
-          <Button variant="filled" color="blue" onClick={handleSearch}>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            fullWidth
+          >
             Tìm kiếm
           </Button>
         </div>
       </div>
-
+      s
       <CustomTable
         data={medicalRecords}
         columns={columns}
