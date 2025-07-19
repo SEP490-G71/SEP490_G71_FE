@@ -72,7 +72,7 @@ const ViewEditInvoiceServicesModal = ({
 
     setServiceRows(rows);
   }, [opened, invoiceItems, availableServices, editable]);
-  const noopSetServiceRows = () => {};
+
   return (
     <Modal
       opened={opened}

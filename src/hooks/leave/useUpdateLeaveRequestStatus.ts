@@ -15,7 +15,7 @@ export const useUpdateLeaveRequestStatus = () => {
   const updateStatus = async (payload: UpdateLeaveStatusPayload) => {
     try {
       setLoading(true);
-      const res = await axiosInstance.put("/leave-request/status", payload);
+      const res = await axiosInstance.put("/leave-requests/status", payload);
 
       toast.success(res.data?.message || "Cập nhật trạng thái thành công");
       return res.data?.result;

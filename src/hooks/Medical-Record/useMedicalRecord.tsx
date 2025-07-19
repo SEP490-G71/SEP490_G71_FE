@@ -25,7 +25,7 @@ const useMedicalRecord = () => {
   ) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/medical-record", {
+      const res = await axiosInstance.get("/medical-records", {
         params: {
           page,
           size,
@@ -45,7 +45,7 @@ const useMedicalRecord = () => {
 
   const handlePreview = async (id: string) => {
     try {
-      const res = await axiosInstance.get(`/medical-record/${id}/preview`, {
+      const res = await axiosInstance.get(`/medical-records/${id}/preview`, {
         responseType: "blob",
       });
 
@@ -59,7 +59,7 @@ const useMedicalRecord = () => {
 
   const handleDownload = async (id: string) => {
     try {
-      const res = await axiosInstance.get(`/medical-record/${id}/download`, {
+      const res = await axiosInstance.get(`/medical-records/${id}/download`, {
         responseType: "blob",
       });
 

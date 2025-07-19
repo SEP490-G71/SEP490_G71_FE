@@ -30,7 +30,7 @@ export const markInvoicePending = async (
     };
 
     // ✅ Dùng đúng đường dẫn API thật bạn đã confirm
-    await axiosInstance.post("/invoice/pay", payload);
+    await axiosInstance.post("/invoices/pay", payload);
 
     await fetchInvoiceDetail(invoiceDetail.invoiceId);
   } catch (error: any) {

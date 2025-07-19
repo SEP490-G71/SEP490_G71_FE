@@ -15,22 +15,23 @@ const useDepartmentService = () => {
   sortDir: "asc" | "desc" = "asc",
   filters?: {
     name?: string;
+    roomNumber?: string;
   }
 ) => {
   setLoading(true);
 
   try {
     const res = await axiosInstance.get("/departments", {
-      params: {
-        page,
-        size,
-        sortBy,
-        sortDir,
-        name: filters?.name,
-      },
+   params: {
+    page,
+    size,
+    sortBy,
+    sortDir,
+    name: filters?.name || undefined,
+    roomNumber: filters?.roomNumber || undefined,
+    
+  },
     });
-
-  
 
     // Gán dữ liệu nếu đúng định dạng
     setDepartments(res.data.result.content);

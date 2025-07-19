@@ -20,7 +20,7 @@ const useMedicalService = () => {
   ) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/medical-service", {
+      const res = await axiosInstance.get("/medical-services", {
         params: {
           page,
           size,
@@ -41,7 +41,7 @@ const useMedicalService = () => {
 
   const fetchMedicalServiceById = async (id: string) => {
     try {
-      const res = await axiosInstance.get(`/medical-service/${id}`);
+      const res = await axiosInstance.get(`/medical-services/${id}`);
       return res.data.result as MedicalService;
     } catch (error) {
       console.error("Failed to fetch medical service by id:", error);
@@ -51,7 +51,7 @@ const useMedicalService = () => {
 
   const handleDeleteMedicalServiceById = async (id: string) => {
     try {
-      const res = await axiosInstance.delete(`/medical-service/${id}`);
+      const res = await axiosInstance.delete(`/medical-services/${id}`);
       if (res.status === 200) {
         toast.success("Deleted successfully");
         fetchAllMedicalServices();

@@ -4,7 +4,7 @@ import axiosInstance from "../../services/axiosInstance";
 export const useExportInvoicesExcel = () => {
   const exportInvoicesExcel = async (params: Record<string, string>) => {
     try {
-      const response = await axiosInstance.get("/invoice/export", {
+      const response = await axiosInstance.get("/invoices/export", {
         params,
         responseType: "blob",
       });

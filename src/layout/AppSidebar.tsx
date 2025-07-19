@@ -105,10 +105,6 @@ const navItemsByRole: Record<string, NavItem[]> = {
           name: "Bệnh nhân",
           path: "/admin/statistic-patient",
         },
-        {
-          name: "Hoá đơn",
-          path: "/admin/statistic-invoice",
-        },
       ],
     },
     {

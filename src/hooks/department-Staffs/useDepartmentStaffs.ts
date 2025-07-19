@@ -3,8 +3,9 @@ import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { DepartmentStaffResponse } from "../../types/Admin/Department-Staffs/DepartmentStaffResponse ";
 
+
 const useDepartmentStaffs = (departmentId?: string) => {
-  const [data, setData] = useState<DepartmentStaffResponse[]>([]);
+  const [data, setData] = useState<DepartmentStaffResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,32 +16,28 @@ const useDepartmentStaffs = (departmentId?: string) => {
 
     try {
       const res = await axiosInstance.get(
-        `/department-staffs/department/${departmentId}/staffs`
+        `/medical-diagnosis/departments/${departmentId}`
       );
-
-      setData(res.data.result || []);
-    } catch (err: any) {
-      console.error("Failed to fetch department staffs:", err);
-      toast.error("Không thể tải danh sách nhân viên.");
-      setError("Không thể tải danh sách nhân viên.");
-      setData([]);
+      setData(res.data.result ?? null);
+    } catch (err) {
+      console.error("Failed to fetch department:", err);
+      toast.error("Không thể tải thông tin phòng ban.");
+      setError("Không thể tải thông tin phòng ban.");
+      setData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  
   useEffect(() => {
     fetchDepartmentStaffs();
   }, [departmentId]);
 
   return {
-    data,
+    data, 
     loading,
     error,
-    fetchDepartmentStaffs,
-    setData,
-    setLoading,
+    refetch: fetchDepartmentStaffs,
   };
 };
 

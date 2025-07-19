@@ -74,12 +74,14 @@ const MedicalExaminationPage = () => {
   }, []);
 
   const selectedDepartmentId = form.values.department;
-  const { data: departmentStaffs = [], loading: staffLoading } =
+  const { data: departmentStaffs = undefined, loading: staffLoading } =
     useDepartmentStaffs(selectedDepartmentId);
 
-  const doctorOptions = departmentStaffs
-    .filter((s) => s.position === "DOCTOR")
-    .map((staff) => ({ value: staff.staffId, label: staff.staffName }));
+  const doctorOptions =
+    departmentStaffs?.staffs?.map((staff) => ({
+      value: staff.id,
+      label: staff.fullName,
+    })) ?? [];
 
   const departmentOptions = departments.map((d) => ({
     value: d.id,

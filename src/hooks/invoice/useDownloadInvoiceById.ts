@@ -10,7 +10,7 @@ export const useDownloadInvoiceById = () => {
 
     try {
       const response = await axiosInstance.get(
-        `/invoice/${invoiceId}/download`,
+        `/invoices/${invoiceId}/download`,
         { responseType: "blob" }
       );
 

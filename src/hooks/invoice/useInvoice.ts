@@ -51,7 +51,7 @@ export const useFilteredInvoices = () => {
         sortDir,
       };
 
-      const res = await axiosInstance.get("/invoice", { params });
+      const res = await axiosInstance.get("/invoices", { params });
       const outerResult = res.data?.result;
       const result = outerResult?.data;
 
@@ -111,7 +111,7 @@ export const useFilteredInvoices = () => {
   const fetchInvoiceDetail = async (invoiceId: string) => {
     try {
       setLoadingDetail(true);
-      const res = await axiosInstance.get(`/invoice/${invoiceId}`);
+      const res = await axiosInstance.get(`/invoices/${invoiceId}`);
       setInvoiceDetail(res.data?.result ?? null);
     } catch (err) {
       console.error("❌ Lỗi khi lấy chi tiết hóa đơn:", err);

@@ -37,7 +37,7 @@ export const useMedicalRecord = () => {
       }
 
       const res = await axiosInstance.post(
-        "https://api.datnd.id.vn/medical-diagnosis/medical-record",
+        "https://api.datnd.id.vn/medical-diagnosis/medical-records",
         {
           patientId: payload.patientId,
           staffId: payload.staffId,

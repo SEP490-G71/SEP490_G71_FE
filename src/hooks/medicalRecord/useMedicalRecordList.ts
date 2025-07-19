@@ -35,7 +35,7 @@ const useMedicalRecordList = () => {
         status:filters.status,
       };
 
-      const res = await axiosInstance.get("/medical-record", { params });
+      const res = await axiosInstance.get("/medical-records", { params });
       const result = res.data?.result;
 
       if (!Array.isArray(result?.content)) {
