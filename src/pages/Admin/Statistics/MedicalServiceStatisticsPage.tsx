@@ -124,19 +124,14 @@ const MedicalServiceStatisticsPage = () => {
         </div>
 
         <div className="flex items-end space-x-4">
-          <Button
-            variant="filled"
-            color="gray"
-            onClick={handleReload}
-            className="rounded-md bg-gray-500 text-white px-4 h-10 hover:bg-gray-600 transition"
-          >
+          <Button variant="light" color="gray" onClick={handleReload} fullWidth>
             Tải lại
           </Button>
           <Button
             variant="filled"
             color="blue"
             onClick={handleSearch}
-            className="rounded-md bg-gray-400 text-white px-4 h-10 hover:bg-gray-500 transition"
+            fullWidth
           >
             Tìm kiếm
           </Button>

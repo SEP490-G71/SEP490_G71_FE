@@ -50,12 +50,13 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     refetch: refetchDepartmentStaffs,
   } = useDepartmentStaffs(initialData?.id);
 
+  // Define form with proper typing
   const form = useForm<Partial<DepartmentRequest>>({
     initialValues: {
       name: "",
       description: "",
       roomNumber: "",
-      type: DepartmentType.CONSULTATION,
+      type: undefined,
       specializationId: "",
     },
     validate: {
@@ -63,9 +64,15 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       description: (value) => validateDescription(value ?? ""),
       roomNumber: (value) => validateRoomNumber(value ?? ""),
       type: (value) => (!value ? "Loại phòng không được để trống" : null),
+      specializationId: (value, values) => {
+        return values.type === DepartmentType.CONSULTATION && !value
+          ? "Chuyên khoa là bắt buộc khi chọn loại phòng KHÁM BỆNH"
+          : null;
+      },
     },
   });
 
+  // Fetch list of specializations
   useEffect(() => {
     const fetchSpecializations = async () => {
       try {
@@ -85,7 +92,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         name: initialData.name || "",
         description: initialData.description || "",
         roomNumber: initialData.roomNumber || "",
-        type: initialData.type || DepartmentType.CONSULTATION,
+        type: initialData.type || "",
         specializationId: initialData.specialization?.id ?? "",
       });
     }
@@ -118,6 +125,12 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     setStaffToRemove(null);
   };
 
+  useEffect(() => {
+    if (form.values.type !== DepartmentType.CONSULTATION) {
+      form.setFieldValue("specializationId", "");
+    }
+  }, [form.values.type]);
+
   return (
     <>
       <Modal
@@ -130,10 +143,10 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           <div>
             <h2 className="text-xl font-bold">
               {isViewMode
-                ? "Xem Permission"
+                ? "View Permission"
                 : initialData
                 ? "Cập nhật phòng ban"
-                : "Tạo phòng ban mới"}
+                : "Tạo mới phòng ban"}
             </h2>
             <div className="mt-2 border-b border-gray-300"></div>
           </div>
@@ -152,7 +165,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             const validation = await form.validate();
 
             if (validation.hasErrors) {
-              toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
+              toast.error("Please fill in valid information.");
               return;
             }
 
@@ -160,8 +173,8 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
               await onSubmit(form.values as DepartmentRequest);
               onClose();
             } catch (error) {
-              console.error("Lỗi khi lưu phòng ban", error);
-              toast.error("Lỗi khi lưu phòng ban");
+              console.error("Error saving department", error);
+              toast.error("Error saving department");
             }
           }}
         >
@@ -175,7 +188,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             <div className="mt-6">
               <Flex justify="space-between" align="center" mb="sm">
                 <Text fw={600} size="sm">
-                  Danh sách nhân viên trong phòng
+                  Danh sách nhân viên
                 </Text>
 
                 <Button
@@ -223,12 +236,14 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           setConfirmDeleteModal(false);
           setStaffToRemove(null);
         }}
-        title="Xác nhận xoá nhân viên"
+        title="Confirm Remove Staff"
         centered
         radius="md"
         size="sm"
       >
-        <Text>Bạn có chắc chắn muốn xoá nhân viên này khỏi phòng ban?</Text>
+        <Text>
+          Bạn có chắc chắn muốn xóa nhân viên này khỏi phòng ban không?
+        </Text>
         <Flex justify="flex-end" gap="sm" mt="md">
           <Button
             variant="outline"
