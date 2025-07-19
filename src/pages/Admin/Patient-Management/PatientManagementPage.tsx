@@ -36,6 +36,12 @@ export const PatientManagementPage = () => {
   const [searchFullNameInput, setSearchFullNameInput] = useState("");
   const [searchPhoneInput, setSearchPhoneInput] = useState("");
   const { setting } = useSettingAdminService();
+
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     fetchAllPatients(page - 1, pageSize, {
       name: searchFullName || undefined,
@@ -183,7 +189,9 @@ export const PatientManagementPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <CreatePatientModal

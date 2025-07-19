@@ -48,12 +48,12 @@ export default function RegisterMedicalExaminationPage() {
     {
       key: "patientCode",
       label: "Mã BN",
-      sortable: true,
+      sortable: false,
     },
     {
       key: "fullName",
       label: "Họ tên",
-      sortable: true,
+      sortable: false,
     },
     {
       key: "gender",
@@ -93,6 +93,11 @@ export default function RegisterMedicalExaminationPage() {
     createPatient,
   } = useRegisterMedicalExamination();
 
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     const loadTodayPatients = async () => {
       const { content, totalElements } = await fetchTodayRegisteredPatients(
@@ -271,7 +276,9 @@ export default function RegisterMedicalExaminationPage() {
                 setSortDirection(dir);
               }}
               showActions={false}
-              pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+              pageSizeOptions={setting?.paginationSizeList
+                .slice()
+                .sort((a, b) => a - b)}
             />
           </Paper>
         </div>

@@ -10,7 +10,6 @@ import {
 } from "react-icons/fa";
 import { Column } from "../../types/table";
 import { Modal, Button, Loader } from "@mantine/core";
-import { useSettingAdminService } from "../../hooks/setting/useSettingAdminService";
 
 interface CustomTableProps<T> {
   data?: T[];
@@ -67,8 +66,6 @@ function CustomTable<T>({
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<T | null>(null);
-
-  const { setting, updateSetting } = useSettingAdminService();
 
   return (
     <div className="w-full border rounded-lg overflow-hidden shadow-sm">
@@ -191,18 +188,7 @@ function CustomTable<T>({
               onChange={async (e) => {
                 const newSize = Number(e.target.value);
                 if (onPageSizeChange) {
-                  try {
-                    if (setting) {
-                      const newSetting = {
-                        ...setting,
-                        paginationSizeList: [newSize],
-                      };
-                      await updateSetting(newSetting);
-                    }
-                    onPageSizeChange(newSize);
-                  } catch (error) {
-                    console.error("Không thể cập nhật số dòng:", error);
-                  }
+                  onPageSizeChange(newSize);
                 }
               }}
               className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"

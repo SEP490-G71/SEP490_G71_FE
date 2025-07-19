@@ -17,7 +17,11 @@ const MedicalServiceStatisticsPage = () => {
     useMedicalServiceStatistic();
 
   const { setting } = useSettingAdminService();
-
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
   useEffect(() => {
     fetchStatistics(page - 1, pageSize);
   }, [page, pageSize]);

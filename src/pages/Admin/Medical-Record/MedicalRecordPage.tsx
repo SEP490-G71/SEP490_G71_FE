@@ -9,11 +9,14 @@ import { LuEye, LuDownload } from "react-icons/lu";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 import { format } from "date-fns";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const { setting } = useSettingAdminService();
+
   const [filterInput, setFilterInput] = useState<{
     medicalRecordCode: string;
     patientId: string;
@@ -49,7 +52,7 @@ export const MedicalRecordPage = () => {
   const { options: patientOptions, searchPatients } = usePatientSearch();
 
   const formatLocalDateTime = (date: Date): string => {
-    return format(date, "yyyy-MM-dd"); //
+    return format(date, "yyyy-MM-dd");
   };
 
   const {
@@ -62,8 +65,50 @@ export const MedicalRecordPage = () => {
   } = useMedicalRecord();
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchAllMedicalRecords(page - 1, pageSize, sortDir, filters);
   }, [page, pageSize, sortDir, filters]);
+
+  const handleSearch = () => {
+    setFilters({
+      medicalRecordCode: filterInput.medicalRecordCode.trim(),
+      patientId: filterInput.patientId,
+      createdById: filterInput.createdById,
+      status: filterInput.status,
+      fromDate: filterInput.fromDate
+        ? formatLocalDateTime(filterInput.fromDate)
+        : null,
+      toDate: filterInput.toDate
+        ? formatLocalDateTime(filterInput.toDate)
+        : null,
+    });
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilterInput({
+      medicalRecordCode: "",
+      patientId: "",
+      createdById: "",
+      status: "",
+      fromDate: null,
+      toDate: null,
+    });
+    setFilters({
+      medicalRecordCode: "",
+      patientId: "",
+      createdById: "",
+      status: "",
+      fromDate: null,
+      toDate: null,
+    });
+    setPage(1);
+  };
 
   const columns = [
     createColumn<MedicalRecord>({
@@ -92,11 +137,10 @@ export const MedicalRecordPage = () => {
         return statusMap[row.status] || row.status;
       },
     }),
-
     createColumn<MedicalRecord>({
       key: "createdAt",
       label: "Ngày tạo",
-      render: (row) => new Date(row.createdAt).toLocaleString(),
+      render: (row) => format(new Date(row.createdAt), "dd/MM/yyyy"),
     }),
     createColumn<MedicalRecord>({
       key: "actions",
@@ -133,103 +177,104 @@ export const MedicalRecordPage = () => {
         <h1 className="text-xl font-bold">Hồ sơ bệnh án</h1>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <TextInput
-          placeholder="Mã hồ sơ"
-          value={filterInput.medicalRecordCode}
-          onChange={(e) =>
-            setFilterInput({
-              ...filterInput,
-              medicalRecordCode: e.currentTarget.value,
-            })
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilters((prev) => ({
-                ...prev,
-                medicalRecordCode: filterInput.medicalRecordCode.trim(),
-              }));
-              setPage(1);
-            }
-          }}
-          className="flex-1 min-w-[200px]"
-        />
+      <div className="grid grid-cols-12 gap-4 my-4">
+        {/* Mã hồ sơ - 2/12 */}
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Mã hồ sơ">
+            <TextInput
+              placeholder="Mã hồ sơ"
+              value={filterInput.medicalRecordCode}
+              onChange={(e) =>
+                setFilterInput({
+                  ...filterInput,
+                  medicalRecordCode: e.currentTarget.value,
+                })
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <Select
-          searchable
-          placeholder="Tìm tên bệnh nhân"
-          data={patientOptions}
-          onSearchChange={(query) => searchPatients(query)}
-          onChange={(value) => {
-            setFilterInput({ ...filterInput, patientId: value || "" });
-            setFilters((prev) => ({
-              ...prev,
-              patientId: value || "",
-            }));
-            setPage(1);
-          }}
-          value={filterInput.patientId}
-          className="flex-1 min-w-[250px]"
-          clearable
-        />
+        {/* Tên bệnh nhân - 3/12 */}
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Tìm tên bệnh nhân">
+            <Select
+              searchable
+              placeholder="Tìm tên bệnh nhân"
+              data={patientOptions}
+              onSearchChange={(query) => searchPatients(query)}
+              onChange={(value) =>
+                setFilterInput({ ...filterInput, patientId: value || "" })
+              }
+              value={filterInput.patientId}
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <Select
-          data={[
-            { value: "", label: "Tất cả trạng thái" },
-            { value: "TESTING", label: "Đang xét nghiệm" },
-            { value: "WAITING_FOR_PAYMENT", label: "Chờ thanh toán" },
-            { value: "TESTING_COMPLETED", label: "Đã xét nghiệm" },
-            { value: "WAITING_FOR_RESULT", label: "Chờ kết quả" },
-            { value: "RESULT_COMPLETED", label: "Hoàn thành kết quả" },
-          ]}
-          placeholder="Trạng thái"
-          value={filterInput.status}
-          onChange={(value) => {
-            setFilterInput({ ...filterInput, status: value || "" });
-            setFilters((prev) => {
-              const newFilters = { ...prev };
-              if (!value) delete newFilters.status;
-              else newFilters.status = value;
-              return newFilters;
-            });
-            setPage(1);
-          }}
-          className="flex-1 min-w-[200px]"
-        />
-        <DatePickerInput
-          placeholder="Từ ngày"
-          value={filterInput.fromDate}
-          valueFormat="DD/MM/YYYY"
-          maxDate={new Date()}
-          onChange={(value) => {
-            const date = value ? new Date(value) : null;
-            if (date) date.setHours(0, 0, 0, 0);
+        {/* Trạng thái - 2/12 */}
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Trạng thái">
+            <Select
+              data={[
+                { value: "", label: "Tất cả trạng thái" },
+                { value: "TESTING", label: "Đang xét nghiệm" },
+                { value: "WAITING_FOR_PAYMENT", label: "Chờ thanh toán" },
+                { value: "TESTING_COMPLETED", label: "Đã xét nghiệm" },
+                { value: "WAITING_FOR_RESULT", label: "Chờ kết quả" },
+                { value: "RESULT_COMPLETED", label: "Hoàn thành kết quả" },
+              ]}
+              placeholder="Trạng thái"
+              value={filterInput.status}
+              onChange={(value) =>
+                setFilterInput({ ...filterInput, status: value || "" })
+              }
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-            setFilterInput((prev) => ({ ...prev, fromDate: date }));
-            setFilters((prev) => ({
-              ...prev,
-              fromDate: date ? formatLocalDateTime(date) : null,
-            }));
-            setPage(1);
-          }}
-        />
+        {/* Từ ngày - 2/12 */}
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Từ ngày">
+            <DatePickerInput
+              placeholder="Từ ngày"
+              value={filterInput.fromDate}
+              valueFormat="DD/MM/YYYY"
+              maxDate={new Date()}
+              onChange={(value) => {
+                const date = value ? new Date(value) : null;
+                if (date) date.setHours(0, 0, 0, 0);
+                setFilterInput((prev) => ({ ...prev, fromDate: date }));
+              }}
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <DatePickerInput
-          placeholder="Đến ngày"
-          value={filterInput.toDate}
-          valueFormat="DD/MM/YYYY"
-          onChange={(value) => {
-            const date = value ? new Date(value) : null;
-            if (date) date.setHours(23, 59, 59, 999);
+        {/* Đến ngày - 2/12 */}
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Đến ngày">
+            <DatePickerInput
+              placeholder="Đến ngày"
+              value={filterInput.toDate}
+              valueFormat="DD/MM/YYYY"
+              onChange={(value) => {
+                const date = value ? new Date(value) : null;
+                if (date) date.setHours(23, 59, 59, 999);
+                setFilterInput((prev) => ({ ...prev, toDate: date }));
+              }}
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-            setFilterInput((prev) => ({ ...prev, toDate: date }));
-            setFilters((prev) => ({
-              ...prev,
-              toDate: date ? formatLocalDateTime(date) : null,
-            }));
-            setPage(1);
-          }}
-        />
+        {/* Nút hành động - 1/12 */}
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
+          </Button>
+          <Button variant="filled" color="blue" onClick={handleSearch}>
+            Tìm kiếm
+          </Button>
+        </div>
       </div>
 
       <CustomTable
@@ -247,9 +292,12 @@ export const MedicalRecordPage = () => {
         onSortChange={(_, dir) => setSortDir(dir)}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
     </div>
   );
 };
+
 export default MedicalRecordPage;

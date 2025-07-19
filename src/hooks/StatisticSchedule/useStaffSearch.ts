@@ -5,7 +5,6 @@ export interface StaffOption {
   value: string;
   label: string;
 }
-
 const useStaffSearch = () => {
   const [options, setOptions] = useState<StaffOption[]>([]);
   const [loading, setLoading] = useState(false);
