@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { AiOutlineApartment, AiOutlineAudit } from "react-icons/ai";
 import { FaUserPlus, FaFileMedical, FaUsers, FaClock } from "react-icons/fa";
-import { FaBriefcaseMedical } from "react-icons/fa6";
-import { MdManageAccounts } from "react-icons/md";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import {
   IconCashRegister,
-  IconHeartRateMonitor,
-  IconPrinter,
   IconTimeDurationOff,
-  IconCalendarTime,
   IconCalendarEvent,
-  IconReportMedical,
 } from "@tabler/icons-react";
+import { TbReportAnalytics } from "react-icons/tb";
+import { IoMdSettings } from "react-icons/io";
 
 import { useUserInfo } from "../hooks/auth/useUserInfo";
 
@@ -29,105 +24,134 @@ const navItemsByRole: Record<string, NavItem[]> = {
   ADMIN: [
     { icon: <GridIcon />, name: "Thống kê", path: "/admin/dashboard" },
     {
-      name: "Quản lý dịch vụ khám",
-      icon: <FaBriefcaseMedical />,
-      path: "/admin/medical-service",
-    },
-    { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
-    {
-      name: "Quản lý permission",
-      icon: <MdManageAccounts />,
-      path: "/admin/permission",
-    },
-    {
-      name: "Quản lý nhân viên",
-      icon: <AiOutlineAudit />,
-      path: "/admin/staffs",
-    },
-    {
-      name: "Quản lý phòng ban",
-      icon: <AiOutlineApartment />,
-      path: "/admin/departments",
-    },
-    {
-      name: "Quản lý chuyên khoa",
-      icon: <AiOutlineApartment />,
-      path: "/admin/specializations",
-    },
-    {
-      name: "Đăng ký khám",
-      icon: <FaUserPlus />,
-      path: "/admin/register-medical-examination",
-    },
-    {
-      name: "khám lâm sàng",
-      icon: <FaUserPlus />,
-      path: "/admin/medical-examination",
-    },
-    { name: "Quản lý bệnh nhân", icon: <FaUsers />, path: "/admin/patients" },
-    {
-      name: "Quản Lý Bệnh án",
-      icon: <FaFileMedical />,
-      path: "/admin/medical-records",
-    },
-    {
-      name: "Xem Hàng Chờ",
-      icon: <FaClock />,
-      path: "/admin/view-medical-records",
-    },
-    {
-      name: "Thu chi",
-      icon: <IconCashRegister />,
-      path: "/admin/medical-examination/billing",
-    },
-    {
-      name: "Lịch làm việc",
-      icon: <IconCalendarTime />,
-      path: "/admin/work-schedule",
-    },
-    {
-      name: "Quản lý ca làm",
-      icon: <IconCalendarTime />,
-      path: "/admin/divide-shift",
-    },
-    {
-      name: "Báo cáo",
+      name: "Thông tin chung",
       icon: <IconCalendarEvent />,
       subItems: [
-        { name: "Doanh thu", path: "/admin/invoice" },
-        { name: "Lịch làm việc tổng quan", path: "/admin/statistic-schedule" },
-        { name: "Theo dịch vụ", path: "/admin/statistic-schedule" },
-        { name: "Khách hàng trong tháng", path: "/admin/statistic-schedule" },
+        { name: "Quản lý dịch vụ khám", path: "/admin/medical-service" },
+        { name: "Quản lý chuyên khoa", path: "/admin/specializations" },
+        { name: "Quản lý phòng ban", path: "/admin/departments" },
+        { name: "Quản lý ca làm", path: "/admin/divide-shift" },
       ],
     },
     {
-      name: "Khám bệnh",
-      icon: <IconHeartRateMonitor />,
+      name: "	Nhân sự & bệnh nhân",
+      icon: <FaUsers />,
       subItems: [
-        { name: "Khám lâm sàng", path: "/admin/medical-examination/clinical" },
+        { name: "Quản lý nhân viên", path: "/admin/staffs" },
+        { name: "Quản lý bệnh nhân", path: "/admin/patients" },
+        { name: "Quản lý lịch làm việc", path: "/admin/work-schedule" },
+        { name: "Đơn xin nghỉ", path: "/admin/Leave" },
+      ],
+    },
+    // {
+    //   name: "Quản lý dịch vụ khám",
+    //   icon: <FaBriefcaseMedical />,
+    //   path: "/admin/medical-service",
+    // },
+    // { name: "Quản lý role", icon: <MdManageAccounts />, path: "/admin/role" },
+    // {
+    //   name: "Quản lý nhân viên",
+    //   icon: <AiOutlineAudit />,
+    //   path: "/admin/staffs",
+    // },
+    // {
+    //   name: "Quản lý phòng ban",
+    //   icon: <AiOutlineApartment />,
+    //   path: "/admin/departments",
+    // },
+    // {
+    //   name: "Quản lý chuyên khoa",
+    //   icon: <MdOutlineLocalHospital />,
+    //   path: "/admin/specializations",
+    // },
+    // {
+    //   name: "Đăng ký khám",
+    //   icon: <FaUserPlus />,
+    //   path: "/admin/register-medical-examination",
+    // },
+    // {
+    //   name: "khám lâm sàng",
+    //   icon: <FaUserPlus />,
+    //   path: "/admin/medical-examination",
+    // },
+    // { name: "Quản lý bệnh nhân", icon: <FaUsers />, path: "/admin/patients" },
+    // {
+    //   name: "Quản Lý Bệnh án",
+    //   icon: <FaFileMedical />,
+    //   path: "/admin/medical-records",
+    // },
+    // {
+    //   name: "Xem Hàng Chờ",
+    //   icon: <FaClock />,
+    //   path: "/admin/view-medical-records",
+    // },
+    // {
+    //   name: "Thu chi",
+    //   icon: <IconCashRegister />,
+    //   path: "/admin/medical-examination/billing",
+    // },
+    // {
+    //   name: "Lịch làm việc",
+    //   icon: <IconCalendarTime />,
+    //   path: "/admin/work-schedule",
+    // },
+    // {
+    //   name: "Quản lý ca làm",
+    //   icon: <IconCalendarTime />,
+    //   path: "/admin/divide-shift",
+    // },
+    {
+      name: "Báo cáo",
+      icon: <TbReportAnalytics />,
+      subItems: [
+        { name: "Doanh thu", path: "/admin/invoice" },
+        {
+          name: "Bệnh án",
+          path: "/admin/medical-records",
+        },
+        { name: "Lịch làm việc tổng quan", path: "/admin/statistic-schedule" },
+        { name: "Theo dịch vụ", path: "/admin/statistic-medical-service" },
+        { name: "Khách hàng trong tháng", path: "/admin/statistic-patient" },
       ],
     },
     {
-      name: "Đơn xin nghỉ",
-      icon: <IconTimeDurationOff />,
-      path: "/admin/Leave",
+      name: "Cấu hình hệ thống",
+      icon: <IoMdSettings />,
+      subItems: [
+        { name: "Mẫu in hoá đơn", path: "/admin/invoice-templates" },
+        { name: "Mẫu in bệnh án", path: "/admin/medical-templates" },
+        { name: "Quản lý quyền", path: "/admin/role" },
+        { name: "Cài đặt hệ thống", path: "/admin/settings" },
+      ],
     },
-    {
-      name: "Đơn xin nghỉ nhân viên",
-      icon: <IconTimeDurationOff />,
-      path: "/staff/leave",
-    },
-    {
-      name: "Mẫu in hoá đơn",
-      icon: <IconPrinter />,
-      path: "/admin/invoice-templates",
-    },
-    {
-      name: "Mẫu in bệnh án",
-      icon: <IconReportMedical />,
-      path: "/admin/medical-templates",
-    },
-    { name: "Cài đặt hệ thống", icon: <FaUserPlus />, path: "/admin/settings" },
+    // {
+    //   name: "Khám bệnh",
+    //   icon: <IconHeartRateMonitor />,
+    //   subItems: [
+    //     { name: "Khám lâm sàng", path: "/admin/medical-examination/clinical" },
+    //   ],
+    // },
+    // {
+    //   name: "Đơn xin nghỉ",
+    //   icon: <IconTimeDurationOff />,
+    //   path: "/admin/Leave",
+    // },
+    // {
+    //   name: "Đơn xin nghỉ nhân viên",
+    //   icon: <IconTimeDurationOff />,
+    //   path: "/staff/leave",
+    // },
+    // {
+    //   name: "Mẫu in hoá đơn",
+    //   icon: <IconPrinter />,
+    //   path: "/admin/invoice-templates",
+    // },
+    // {
+    //   name: "Mẫu in bệnh án",
+    //   icon: <IconReportMedical />,
+    //   path: "/admin/medical-templates",
+    // },
+    // { name: "Cài đặt hệ thống", icon: <FaUserPlus />, path: "/admin/settings" },
   ],
   CASHIER: [
     {
@@ -231,9 +255,9 @@ const navItemsByRole: Record<string, NavItem[]> = {
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-  const { userInfo } = useUserInfo(); // ✅ SỬA 2: Lấy danh sách role từ API
+  const { userInfo } = useUserInfo();
 
-  const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
     {}
   );
@@ -266,17 +290,15 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
-  useEffect(() => {
-    let matchedIndex: number | null = null;
-    allNavItems.forEach((nav, index) => {
-      nav.subItems?.forEach((subItem) => {
-        if (isActive(subItem.path)) {
-          matchedIndex = index;
-        }
-      });
-    });
-    setOpenSubmenu(matchedIndex);
-  }, [location, isActive, allNavItems]);
+  // useEffect(() => {
+  //   const found = allNavItems.find((nav) =>
+  //     nav.subItems?.some((subItem) => isActive(subItem.path))
+  //   );
+
+  //   if (!openSubmenu && found) {
+  //     setOpenSubmenu(found.name);
+  //   }
+  // }, [location.pathname, allNavItems, openSubmenu, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -288,20 +310,20 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number) => {
-    setOpenSubmenu((prevIndex) => (prevIndex === index ? null : index));
+  const handleSubmenuToggle = (name: string) => {
+    setOpenSubmenu((prevKey) => (prevKey === name ? null : name));
   };
 
   const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => {
-        const isOpen = openSubmenu === index;
-        const key = `submenu-${index}`;
+      {items.map((nav) => {
+        const isOpen = openSubmenu === nav.name;
+        const key = `submenu-${nav.name}`;
         return (
           <li key={nav.name}>
             {nav.subItems ? (
               <button
-                onClick={() => handleSubmenuToggle(index)}
+                onClick={() => handleSubmenuToggle(nav.name)}
                 className={`menu-item group ${
                   isOpen ? "menu-item-active" : "menu-item-inactive"
                 }`}
@@ -314,7 +336,7 @@ const AppSidebar: React.FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="menu-item-text text-[14px]">{nav.name}</span>
                 )}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
