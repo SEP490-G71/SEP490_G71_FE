@@ -14,42 +14,36 @@ const useRemoveStaffFromDepartment = () => {
   const [error, setError] = useState<string | null>(null);
 
   const removeStaff = async ({ departmentId, staffIdToRemove }: RemoveStaffInput) => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      // B1: Lấy toàn bộ bản ghi hiện tại
-      const res = await axiosInstance.get(
-        `/department-staffs/department/${departmentId}/staffs`
-      );
-      const currentStaffs: DepartmentStaffResponse[] = res.data.result || [];
+  try {
+    const res = await axiosInstance.get(`/departments/${departmentId}`);
+    const department: DepartmentStaffResponse = res.data.result;
 
-      // B2: Lọc bỏ nhân viên cần xoá
-      const filtered = currentStaffs.filter((s) => s.staffId !== staffIdToRemove);
+    // Loại bỏ nhân viên cần xoá
+    const updatedStaffIds = department.staffs
+      .filter((staff) => staff.id !== staffIdToRemove)
+      .map((staff) => staff.id);
 
-      // B3: Chuyển đổi lại về định dạng gửi đi
-      const staffPositions = filtered.map((s) => ({
-        staffId: s.staffId!,
-        position: s.position,
-      }));
+    // Gửi lại danh sách mới
+    const response = await axiosInstance.post(
+      `/departments/${departmentId}/assign-staffs`,
+      { staffIds: updatedStaffIds }
+    );
 
-      // B4: Gửi lại danh sách mới
-      const response = await axiosInstance.post("/department-staffs", {
-        departmentId,
-        staffPositions,
-      });
+    toast.success("Xoá nhân viên thành công");
+    return response.data;
+  } catch (err) {
+    console.error("Lỗi khi xoá nhân viên:", err);
+    toast.error("Xoá nhân viên thất bại");
+    setError("Xoá nhân viên thất bại");
+    return null;
+  } finally {
+    setLoading(false);
+  }
+};
 
-      toast.success("Xoá nhân viên thành công");
-      return response.data;
-    } catch (err) {
-      console.error("Lỗi khi xoá nhân viên:", err);
-      toast.error("Xoá nhân viên thất bại");
-      setError("Xoá nhân viên thất bại");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return {
     removeStaff,

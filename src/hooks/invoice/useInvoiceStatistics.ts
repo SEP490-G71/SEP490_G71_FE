@@ -13,7 +13,7 @@ export const useInvoiceStatistics = () => {
   const fetchInvoiceStats = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/invoice");
+      const res = await axiosInstance.get("/invoices");
       const result = res.data?.result;
       setStats({
         totalInvoices: result?.totalInvoices ?? 0,

@@ -1,10 +1,17 @@
-import { Position } from "../../../enums/Admin/Position";
+import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
+
+import { StaffsResponse } from "../Staffs/StaffsTypeResponse";
 
 export interface DepartmentStaffResponse {
-  id: string;
-  departmentId: string;
-  staffId: string;
-  departmentName: string;
-  staffName: string; 
-  position: keyof typeof Position;
+   id: string;
+  name: string;
+  description: string;
+  roomNumber: string;
+  type: DepartmentType;
+  specialization: {
+    id: string;
+    name: string;
+    description: string;
+  } | null;
+  staffs: StaffsResponse[];
 }

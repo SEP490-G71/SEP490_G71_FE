@@ -13,4 +13,10 @@ export interface StaffsResponse {
   dob: string; 
   roles: string[];
   accountId: string;
+
+  department: {
+    id: string;
+    name: string;
+    roomNumber: string;
+  } | null;
 }

@@ -15,7 +15,6 @@ import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTy
 import { IconPlus } from "@tabler/icons-react";
 import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
-import { Position } from "../../../enums/Admin/Position";
 import AssignStaffModal from "../Department-Staffs/AssignStaffModal";
 import { DepartmentStaffResponse } from "../../../types/Admin/Department-Staffs/DepartmentStaffResponse ";
 import useRemoveStaffFromDepartment from "../../../hooks/department-Staffs/useRemoveStaffFromDepartment";
@@ -25,11 +24,12 @@ import {
   validateRoomNumber,
   validateDescription,
 } from "../../utils/validation";
+import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
 interface CreateEditDepartmentModalProps {
   opened: boolean;
   onClose: () => void;
   initialData?: DepartmentResponse | null;
-  onSubmit: (data: Partial<DepartmentResponse>) => void;
+  onSubmit: (data: Partial<DepartmentRequest>) => void;
   isViewMode?: boolean;
 }
 
@@ -40,24 +40,41 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   onSubmit,
   isViewMode = false,
 }) => {
-  const [departmentStaffs, setDepartmentStaffs] = useState<
-    DepartmentStaffResponse[]
-  >([]);
+  const [departmentData, setDepartmentData] =
+    useState<DepartmentStaffResponse | null>(null);
+
   const [loadingStaffs, setLoadingStaffs] = useState(false);
   const [assignModalOpened, setAssignModalOpened] = useState(false);
 
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [staffToRemove, setStaffToRemove] = useState<string | null>(null);
 
+  const [specializations, setSpecializations] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  useEffect(() => {
+    const fetchSpecializations = async () => {
+      try {
+        const res = await axiosInstance.get("/specializations/all");
+        setSpecializations(res.data.result || []);
+      } catch (error) {
+        toast.error("Không thể tải danh sách chuyên khoa.");
+      }
+    };
+
+    fetchSpecializations();
+  }, []);
   const { removeStaff, loading: removingStaff } =
     useRemoveStaffFromDepartment();
 
-  const form = useForm<Partial<DepartmentResponse>>({
+  const form = useForm<Partial<DepartmentRequest>>({
     initialValues: {
       name: "",
       description: "",
       roomNumber: "",
       type: DepartmentType.CONSULTATION,
+      specializationId: initialData?.specialization?.id || "",
     },
     validate: {
       name: (value) => validateName(value ?? ""),
@@ -71,10 +88,8 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     if (!initialData?.id) return;
     setLoadingStaffs(true);
     try {
-      const res = await axiosInstance.get(
-        `/department-staffs/department/${initialData.id}/staffs`
-      );
-      setDepartmentStaffs(res.data.result || []);
+      const res = await axiosInstance.get(`/departments/${initialData.id}`);
+      setDepartmentData(res.data.result ?? null);
     } catch (error) {
       console.error("Lỗi khi tải danh sách nhân viên:", error);
       toast.error("Không thể tải danh sách nhân viên.");
@@ -84,25 +99,29 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   };
 
   useEffect(() => {
-    if (initialData) {
+    if (initialData && specializations.length > 0) {
       form.setValues({
         name: initialData.name || "",
         description: initialData.description || "",
         roomNumber: initialData.roomNumber || "",
         type: initialData.type || DepartmentType.CONSULTATION,
+        specializationId: initialData.specialization?.id ?? "",
       });
-    } else {
+    }
+  }, [initialData, specializations]);
+
+  useEffect(() => {
+    if (!initialData) {
       form.reset();
-      setDepartmentStaffs([]);
+      setDepartmentData(null);
     }
   }, [initialData, opened]);
 
   useEffect(() => {
-    if (initialData?.id) {
+    if (opened && initialData?.id) {
       fetchStaffs();
     }
-  }, [initialData?.id]);
-
+  }, [opened, initialData]);
   const handleRemoveStaff = (staffId: string) => {
     setStaffToRemove(staffId);
     setConfirmDeleteModal(true);
@@ -158,14 +177,14 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             const validation = await form.validate();
 
             if (validation.hasErrors) {
-              // ❗ Không gọi API, không đóng modal
               toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
               return;
             }
 
             try {
-              await onSubmit(form.values); // Gọi API chỉ khi hợp lệ
-              onClose(); // Chỉ đóng modal khi API thành công
+              await onSubmit(form.values as DepartmentRequest);
+
+              onClose();
             } catch (error) {
               console.error("Lỗi khi lưu phòng ban", error);
               toast.error("Lỗi khi lưu phòng ban");
@@ -217,6 +236,20 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             clearable
             disabled={isViewMode}
           />
+          <Select
+            label="Chuyên khoa"
+            placeholder="Chọn chuyên khoa"
+            data={specializations.map((s) => ({
+              value: s.id,
+              label: s.name,
+            }))}
+            value={form.values.specializationId ?? ""}
+            onChange={(val) =>
+              form.setFieldValue("specializationId", val ?? "")
+            }
+            mt="sm"
+            disabled={isViewMode}
+          />
 
           {initialData && (
             <div className="mt-6">
@@ -239,7 +272,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                 <div className="flex justify-center py-6">
                   <Loader />
                 </div>
-              ) : departmentStaffs.length === 0 ? (
+              ) : (departmentData?.staffs.length ?? 0) === 0 ? (
                 <Text color="dimmed" size="sm" className="text-center">
                   Không có nhân viên nào trong phòng này.
                 </Text>
@@ -268,30 +301,15 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                             paddingLeft: "48px",
                           }}
                         >
-                          Chức vụ
+                          Mã nhân viên
                         </th>
                         <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.values(
-                        departmentStaffs.reduce((acc, curr) => {
-                          if (!acc[curr.staffId]) {
-                            acc[curr.staffId] = {
-                              staffId: curr.staffId,
-                              staffName: curr.staffName,
-                              positions: [Position[curr.position]],
-                            };
-                          } else {
-                            acc[curr.staffId].positions.push(
-                              Position[curr.position]
-                            );
-                          }
-                          return acc;
-                        }, {} as Record<string, { staffId: string; staffName: string; positions: string[] }>)
-                      ).map((staff) => (
+                      {departmentData?.staffs.map((staff) => (
                         <tr
-                          key={staff.staffId}
+                          key={staff.id}
                           style={{
                             borderBottom: "1px solid #dee2e6",
                           }}
@@ -303,7 +321,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                               paddingLeft: "40px",
                             }}
                           >
-                            {staff.staffName}
+                            {staff.fullName}
                           </td>
                           <td
                             style={{
@@ -312,10 +330,13 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                               paddingLeft: "48px",
                             }}
                           >
-                            {staff.positions.join(", ")}
+                            {staff.staffCode}
                           </td>
                           <td
-                            style={{ textAlign: "center", padding: "4px 8px" }}
+                            style={{
+                              textAlign: "center",
+                              padding: "4px 8px",
+                            }}
                           >
                             <Button
                               size="sm"
@@ -323,7 +344,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                               color="red"
                               px={0}
                               style={{ height: "auto" }}
-                              onClick={() => handleRemoveStaff(staff.staffId)}
+                              onClick={() => handleRemoveStaff(staff.id)}
                             >
                               <IconSquareX size={24} />
                             </Button>

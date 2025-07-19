@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import CreateEditStaffModal from "../../../components/admin/Staffs/CreateEditStaffModal";
 import { RoleLabels } from "../../../enums/Role/Role";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -67,10 +68,6 @@ const StaffsPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchStaffs();
-  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
-
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
     firstName: res.firstName,
     middleName: res.middleName,
@@ -81,7 +78,6 @@ const StaffsPage = () => {
     gender: res.gender,
     dob: res.dob,
     roleNames: res.roles,
-    //accountId: res.accountId,
   });
 
   const handleAdd = () => {
@@ -145,6 +141,25 @@ const StaffsPage = () => {
     setModalOpened(false);
     setEditingId(null);
   };
+  const handleSearch = () => {
+    setPage(1);
+    setFilterName(inputName.trim());
+  };
+
+  useEffect(() => {
+    fetchStaffs();
+  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
+
+  const handleReset = () => {
+    setInputName("");
+    setFilterName("");
+    setFilterRoles([]);
+    setPage(1);
+    setSortKey("firstName");
+    setSortDirection("asc");
+
+    fetchStaffs();
+  };
 
   const columns = [
     createColumn<StaffsResponse>({
@@ -171,6 +186,14 @@ const StaffsPage = () => {
       label: "Ngày sinh",
       render: (row) => (row.dob ? dayjs(row.dob).format("DD/MM/YYYY") : ""),
     }),
+    createColumn<StaffsResponse>({
+      key: "departmentInfo",
+      label: "Phòng ban",
+      render: (row) => {
+        if (!row.department) return "Chưa được gán";
+        return `${row.department.roomNumber} - ${row.department.name}`;
+      },
+    }),
   ];
 
   return (
@@ -189,37 +212,58 @@ const StaffsPage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
-        <Select
-          placeholder="Chọn vai trò"
-          className="w-full"
-          styles={{ input: { height: 45 } }}
-          value={filterRoles[0] || ""}
-          onChange={(val) => {
-            setPage(1);
-            setFilterRoles(val ? [val] : []);
-          }}
-          data={Object.entries(RoleLabels).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          searchable
-          clearable
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 my-4 items-end">
+        {/* Ô Chọn vai trò - chiếm 5/12 */}
+        <div className="sm:col-span-5">
+          <FloatingLabelWrapper label="Chọn vai trò">
+            <Select
+              key={filterRoles[0] || "empty"}
+              placeholder="Chọn vai trò"
+              className="w-full"
+              styles={{ input: { height: 45 } }}
+              value={filterRoles.length > 0 ? filterRoles[0] : undefined}
+              onChange={(val) => {
+                setFilterRoles(val ? [val] : []);
+              }}
+              data={Object.entries(RoleLabels).map(([value, label]) => ({
+                value,
+                label,
+              }))}
+              searchable
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Tìm theo tên"
-          className="border rounded px-3 text-sm w-full h-[45px]"
-          value={inputName}
-          onChange={(e) => setInputName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setFilterName(inputName.trim());
-              setPage(1);
-            }
-          }}
-        />
+        {/* Ô Tìm theo tên - cũng chiếm 5/12 */}
+        <div className="sm:col-span-5">
+          <FloatingLabelWrapper label="Tìm theo tên">
+            <input
+              type="text"
+              placeholder="Tìm theo tên"
+              className="border rounded px-3 text-sm w-full h-[45px]"
+              value={inputName}
+              onChange={(e) => setInputName(e.target.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* 2 nút - chiếm 2/12 */}
+        <div className="sm:col-span-2 flex justify-end gap-2">
+          <button
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
+            onClick={handleSearch}
+          >
+            Tìm
+          </button>
+
+          <button
+            className="bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded hover:bg-gray-400"
+            onClick={handleReset}
+          >
+            Tải lại
+          </button>
+        </div>
       </div>
 
       <CustomTable

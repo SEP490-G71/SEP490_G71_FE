@@ -8,7 +8,7 @@ export const usePreviewInvoice = () => {
     }
 
     try {
-      const response = await axiosInstance.get(`/invoice/${invoiceId}/preview`, {
+      const response = await axiosInstance.get(`/invoices/${invoiceId}/preview`, {
         responseType: "blob",
       });
 

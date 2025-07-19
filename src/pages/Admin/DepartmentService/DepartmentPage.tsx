@@ -9,6 +9,8 @@ import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
 import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -33,6 +35,8 @@ const DepartmentPage = () => {
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [inputRoom, setInputRoom] = useState("");
+  const [filterRoom, setFilterRoom] = useState("");
   const { setting } = useSettingAdminService();
   const fetchDepartments = async () => {
     setLoading(true);
@@ -45,6 +49,7 @@ const DepartmentPage = () => {
           sortDir: sortDirection,
           name: filterName || undefined,
           type: filterType || undefined,
+          roomNumber: filterRoom || undefined,
         },
       });
       setDepartments(res.data.result?.content || []);
@@ -58,7 +63,15 @@ const DepartmentPage = () => {
 
   useEffect(() => {
     fetchDepartments();
-  }, [page, pageSize, sortKey, sortDirection, filterName, filterType]);
+  }, [
+    page,
+    pageSize,
+    sortKey,
+    sortDirection,
+    filterName,
+    filterType,
+    filterRoom,
+  ]);
 
   const handleAdd = () => {
     setSelectedDepartment(null);
@@ -87,7 +100,7 @@ const DepartmentPage = () => {
     }
   };
 
-  const handleSubmit = async (data: Partial<DepartmentResponse>) => {
+  const handleSubmit = async (data: DepartmentRequest) => {
     try {
       if (editingId) {
         await axiosInstance.put(`/departments/${editingId}`, data);
@@ -100,7 +113,8 @@ const DepartmentPage = () => {
       fetchDepartments();
       setModalOpened(false);
       setEditingId(null);
-    } catch {
+    } catch (err) {
+      console.error("Lỗi tạo/sửa phòng ban:", err);
       toast.error("Lỗi khi lưu phòng ban");
     }
   };
@@ -117,6 +131,11 @@ const DepartmentPage = () => {
       key: "type",
       label: "Loại phòng",
       render: (row) => getEnumLabel(DepartmentType, row.type),
+    }),
+    createColumn<DepartmentResponse>({
+      key: "Specialization",
+      label: "Chuyên khoa",
+      render: (row) => row.specialization?.name ?? "Không có",
     }),
   ];
 
@@ -137,41 +156,88 @@ const DepartmentPage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-        <div>
-          <Select
-            placeholder="Chọn loại phòng"
-            className="w-full"
-            styles={{ input: { height: 40 } }}
-            value={filterType}
-            onChange={(val) => {
-              setPage(1);
-              setFilterType(val || "");
-            }}
-            data={[
-              { value: "", label: "Tất cả" },
-              ...Object.entries(DepartmentType).map(([value, label]) => ({
-                value,
-                label,
-              })),
-            ]}
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 my-4 items-end">
+        {/* Chọn loại phòng */}
+        <div className="sm:col-span-3">
+          <FloatingLabelWrapper label="Chọn loại phòng">
+            <Select
+              placeholder="Chọn loại phòng"
+              className="w-full"
+              styles={{ input: { height: 45 } }}
+              value={filterType}
+              onChange={(val) => {
+                setPage(1);
+                setFilterType(val || "");
+              }}
+              data={[
+                { value: "", label: "Tất cả" },
+                ...Object.entries(DepartmentType).map(([value, label]) => ({
+                  value,
+                  label,
+                })),
+              ]}
+              clearable
+              searchable
+            />
+          </FloatingLabelWrapper>
         </div>
 
-        <div>
-          <input
-            type="text"
-            placeholder="Tìm theo tên"
-            className="border rounded px-3 py-2 text-sm w-full h-[40px]"
-            value={inputName}
-            onChange={(e) => setInputName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setPage(1);
-                setFilterName(inputName.trim());
-              }
+        {/* Tìm theo tên */}
+        <div className="sm:col-span-3">
+          <FloatingLabelWrapper label="Tìm theo tên">
+            <input
+              type="text"
+              placeholder="Tìm theo tên"
+              className="border rounded px-3 text-sm w-full h-[45px]"
+              value={inputName}
+              onChange={(e) => setInputName(e.target.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Tìm theo số phòng */}
+        <div className="sm:col-span-3">
+          <FloatingLabelWrapper label="Tìm theo số phòng">
+            <input
+              type="text"
+              placeholder="Tìm theo số phòng"
+              className="border rounded px-3 text-sm w-full h-[45px]"
+              value={inputRoom}
+              onChange={(e) => setInputRoom(e.target.value)}
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Nút tìm và tải lại */}
+        <div className="sm:col-span-3 flex justify-end gap-2">
+          <button
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700"
+            onClick={() => {
+              const normalizeText = (text: string) =>
+                text.trim().replace(/\s+/g, " ");
+              setPage(1);
+              setFilterName(normalizeText(inputName));
+              setFilterRoom(normalizeText(inputRoom));
             }}
-          />
+          >
+            Tìm
+          </button>
+
+          <button
+            className="bg-gray-300 text-gray-800 text-sm px-4 py-2 rounded hover:bg-gray-400"
+            onClick={() => {
+              setInputName("");
+              setFilterName("");
+              setInputRoom("");
+              setFilterRoom("");
+              setFilterType("");
+              setSortKey("name");
+              setSortDirection("asc");
+              setPage(1);
+            }}
+          >
+            Tải lại
+          </button>
         </div>
       </div>
 
@@ -205,7 +271,7 @@ const DepartmentPage = () => {
           setEditingId(null);
         }}
         initialData={selectedDepartment}
-        onSubmit={handleSubmit}
+        onSubmit={(data) => handleSubmit(data as DepartmentRequest)}
       />
     </>
   );
