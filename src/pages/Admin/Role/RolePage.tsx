@@ -34,6 +34,12 @@ const RolePage = () => {
   const [searchName, setSearchName] = useState<string>("");
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchAllRoles(page - 1, pageSize, sortKey || "name", sortDirection, {
       name: searchName,
     });
@@ -122,18 +128,22 @@ const RolePage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <FloatingLabelWrapper label="Mã hồ sơ">
-          <TextInput
-            placeholder="Nhập tên vai trò"
-            value={searchNameInput}
-            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-            className="flex-1 min-w-[150px]"
-          />
-        </FloatingLabelWrapper>
-        <div className="flex items-end gap-2">
-          <Button variant="filled" color="blue" onClick={handleReset}>
-            Reset
+      <div className="grid grid-cols-12 gap-4 my-4">
+        <div className="col-span-12 md:col-span-10">
+          <FloatingLabelWrapper label="Mã hồ sơ">
+            <TextInput
+              placeholder="Nhập tên vai trò"
+              value={searchNameInput}
+              onChange={(event) =>
+                setSearchNameInput(event.currentTarget.value)
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
           </Button>
           <Button variant="filled" color="blue" onClick={handleSearch}>
             Tìm kiếm

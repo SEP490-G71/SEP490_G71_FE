@@ -53,6 +53,11 @@ const MedicalServicePage = () => {
   >([]);
 
   const { setting } = useSettingAdminService();
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
 
   useEffect(() => {
     fetchAllMedicalServices(
@@ -86,7 +91,7 @@ const MedicalServicePage = () => {
         );
         setDepartments(departmentsOptions);
 
-        const servicesRes = await axiosInstance.get("/medical-service", {
+        const servicesRes = await axiosInstance.get("/medical-services", {
           params: { page: 0, size: 1000 },
         });
         const serviceNameOptions = Array.from(
@@ -142,12 +147,12 @@ const MedicalServicePage = () => {
     try {
       if (selectedService) {
         await axiosInstance.put(
-          `/medical-service/${selectedService.id}`,
+          `/medical-services/${selectedService.id}`,
           formData
         );
         toast.success("Updated successfully");
       } else {
-        await axiosInstance.post(`/medical-service`, formData);
+        await axiosInstance.post(`/medical-services`, formData);
         toast.success("Created successfully");
       }
       fetchAllMedicalServices(
@@ -221,33 +226,37 @@ const MedicalServicePage = () => {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2 my-4">
-        <FloatingLabelWrapper label="Chọn phòng ban">
-          <Select
-            placeholder="Chọn phòng ban"
-            data={departments}
-            value={departmentFilterInput}
-            onChange={(value) => {
-              setDepartmentFilterInput(value || undefined);
-            }}
-            clearable
-            searchable
-            className="flex-1 min-w-[150px]"
-          />
-        </FloatingLabelWrapper>
+      <div className="grid grid-cols-12 gap-4 mb-4">
+        <div className="col-span-12 md:col-span-5">
+          <FloatingLabelWrapper label="Chọn phòng ban">
+            <Select
+              placeholder="Chọn phòng ban"
+              data={departments}
+              value={departmentFilterInput}
+              onChange={(value) => {
+                setDepartmentFilterInput(value || undefined);
+              }}
+              clearable
+              searchable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <FloatingLabelWrapper label="Nhập tên dịch vụ">
-          <TextInput
-            placeholder="Nhập tên dịch vụ"
-            value={searchNameInput}
-            onChange={(event) => setSearchNameInput(event.currentTarget.value)}
-            className="flex-1 min-w-[150px]"
-          />
-        </FloatingLabelWrapper>
+        <div className="col-span-12 md:col-span-5">
+          <FloatingLabelWrapper label="Nhập tên dịch vụ">
+            <TextInput
+              placeholder="Nhập tên dịch vụ"
+              value={searchNameInput}
+              onChange={(event) =>
+                setSearchNameInput(event.currentTarget.value)
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <div className="flex items-end gap-2">
-          <Button variant="filled" color="blue" onClick={handleReset}>
-            Reset
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
           </Button>
           <Button variant="filled" color="blue" onClick={handleSearch}>
             Tìm kiếm

@@ -27,7 +27,7 @@ export const useStatisticSchedule = () => {
   ) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/work-schedule/statistics", {
+      const res = await axiosInstance.get("/work-schedules/statistics", {
         params: {
           page,
           size,
@@ -64,7 +64,7 @@ export const useStatisticSchedule = () => {
     staffId?: string;
   }) => {
     try {
-      const res = await axiosInstance.get("/work-schedule/statistics/export", {
+      const res = await axiosInstance.get("/work-schedules/statistics/export", {
         params: {
           fromDate: filters?.fromDate,
           toDate: filters?.toDate,

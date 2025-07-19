@@ -11,7 +11,6 @@ import { LuDownload } from "react-icons/lu";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
-// ✅ Thêm type rõ ràng để tránh lỗi TS
 interface SearchFilters {
   fromDate: Date | null;
   toDate: Date | null;
@@ -167,70 +166,87 @@ export const StatisticSchedulePage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-        <FloatingLabelWrapper label="Từ ngày">
-          <DatePickerInput
-            placeholder="Từ ngày"
-            value={searchFilters.fromDate}
-            onChange={(value) =>
-              setSearchFilters({
-                ...searchFilters,
-                fromDate: value as Date | null,
-              })
-            }
-            className="w-full"
-            valueFormat="DD/MM/YYYY"
-          />
-        </FloatingLabelWrapper>
-        <FloatingLabelWrapper label="Đến ngày">
-          <DatePickerInput
-            placeholder="Đến ngày"
-            value={searchFilters.toDate}
-            onChange={(value) =>
-              setSearchFilters({
-                ...searchFilters,
-                toDate: value as Date | null,
-              })
-            }
-            className="w-full"
-            valueFormat="DD/MM/YYYY"
-          />
-        </FloatingLabelWrapper>
-        <FloatingLabelWrapper label="Tìm nhân viên">
-          <Select
-            placeholder="Tìm tên nhân viên"
-            data={staffOptions}
-            value={searchFilters.staffId || null}
-            onChange={(value) =>
-              setSearchFilters({
-                ...searchFilters,
-                staffId: typeof value === "string" ? value : "",
-              })
-            }
-            onSearchChange={(query) => {
-              searchStaffs(query);
-            }}
-            clearable
-            searchable
-            className="w-full"
-          />
-        </FloatingLabelWrapper>
-        <FloatingLabelWrapper label="Tìm mã nhân viên">
-          <TextInput
-            placeholder="Tìm mã nhân viên"
-            value={searchFilters.staffCodeSearch}
-            onChange={(event) =>
-              setSearchFilters({
-                ...searchFilters,
-                staffCodeSearch: event.currentTarget.value,
-              })
-            }
-            className="w-full"
-          />
-        </FloatingLabelWrapper>
-        <div className="flex items-end gap-2">
-          <Button variant="filled" color="blue" onClick={handleReset}>
-            Reset
+      <div className="grid grid-cols-12 gap-4 mb-4">
+        {/* Từ ngày - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Từ ngày">
+            <DatePickerInput
+              placeholder="Từ ngày"
+              value={searchFilters.fromDate}
+              onChange={(value) =>
+                setSearchFilters({
+                  ...searchFilters,
+                  fromDate: value as Date | null,
+                })
+              }
+              className="w-full"
+              valueFormat="DD/MM/YYYY"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Đến ngày - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Đến ngày">
+            <DatePickerInput
+              placeholder="Đến ngày"
+              value={searchFilters.toDate}
+              onChange={(value) =>
+                setSearchFilters({
+                  ...searchFilters,
+                  toDate: value as Date | null,
+                })
+              }
+              className="w-full"
+              valueFormat="DD/MM/YYYY"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Tìm nhân viên - 3/12 */}
+        <div className="col-span-12 lg:col-span-3">
+          <FloatingLabelWrapper label="Tìm nhân viên">
+            <Select
+              placeholder="Tìm tên nhân viên"
+              data={staffOptions}
+              value={searchFilters.staffId || null}
+              onChange={(value) =>
+                setSearchFilters({
+                  ...searchFilters,
+                  staffId: typeof value === "string" ? value : "",
+                })
+              }
+              onSearchChange={(query) => {
+                searchStaffs(query);
+              }}
+              clearable
+              searchable
+              className="w-full"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Tìm mã nhân viên - 3/12 */}
+        <div className="col-span-12 lg:col-span-3">
+          <FloatingLabelWrapper label="Tìm mã nhân viên">
+            <TextInput
+              placeholder="Tìm mã nhân viên"
+              value={searchFilters.staffCodeSearch}
+              onChange={(event) =>
+                setSearchFilters({
+                  ...searchFilters,
+                  staffCodeSearch: event.currentTarget.value,
+                })
+              }
+              className="w-full"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Nút - 2/12 */}
+        <div className="col-span-12 lg:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset}>
+            Tải lại
           </Button>
           <Button variant="filled" color="blue" onClick={handleSearch}>
             Tìm kiếm

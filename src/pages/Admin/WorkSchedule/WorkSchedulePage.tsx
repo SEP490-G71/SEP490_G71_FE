@@ -57,6 +57,12 @@ export const WorkSchedulePage = () => {
   const { options: staffOptions, searchStaffs } = useStaffSearch();
 
   useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+    }
+  }, [setting]);
+
+  useEffect(() => {
     fetchWorkSchedules(page - 1, pageSize, {
       shift: filters.shift || undefined,
       fromDate: filters.fromDate
@@ -183,84 +189,104 @@ export const WorkSchedulePage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-        <FloatingLabelWrapper label="Nhân viên">
-          <Select
-            placeholder="Tìm tên nhân viên"
-            data={staffOptions}
-            value={filterInput.staffId || null}
-            onChange={(value) =>
-              setFilterInput({
-                ...filterInput,
-                staffId: typeof value === "string" ? value : "",
-              })
-            }
-            onSearchChange={(query) => searchStaffs(query)}
-            clearable
-            searchable
-          />
-        </FloatingLabelWrapper>
+      <div className="grid grid-cols-12 gap-4 mb-4">
+        {/* Nhân viên - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Nhân viên">
+            <Select
+              placeholder="Tìm tên nhân viên"
+              data={staffOptions}
+              value={filterInput.staffId || null}
+              onChange={(value) =>
+                setFilterInput({
+                  ...filterInput,
+                  staffId: typeof value === "string" ? value : "",
+                })
+              }
+              onSearchChange={(query) => searchStaffs(query)}
+              clearable
+              searchable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <FloatingLabelWrapper label="Ca trực">
-          <Select
-            data={[
-              { value: "MORNING", label: "Sáng" },
-              { value: "AFTERNOON", label: "Chiều" },
-              { value: "NIGHT", label: "Tối" },
-            ]}
-            value={filterInput.shift}
-            onChange={(value) =>
-              setFilterInput({ ...filterInput, shift: value || "" })
-            }
-            placeholder="Chọn ca trực"
-            clearable
-          />
-        </FloatingLabelWrapper>
+        {/* Ca trực - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Ca trực">
+            <Select
+              data={[
+                { value: "MORNING", label: "Sáng" },
+                { value: "AFTERNOON", label: "Chiều" },
+                { value: "NIGHT", label: "Tối" },
+              ]}
+              value={filterInput.shift}
+              onChange={(value) =>
+                setFilterInput({ ...filterInput, shift: value || "" })
+              }
+              placeholder="Chọn ca trực"
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <FloatingLabelWrapper label="Từ ngày">
-          <DatePickerInput
-            value={filterInput.fromDate}
-            onChange={(value) =>
-              setFilterInput({ ...filterInput, fromDate: value as Date | null })
-            }
-            placeholder="Từ ngày"
-            valueFormat="DD/MM/YYYY"
-          />
-        </FloatingLabelWrapper>
+        {/* Từ ngày - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Từ ngày">
+            <DatePickerInput
+              value={filterInput.fromDate}
+              onChange={(value) =>
+                setFilterInput({
+                  ...filterInput,
+                  fromDate: value as Date | null,
+                })
+              }
+              placeholder="Từ ngày"
+              valueFormat="DD/MM/YYYY"
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <FloatingLabelWrapper label="Đến ngày">
-          <DatePickerInput
-            value={filterInput.toDate}
-            onChange={(value) =>
-              setFilterInput({ ...filterInput, toDate: value as Date | null })
-            }
-            placeholder="Đến ngày"
-            valueFormat="DD/MM/YYYY"
-          />
-        </FloatingLabelWrapper>
+        {/* Đến ngày - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Đến ngày">
+            <DatePickerInput
+              value={filterInput.toDate}
+              onChange={(value) =>
+                setFilterInput({ ...filterInput, toDate: value as Date | null })
+              }
+              placeholder="Đến ngày"
+              valueFormat="DD/MM/YYYY"
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        <FloatingLabelWrapper label="Thứ">
-          <Select
-            data={[
-              { value: "MONDAY", label: "Thứ 2" },
-              { value: "TUESDAY", label: "Thứ 3" },
-              { value: "WEDNESDAY", label: "Thứ 4" },
-              { value: "THURSDAY", label: "Thứ 5" },
-              { value: "FRIDAY", label: "Thứ 6" },
-              { value: "SATURDAY", label: "Thứ 7" },
-              { value: "SUNDAY", label: "Chủ nhật" },
-            ]}
-            value={filterInput.dayOfWeek}
-            onChange={(value) =>
-              setFilterInput({ ...filterInput, dayOfWeek: value || "" })
-            }
-            placeholder="Chọn thứ"
-            clearable
-          />
-        </FloatingLabelWrapper>
-        <div className="flex gap-2 items-end">
-          <Button color="blue" variant="filled" onClick={handleReset}>
-            Reset
+        {/* Thứ - 2/12 */}
+        <div className="col-span-12 lg:col-span-2">
+          <FloatingLabelWrapper label="Thứ">
+            <Select
+              data={[
+                { value: "MONDAY", label: "Thứ 2" },
+                { value: "TUESDAY", label: "Thứ 3" },
+                { value: "WEDNESDAY", label: "Thứ 4" },
+                { value: "THURSDAY", label: "Thứ 5" },
+                { value: "FRIDAY", label: "Thứ 6" },
+                { value: "SATURDAY", label: "Thứ 7" },
+                { value: "SUNDAY", label: "Chủ nhật" },
+              ]}
+              value={filterInput.dayOfWeek}
+              onChange={(value) =>
+                setFilterInput({ ...filterInput, dayOfWeek: value || "" })
+              }
+              placeholder="Chọn thứ"
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Nút hành động - 2/12 */}
+        <div className="col-span-12 lg:col-span-2 flex items-end gap-2">
+          <Button color="gray" variant="light" onClick={handleReset}>
+            Tải lại
           </Button>
           <Button color="blue" variant="filled" onClick={handleSearch}>
             Tìm kiếm

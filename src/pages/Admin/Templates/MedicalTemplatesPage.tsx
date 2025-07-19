@@ -10,6 +10,7 @@ import CreateEditTemplateModal, {
 } from "../../../components/admin/Template/CreateEditTemplateModal";
 import { TemplateFileType } from "../../../enums/Admin/TemplateFileType";
 import { toast } from "react-toastify";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 const MedicalTemplatesPage = () => {
   const {
@@ -28,6 +29,7 @@ const MedicalTemplatesPage = () => {
   const [sortKey, setSortKey] = useState<keyof TemplateFileResponse>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [modalOpened, setModalOpened] = useState(false);
+  const { setting } = useSettingAdminService();
   const paginatedTemplates = medicalTemplates.slice(
     (page - 1) * pageSize,
     page * pageSize
@@ -156,6 +158,9 @@ const MedicalTemplatesPage = () => {
         sortDirection={sortDirection}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        pageSizeOptions={setting?.paginationSizeList
+          .slice()
+          .sort((a, b) => a - b)}
       />
 
       <div className="mt-4 p-4 rounded bg-green-100 text-green-700 text-sm flex items-start gap-2">
