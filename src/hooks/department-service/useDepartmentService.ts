@@ -9,47 +9,49 @@ const useDepartmentService = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
- const fetchAllDepartments = async (
-  page: number = 0,
-  size: number = 5,
-  
-  filters?: {
-    name?: string;
-    roomNumber?: string;
-  }
-) => {
+const fetchDepartments = async (params: {
+  page: number;
+  size: number;
+  name?: string;
+  roomNumber?: string;
+  type?: string;
+}) => {
   setLoading(true);
-
   try {
-    const res = await axiosInstance.get("/departments", {
-   params: {
-    page,
-    size,
-    
-    name: filters?.name || undefined,
-    roomNumber: filters?.roomNumber || undefined,
-    
-  },
-    });
-   
-    setDepartments(res.data.result.content);
-    setTotalItems(res.data.result.totalElements);
-  } catch (error: any) {
-    console.error(" Failed to fetch departments:", error);
-    toast.error("Lỗi khi tải danh sách phòng ban");
-    
-    if (error.response) {
-      console.log(" Error response data:", error.response.data);
-      console.log(" Error status:", error.response.status);
-    } else if (error.request) {
-      console.log(" No response received from server:", error.request);
-    } else {
-      console.log("Error setting up request:", error.message);
+    const res = await axiosInstance.get("/departments", { params });
+    const content = res.data.result?.content ?? [];
+    const total = res.data.result?.totalElements ?? 0;
+    setDepartments(content);
+    setTotalItems(total);
+    if (content.length === 0) {
+      toast.info("Không có dữ liệu phòng ban.");
     }
+  } catch (error) {
+    console.error("Failed to fetch departments:", error);
+    toast.error("Không thể tải dữ liệu phòng ban.");
   } finally {
     setLoading(false);
   }
 };
+
+const fetchAllDepartments = async () => {
+  setLoading(true);
+  try {
+    const res = await axiosInstance.get("/departments/all");
+    const data = res.data.result ?? [];
+    setDepartments(data);
+    setTotalItems(data.length);
+    if (data.length === 0) {
+      toast.info("Không có phòng ban nào.");
+    }
+  } catch (error) {
+    console.error("Failed to fetch all departments:", error);
+    toast.error("Không thể tải toàn bộ danh sách phòng ban.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 const createDepartment = async (data: DepartmentRequest) => {
   try {
     const res = await axiosInstance.post("/departments", data);
@@ -126,7 +128,8 @@ const createDepartment = async (data: DepartmentRequest) => {
     fetchAllDepartmentsRaw,
     handleDeleteDepartmentById,
     createDepartment,
-    updateDepartment
+    updateDepartment,
+    fetchDepartments
   };
 };
 

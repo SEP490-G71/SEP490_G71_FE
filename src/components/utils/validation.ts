@@ -1,7 +1,15 @@
 // Validate tên (dùng cho nhân viên, phòng ban,...)
 export const validateName = (value: string): string | null => {
   if (!value || value.trim() === "") return "Tên không được để trống";
-  if (value.length < 3 || value.length > 100) return "Tên phải từ 3 đến 100 ký tự";
+  if (value.length <2 || value.length > 20) return "Tên phải từ 2 đến 20 ký tự";
+  if (!/^[A-Za-zÀ-ỹ\s]+$/.test(value)) return "Tên chỉ được chứa chữ cái và khoảng trắng";
+  return null;
+};
+
+
+export const validateNameForDepartmen = (value: string): string | null => {
+  if (!value || value.trim() === "") return "Tên không được để trống";
+  if (value.length <3 || value.length > 100) return "Tên phải từ 3 đến 100 ký tự";
   if (!/^[A-Za-zÀ-ỹ\s]+$/.test(value)) return "Tên chỉ được chứa chữ cái và khoảng trắng";
   return null;
 };

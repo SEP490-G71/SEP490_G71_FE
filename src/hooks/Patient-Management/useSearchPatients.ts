@@ -13,11 +13,7 @@ export const useSearchPatients = (searchTerm: string) => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
-      const cleanedSearchTerm = searchTerm
-          .replace(/[\u0300-\u036f]/g, "")     
-           .toLowerCase()
-           .trim()
-            .replace(/\s+/g, " ");
+      const cleanedSearchTerm = searchTerm.trim().replace(/\s+/g, " "); 
 
       if (!cleanedSearchTerm) {
         setOptions([]);
@@ -51,3 +47,4 @@ export const useSearchPatients = (searchTerm: string) => {
 
   return { options, loading };
 };
+
