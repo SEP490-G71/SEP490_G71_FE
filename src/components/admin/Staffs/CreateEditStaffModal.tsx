@@ -187,6 +187,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
 
         <Select
           label="Giới tính"
+          placeholder="Chọn giới tính"
           data={Object.entries(Gender).map(([value, label]) => ({
             value,
             label,

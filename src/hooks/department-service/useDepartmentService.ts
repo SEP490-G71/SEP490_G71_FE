@@ -2,6 +2,7 @@ import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
+import { DepartmentRequest } from "../../types/Admin/Department/DepartmentTypeRequest";
 
 const useDepartmentService = () => {
   const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
@@ -11,8 +12,7 @@ const useDepartmentService = () => {
  const fetchAllDepartments = async (
   page: number = 0,
   size: number = 5,
-  sortBy: string = "name",
-  sortDir: "asc" | "desc" = "asc",
+  
   filters?: {
     name?: string;
     roomNumber?: string;
@@ -25,22 +25,19 @@ const useDepartmentService = () => {
    params: {
     page,
     size,
-    sortBy,
-    sortDir,
+    
     name: filters?.name || undefined,
     roomNumber: filters?.roomNumber || undefined,
     
   },
     });
-
-    // Gán dữ liệu nếu đúng định dạng
+   
     setDepartments(res.data.result.content);
     setTotalItems(res.data.result.totalElements);
   } catch (error: any) {
     console.error(" Failed to fetch departments:", error);
     toast.error("Lỗi khi tải danh sách phòng ban");
-
-    // Ghi log chi tiết response lỗi nếu có
+    
     if (error.response) {
       console.log(" Error response data:", error.response.data);
       console.log(" Error status:", error.response.status);
@@ -53,7 +50,18 @@ const useDepartmentService = () => {
     setLoading(false);
   }
 };
-
+const createDepartment = async (data: DepartmentRequest) => {
+  try {
+    const res = await axiosInstance.post("/departments", data);
+    toast.success("Tạo phòng ban thành công");
+    fetchAllDepartments(); 
+    return res.data.result as DepartmentResponse;
+  } catch (error) {
+    console.error("Lỗi khi tạo phòng ban:", error);
+    toast.error("Tạo phòng ban thất bại");
+    return null;
+  }
+};
 
   const fetchDepartmentById = async (id: string) => {
     try {
@@ -65,6 +73,22 @@ const useDepartmentService = () => {
       return null;
     }
   };
+
+  const updateDepartment = async (
+  id: string,
+  data: Partial<DepartmentRequest>
+): Promise<DepartmentResponse | null> => {
+  try {
+    const res = await axiosInstance.put(`/departments/${id}`, data);
+    toast.success("Cập nhật phòng ban thành công");
+    fetchAllDepartments(); 
+    return res.data.result as DepartmentResponse;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật phòng ban:", error);
+    toast.error("Cập nhật phòng ban thất bại");
+    return null;
+  }
+};
 
   const handleDeleteDepartmentById = async (id: string) => {
     try {
@@ -101,6 +125,8 @@ const useDepartmentService = () => {
     fetchDepartmentById,
     fetchAllDepartmentsRaw,
     handleDeleteDepartmentById,
+    createDepartment,
+    updateDepartment
   };
 };
 

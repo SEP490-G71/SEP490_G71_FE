@@ -30,9 +30,6 @@ const LeaveAdminPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] =
-    useState<keyof LeaveRequestResponse>("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterStaffId, setFilterStaffId] = useState("");
   const [filterFromDate, setFilterFromDate] = useState<Date | null>(null);
@@ -45,11 +42,15 @@ const LeaveAdminPage = () => {
   const { options: staffOptions, loading: loadingStaffSearch } =
     useSearchStaffs(staffSearch);
 
+  // State for controlling search
+  const [isSearchClicked, setIsSearchClicked] = useState(false);
+
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
+
   const fetchData = async () => {
     const isValid = validate(filterFromDate, filterToDate);
 
@@ -72,8 +73,7 @@ const LeaveAdminPage = () => {
       const params = {
         page: page - 1,
         size: pageSize,
-        sortBy: sortKey,
-        sortDir: sortDirection,
+
         status: filterStatus || undefined,
         staffId: filterStaffId || undefined,
         createdAtFrom: filterFromDate
@@ -123,17 +123,34 @@ const LeaveAdminPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    if (isSearchClicked) {
+      fetchData();
+    }
   }, [
     page,
     pageSize,
-    sortKey,
-    sortDirection,
+
     filterStatus,
     filterStaffId,
     filterFromDate,
     filterToDate,
+    isSearchClicked,
   ]);
+
+  const handleSearch = () => {
+    setIsSearchClicked(true);
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setFilterStatus("");
+    setFilterStaffId("");
+    setFilterFromDate(null);
+    setFilterToDate(null);
+    setStaffSearch("");
+    setPage(1);
+    fetchData();
+  };
 
   const [rejectNote, setRejectNote] = useState("");
   const [openedPopoverId, setOpenedPopoverId] = useState<string | null>(null);
@@ -234,7 +251,7 @@ const LeaveAdminPage = () => {
                         await handleStatusChange(
                           row.id,
                           LeaveRequestStatus.REJECTED,
-                          rejectNote // vẫn truyền note nếu có
+                          rejectNote
                         );
                         setOpenedPopoverId(null);
                       }}
@@ -264,110 +281,147 @@ const LeaveAdminPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h1 className="text-xl font-bold">Yêu cầu nghỉ phép</h1>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-12 gap-4 my-4">
         {/* Trạng thái */}
-        <FloatingLabelWrapper label="Trạng thái">
-          <Select
-            placeholder="Chọn trạng thái"
-            value={filterStatus}
-            onChange={(val) => {
-              setPage(1);
-              setFilterStatus(val || "");
-            }}
-            data={[
-              { value: "", label: "Tất cả" },
-              ...Object.entries(LeaveRequestStatusLabels).map(
-                ([key, label]) => ({
-                  value: key,
-                  label,
-                })
-              ),
-            ]}
-            className="w-full"
-            styles={{ input: { height: 40, zIndex: 1 } }}
-          />
-        </FloatingLabelWrapper>
+        <div className="col-span-12 md:col-span-3">
+          <FloatingLabelWrapper label="Trạng thái">
+            <Select
+              placeholder="Chọn trạng thái"
+              value={filterStatus}
+              onChange={(val) => {
+                setPage(1);
+                setFilterStatus(val || "");
+              }}
+              data={[
+                { value: "", label: "Tất cả" },
+                ...Object.entries(LeaveRequestStatusLabels).map(
+                  ([key, label]) => ({
+                    value: key,
+                    label,
+                  })
+                ),
+              ]}
+              className="w-full"
+              styles={{
+                input: {
+                  height: 36,
+                  marginTop: "2px",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                },
+              }}
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-        {/* Tên nhân viên */}
-        <FloatingLabelWrapper label="Nhân viên">
-          <Select
-            searchable
-            clearable
-            placeholder="Nhập tên hoặc mã nhân viên"
-            value={filterStaffId}
-            onSearchChange={setStaffSearch}
-            onChange={(val) => {
-              setPage(1);
-              setFilterStaffId(val || "");
-            }}
-            data={staffOptions}
-            className="w-full"
-            styles={{ input: { height: 40, zIndex: 1 } }}
-            rightSection={
-              loadingStaffSearch ? <span className="mr-2">⏳</span> : null
-            }
-          />
-        </FloatingLabelWrapper>
+        {/* Nhân viên */}
+        <div className="col-span-12 md:col-span-3">
+          <FloatingLabelWrapper label="Nhân viên">
+            <Select
+              searchable
+              clearable
+              placeholder="Nhập tên hoặc mã nhân viên"
+              value={filterStaffId}
+              onSearchChange={setStaffSearch}
+              onChange={(val) => {
+                setPage(1);
+                setFilterStaffId(val || "");
+              }}
+              data={staffOptions}
+              className="w-full"
+              styles={{
+                input: {
+                  height: 36,
+                  marginTop: "2px",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                },
+              }}
+              rightSection={
+                loadingStaffSearch ? <span className="mr-2">⏳</span> : null
+              }
+            />
+          </FloatingLabelWrapper>
+        </div>
 
         {/* Ngày tạo từ */}
-        <FloatingLabelWrapper label="Ngày tạo từ">
-          <DatePickerInput
-            placeholder="Chọn ngày"
-            value={filterFromDate}
-            onChange={(val) => {
-              const date = val as Date | null;
-              setFilterFromDate(date);
-              setPage(1);
-
-              const error1 = validateDateNotFuture(date);
-              const error2 = validateFromDateToDate(date, filterToDate);
-              setFromDateError(error1 || error2);
-            }}
-            error={fromDateError}
-            className="w-full"
-            styles={{ input: { height: 40, zIndex: 1 } }}
-            valueFormat="DD/MM/YYYY"
-            clearable
-          />
-        </FloatingLabelWrapper>
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Ngày tạo từ">
+            <DatePickerInput
+              placeholder="Chọn ngày"
+              value={filterFromDate}
+              onChange={(val) => {
+                const date = val as Date | null;
+                setFilterFromDate(date);
+                setPage(1);
+                const error1 = validateDateNotFuture(date);
+                const error2 = validateFromDateToDate(date, filterToDate);
+                setFromDateError(error1 || error2);
+              }}
+              error={fromDateError}
+              className="w-full"
+              styles={{
+                input: {
+                  height: 36,
+                  marginTop: "2px",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                },
+              }}
+              valueFormat="DD/MM/YYYY"
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
         {/* Ngày tạo đến */}
-        <FloatingLabelWrapper label="Ngày tạo đến">
-          <DatePickerInput
-            placeholder="Đến ngày"
-            value={filterToDate}
-            onChange={(val) => {
-              const date = val as Date | null;
-              setFilterToDate(date);
-              setPage(1);
+        <div className="col-span-12 md:col-span-2">
+          <FloatingLabelWrapper label="Ngày tạo đến">
+            <DatePickerInput
+              placeholder="Đến ngày"
+              value={filterToDate}
+              onChange={(val) => {
+                const date = val as Date | null;
+                setFilterToDate(date);
+                setPage(1);
+                const error1 = validateDateNotFuture(date);
+                const error2 = validateFromDateToDate(filterFromDate, date);
+                setToDateError(error1 || error2);
+              }}
+              error={toDateError}
+              className="w-full"
+              styles={{
+                input: {
+                  height: 36,
+                  marginTop: "2px",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                },
+              }}
+              valueFormat="DD/MM/YYYY"
+              clearable
+            />
+          </FloatingLabelWrapper>
+        </div>
 
-              const error1 = validateDateNotFuture(date);
-              const error2 = validateFromDateToDate(filterFromDate, date);
-              setToDateError(error1 || error2);
-            }}
-            error={toDateError}
-            className="w-full"
-            styles={{ input: { height: 40, zIndex: 1 } }}
-            valueFormat="DD/MM/YYYY"
-            clearable
-          />
-        </FloatingLabelWrapper>
-
-        {/* Nút tải lại */}
-        <div className="flex items-end col-span-1">
-          <button
-            onClick={() => {
-              setFilterStatus("");
-              setFilterStaffId("");
-              setFilterFromDate(null);
-              setFilterToDate(null);
-              setPage(1);
-            }}
-            className="rounded-md bg-blue-400 text-white border border-blue-400 hover:bg-blue-500 transition w-16 h-10 flex items-center justify-center"
-            title="Tải lại bộ lọc"
+        {/* Nút */}
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2 justify-end">
+          <Button
+            variant="light"
+            color="gray"
+            onClick={handleResetFilters}
+            className="h-[38px] min-w-[80px] max-w-[90px] px-2"
           >
             Tải lại
-          </button>
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            onClick={handleSearch}
+            className="h-[38px] min-w-[80px] max-w-[90px] px-2"
+          >
+            Tìm kiếm
+          </Button>
         </div>
       </div>
 
@@ -382,12 +436,6 @@ const LeaveAdminPage = () => {
           setPageSize(size);
           setPage(1);
         }}
-        onSortChange={(key, dir) => {
-          setSortKey(key);
-          setSortDirection(dir);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         onDelete={handleDelete}
         pageSizeOptions={setting?.paginationSizeList

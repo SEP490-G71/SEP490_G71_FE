@@ -5,6 +5,7 @@ import { IconSquareX } from "@tabler/icons-react";
 interface StaffListTableProps {
   staffs: StaffsResponse[];
   onRemove: (staffId: string) => void;
+  isViewMode: boolean;
 }
 
 const StaffListTable = ({ staffs, onRemove }: StaffListTableProps) => {

@@ -33,16 +33,17 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   const { assignStaffs, loading: assigning } = useAssignStaffsToDepartment();
 
   const [selectedStaffs, setSelectedStaffs] = useState<AssignStaff[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredStaffs, setFilteredStaffs] = useState(staffs);
+  const [search, setSearch] = useState<string>("");
+  const [isResetting, setIsResetting] = useState(false);
 
-  const toggleSelection = (staffId: string) => {
-    setSelectedStaffs((prev) => {
-      const exists = prev.find((s) => s.staffId === staffId);
-      return exists
-        ? prev.filter((s) => s.staffId !== staffId)
-        : [...prev, { staffId }];
-    });
+  const handleReset = async () => {
+    setSearch("");
+    setIsResetting(true);
+    try {
+      await fetchUnassignedStaffs(""); // Reload with an empty search term
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleAssignSelected = async () => {
@@ -57,39 +58,37 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     }
   };
 
-  const handleSearch = () => {
-    setFilteredStaffs(
-      staffs.filter((staff) =>
-        `${staff.firstName} ${staff.middleName} ${staff.lastName}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
-    );
+  const toggleSelection = (staffId: string) => {
+    setSelectedStaffs((prev) => {
+      const exists = prev.find((s) => s.staffId === staffId);
+      return exists
+        ? prev.filter((s) => s.staffId !== staffId)
+        : [...prev, { staffId }];
+    });
   };
 
-  const handleReset = () => {
-    setSearchTerm("");
-    setFilteredStaffs(staffs);
-    setSelectedStaffs([]);
+  // Khi người dùng nhấn nút Tìm kiếm, gọi API tìm kiếm
+  const handleSearch = () => {
+    fetchUnassignedStaffs(search); // Lấy dữ liệu mới từ API khi nhấn tìm kiếm
   };
+
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
 
   useEffect(() => {
     if (opened) {
-      fetchUnassignedStaffs();
-      setSearchTerm("");
-      setSelectedStaffs([]);
+      setIsInitialLoading(true);
+      fetchUnassignedStaffs("").finally(() => {
+        setIsInitialLoading(false);
+      }); // Lấy tất cả nhân viên khi modal mở
     }
   }, [opened]);
 
   useEffect(() => {
-    setFilteredStaffs(
-      staffs.filter((staff) =>
-        `${staff.firstName} ${staff.middleName} ${staff.lastName}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [staffs]);
+    if (opened) {
+      setSelectedStaffs([]);
+      setSearch("");
+    }
+  }, [opened]);
 
   return (
     <Modal
@@ -98,10 +97,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
       title="Gán nhân viên vào phòng"
       size="lg"
     >
-      {loading ? (
+      {isInitialLoading ? (
         <Loader />
-      ) : staffs.length === 0 ? (
-        <Text>Không có nhân viên nào chưa gán phòng.</Text>
       ) : (
         <>
           <Flex justify="space-between" align="center" mb="sm">
@@ -117,12 +114,13 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
               Gán vào phòng
             </Button>
           </Flex>
+
           <Flex mb="sm" gap="sm" justify="flex-start" align="flex-start">
             <TextInput
               placeholder="Tìm kiếm nhân viên theo tên"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              mb="sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // Cho phép Enter để search
               style={{
                 flex: 1,
                 height: 36,
@@ -132,23 +130,10 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
               }}
             />
             <Button
-              variant="light"
-              color="gray"
-              onClick={handleReset}
-              size="sm"
-              style={{
-                width: "auto",
-                height: 36,
-                lineHeight: "36px",
-                padding: "0 12px",
-              }}
-            >
-              Tải lại
-            </Button>
-            <Button
               variant="filled"
               color="blue"
-              onClick={handleSearch}
+              onClick={handleSearch} // Gọi tìm kiếm khi nhấn nút Tìm kiếm
+              loading={loading && !isResetting} // Chỉ show loading khi search, không phải reset
               size="sm"
               style={{
                 width: "auto",
@@ -159,90 +144,125 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
             >
               Tìm kiếm
             </Button>
-          </Flex>
-
-          <div
-            style={{
-              maxHeight: 400,
-              overflowY: "auto",
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
-            <style>
-              {`
-                div::-webkit-scrollbar {
-                  display: none;
-                }
-              `}
-            </style>
-
-            <Table
-              verticalSpacing="sm"
-              highlightOnHover
+            <Button
+              variant="light"
+              color="gray"
+              onClick={handleReset}
+              loading={isResetting} // Show loading state on reset button
+              size="sm"
               style={{
-                borderCollapse: "separate",
-                borderSpacing: "0 8px",
-                fontSize: "14px",
+                width: "auto",
+                height: 36,
+                lineHeight: "36px",
+                padding: "0 12px",
               }}
             >
-              <thead style={{ backgroundColor: "#f9f9f9" }}>
-                <tr>
-                  <th style={{ textAlign: "left", padding: "8px" }}></th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Họ và tên
-                  </th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>Email</th>
-                  <th style={{ textAlign: "left", padding: "8px" }}>
-                    Mã nhân viên
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStaffs.map((staff) => {
-                  const isSelected = selectedStaffs.some(
-                    (s) => s.staffId === staff.id
-                  );
+              Tải lại
+            </Button>
+          </Flex>
 
-                  return (
-                    <tr
-                      key={staff.id}
-                      onClick={() => toggleSelection(staff.id)}
-                      style={{
-                        backgroundColor: isSelected ? "#e6f7ff" : "transparent",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <td style={{ textAlign: "left", padding: "8px" }}>
-                        <Checkbox
-                          checked={isSelected}
-                          disabled
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                      <td style={{ textAlign: "left", padding: "8px" }}>
-                        {[staff.firstName, staff.middleName, staff.lastName]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </td>
-                      <td style={{ textAlign: "left", padding: "8px" }}>
-                        {staff.email}
-                      </td>
-                      <td
+          {staffs.length === 0 && !loading ? (
+            <Text c="dimmed" ta="center" py="xl">
+              {search.trim()
+                ? `Không tìm thấy nhân viên nào với từ khóa "${search}"`
+                : "Không có nhân viên nào chưa gán phòng."}
+            </Text>
+          ) : loading && !isResetting ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "200px",
+              }}
+            >
+              <Loader size="md" />
+            </div>
+          ) : (
+            <div
+              style={{
+                maxHeight: 400,
+                overflowY: "auto",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              <style>
+                {`
+                  div::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}
+              </style>
+              <Table
+                verticalSpacing="sm"
+                highlightOnHover
+                style={{
+                  borderCollapse: "separate",
+                  borderSpacing: "0 8px",
+                  fontSize: "14px",
+                }}
+              >
+                <thead style={{ backgroundColor: "#f9f9f9" }}>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "8px" }}></th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Họ và tên
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>Email</th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
+                      Mã nhân viên
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffs.map((staff) => {
+                    const isSelected = selectedStaffs.some(
+                      (s) => s.staffId === staff.id
+                    );
+
+                    return (
+                      <tr
+                        key={staff.id}
+                        onClick={() => toggleSelection(staff.id)}
                         style={{
-                          textAlign: "left",
-                          padding: "8px",
-                          width: 120,
+                          backgroundColor: isSelected
+                            ? "#e6f7ff"
+                            : "transparent",
+                          cursor: "pointer",
                         }}
                       >
-                        {staff.staffCode}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </div>
+                        <td style={{ textAlign: "left", padding: "8px" }}>
+                          <Checkbox
+                            checked={isSelected}
+                            disabled
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td style={{ textAlign: "left", padding: "8px" }}>
+                          {[staff.firstName, staff.middleName, staff.lastName]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </td>
+                        <td style={{ textAlign: "left", padding: "8px" }}>
+                          {staff.email}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "left",
+                            padding: "8px",
+                            width: 120,
+                          }}
+                        >
+                          {staff.staffCode}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
+          )}
         </>
       )}
     </Modal>

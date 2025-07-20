@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button, Input, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
@@ -24,7 +24,7 @@ const InvoicePage = () => {
   const [filterToDate, setFilterToDate] = useState<Date | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
   const [inputCode, setInputCode] = useState("");
   const [filterCode, setFilterCode] = useState("");
   const [inputPatient, setInputPatient] = useState("");
@@ -39,28 +39,61 @@ const InvoicePage = () => {
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
 
-  const applyFilter = () => {
-    fetchInvoices(
-      {
-        status: filterStatus || undefined,
-        patientId: filterPatient || undefined,
-        invoiceCode: filterCode || undefined,
-        fromDate: filterFromDate
-          ? dayjs(filterFromDate).format("YYYY-MM-DD")
-          : undefined,
-        toDate: filterToDate
-          ? dayjs(filterToDate).format("YYYY-MM-DD")
-          : undefined,
-      },
-      0,
-      pageSize,
-      "createdAt",
-      sortDirection
-    );
-    setPage(1);
-  };
+  // Tách logic fetch thành useCallback để tránh re-render không cần thiết
+  const fetchInvoicesWithFilters = useCallback(
+    (
+      status: string,
+      patientId: string,
+      invoiceCode: string,
+      fromDate: Date | null,
+      toDate: Date | null,
+      pageIndex: number,
+      size: number
+    ) => {
+      fetchInvoices(
+        {
+          status: status || undefined,
+          patientId: patientId || undefined,
+          invoiceCode: invoiceCode || undefined,
+          fromDate: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+          toDate: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+        },
+        pageIndex,
+        size,
+        "createdAt"
+      );
+    },
+    [fetchInvoices]
+  );
 
-  const handleReset = () => {
+  const handleSearch = useCallback(() => {
+    // Cập nhật filterCode trước, sau đó fetch với giá trị mới
+    const newFilterCode = inputCode.trim();
+    setFilterCode(newFilterCode);
+    setPage(1); // Reset về trang đầu
+
+    // Fetch ngay lập tức với các giá trị hiện tại
+    fetchInvoicesWithFilters(
+      filterStatus,
+      filterPatient,
+      newFilterCode, // Sử dụng giá trị mới
+      filterFromDate,
+      filterToDate,
+      0, // page 0 vì đã reset về trang 1
+      pageSize
+    );
+  }, [
+    inputCode,
+    filterStatus,
+    filterPatient,
+    filterFromDate,
+    filterToDate,
+    pageSize,
+    fetchInvoicesWithFilters,
+  ]);
+
+  const handleReset = useCallback(() => {
+    // Reset tất cả state
     setFilterStatus("");
     setInputCode("");
     setFilterCode("");
@@ -68,52 +101,53 @@ const InvoicePage = () => {
     setFilterPatient("");
     setFilterFromDate(null);
     setFilterToDate(null);
-    setPage(1); // Đặt lại trang về 1
-    applyFilter(); // Gọi applyFilter ngay lập tức sau khi reset
-  };
+    setPage(1);
 
-  const handleSearch = () => {
-    setFilterCode(inputCode.trim());
-    applyFilter(); // Gọi applyFilter ngay lập tức sau khi tìm kiếm
-  };
+    // Fetch với tất cả filter rỗng
+    fetchInvoicesWithFilters("", "", "", null, null, 0, pageSize);
+  }, [pageSize, fetchInvoicesWithFilters]);
+
+  const applyCurrentFilters = useCallback(() => {
+    fetchInvoicesWithFilters(
+      filterStatus,
+      filterPatient,
+      filterCode,
+      filterFromDate,
+      filterToDate,
+      page - 1,
+      pageSize
+    );
+  }, [
+    filterStatus,
+    filterPatient,
+    filterCode,
+    filterFromDate,
+    filterToDate,
+    page,
+    pageSize,
+    fetchInvoicesWithFilters,
+  ]);
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
+  // Effect để fetch khi page hoặc pageSize thay đổi
   useEffect(() => {
-    fetchInvoices(
-      {
-        status: filterStatus || undefined,
-        patientId: filterPatient || undefined,
-        invoiceCode: filterCode || undefined,
-        fromDate: filterFromDate
-          ? dayjs(filterFromDate).format("YYYY-MM-DD")
-          : undefined,
-        toDate: filterToDate
-          ? dayjs(filterToDate).format("YYYY-MM-DD")
-          : undefined,
-      },
-      page - 1,
-      pageSize,
-      "createdAt",
-      sortDirection
-    );
-  }, [page, pageSize, sortDirection]);
+    applyCurrentFilters();
+  }, [page, pageSize]); // Loại bỏ applyCurrentFilters khỏi dependencies để tránh loop
 
   useEffect(() => {
     fetchInvoiceStats();
-  }, []);
+  }, [fetchInvoiceStats]);
 
   const handleExport = () => {
     exportInvoicesExcel({
       status: filterStatus,
       fromDate: filterFromDate?.toISOString() ?? "",
       toDate: filterToDate?.toISOString() ?? "",
-      sortBy: "createdAt",
-      sortDir: "desc",
     });
   };
 
@@ -128,7 +162,6 @@ const InvoicePage = () => {
     createColumn<InvoiceResponse>({
       key: "invoiceCode",
       label: "Mã hóa đơn",
-      sortable: true,
     }),
     createColumn<InvoiceResponse>({
       key: "patientName",
@@ -149,7 +182,7 @@ const InvoicePage = () => {
     createColumn<InvoiceResponse>({
       key: "total",
       label: "Đơn giá",
-      render: (row) => row.total?.toLocaleString("vi-VN"),
+      render: (row) => row.total?.toLocaleString("vi-VN") + " ₫",
     }),
     createColumn<InvoiceResponse>({
       key: "actions",
@@ -219,7 +252,7 @@ const InvoicePage = () => {
               { value: "UNPAID", label: "Chưa thanh toán" },
             ]}
             className="w-full"
-            styles={{ input: { height: 40, zIndex: 1 } }}
+            styles={{ input: { height: 35, zIndex: 1 } }}
           />
         </FloatingLabelWrapper>
 
@@ -229,7 +262,12 @@ const InvoicePage = () => {
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
             className="w-full"
-            styles={{ input: { height: 40 } }}
+            styles={{ input: { height: 35 } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
           />
         </FloatingLabelWrapper>
 
@@ -243,7 +281,7 @@ const InvoicePage = () => {
             onChange={(val) => setFilterPatient(val || "")}
             className="w-full"
             clearable
-            styles={{ input: { height: 40, zIndex: 1 } }}
+            styles={{ input: { height: 35, zIndex: 1 } }}
           />
         </FloatingLabelWrapper>
 
@@ -255,7 +293,7 @@ const InvoicePage = () => {
               setFilterFromDate(date ? dayjs(date).toDate() : null)
             }
             className="w-full"
-            styles={{ input: { height: 40 } }}
+            styles={{ input: { height: 35 } }}
             valueFormat="DD/MM/YYYY"
           />
         </FloatingLabelWrapper>
@@ -268,7 +306,7 @@ const InvoicePage = () => {
               setFilterToDate(date ? dayjs(date).toDate() : null)
             }
             className="w-full"
-            styles={{ input: { height: 40 } }}
+            styles={{ input: { height: 35 } }}
             valueFormat="DD/MM/YYYY"
           />
         </FloatingLabelWrapper>
@@ -279,7 +317,7 @@ const InvoicePage = () => {
             color="gray"
             onClick={handleReset}
             style={{
-              height: 40,
+              height: 35,
             }}
             fullWidth
           >
@@ -290,7 +328,7 @@ const InvoicePage = () => {
             color="blue"
             onClick={handleSearch}
             style={{
-              height: 40,
+              height: 35,
             }}
             fullWidth
           >
@@ -310,14 +348,10 @@ const InvoicePage = () => {
           setPageSize(newSize);
           setPage(1);
         }}
-        onSortChange={(_, direction) => {
-          setSortDirection(direction);
-        }}
-        sortDirection={sortDirection}
         loading={loadingList}
         showActions={false}
         pageSizeOptions={setting?.paginationSizeList
-          .slice()
+          ?.slice()
           .sort((a, b) => a - b)}
       />
     </>
