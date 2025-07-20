@@ -7,11 +7,15 @@ const useUnassignedStaffs = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUnassignedStaffs = async () => {
+  
+  const fetchUnassignedStaffs = async (search: string = "") => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get("/staffs/unassigned");
+      
+      const res = await axiosInstance.get("/staffs/unassigned", {
+        params: { search }, 
+      });
       if (res.data?.result) {
         setStaffs(res.data.result);
       } else {
@@ -32,5 +36,6 @@ const useUnassignedStaffs = () => {
     fetchUnassignedStaffs,
   };
 };
+
 
 export default useUnassignedStaffs;

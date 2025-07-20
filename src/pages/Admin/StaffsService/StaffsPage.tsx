@@ -27,8 +27,6 @@ const StaffsPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] = useState<keyof StaffsResponse>("firstName");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [filterRoles, setFilterRoles] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
@@ -45,8 +43,7 @@ const StaffsPage = () => {
       const params = {
         page: page - 1,
         size: pageSize,
-        sortBy: sortKey,
-        sortDir: sortDirection,
+
         name: filterName || undefined,
         role: filterRoles.length > 0 ? filterRoles[0] : undefined,
       };
@@ -70,13 +67,13 @@ const StaffsPage = () => {
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
   useEffect(() => {
     fetchStaffs();
-  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
+  }, [page, pageSize, filterName, filterRoles]);
 
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
     firstName: res.firstName,
@@ -158,15 +155,13 @@ const StaffsPage = () => {
 
   useEffect(() => {
     fetchStaffs();
-  }, [page, pageSize, sortKey, sortDirection, filterName, filterRoles]);
+  }, [page, pageSize, filterName, filterRoles]);
 
   const handleReset = () => {
     setInputName("");
     setFilterName("");
     setFilterRoles([]);
     setPage(1);
-    setSortKey("firstName");
-    setSortDirection("asc");
 
     fetchStaffs();
   };
@@ -176,7 +171,6 @@ const StaffsPage = () => {
       key: "fullName",
       label: "Họ và tên",
       render: (row) => row.fullName,
-      sortable: false,
     }),
     createColumn<StaffsResponse>({ key: "email", label: "Email" }),
     createColumn<StaffsResponse>({ key: "phone", label: "SĐT" }),
@@ -230,7 +224,7 @@ const StaffsPage = () => {
               key={filterRoles[0] || "empty"}
               placeholder="Chọn vai trò"
               className="w-full"
-              styles={{ input: { height: 45 } }}
+              styles={{ input: { height: 35 } }}
               value={filterRoles.length > 0 ? filterRoles[0] : undefined}
               onChange={(val) => {
                 setFilterRoles(val ? [val] : []);
@@ -251,7 +245,7 @@ const StaffsPage = () => {
             <input
               type="text"
               placeholder="Tìm theo tên"
-              className="border rounded px-3 text-sm w-full h-[45px]"
+              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
@@ -265,7 +259,7 @@ const StaffsPage = () => {
             color="gray"
             onClick={handleReset}
             style={{
-              height: 45, // Chỉ thay đổi chiều cao của nút
+              height: 35,
             }}
             fullWidth
           >
@@ -276,7 +270,7 @@ const StaffsPage = () => {
             color="blue"
             onClick={handleSearch}
             style={{
-              height: 45, // Chỉ thay đổi chiều cao của nút
+              height: 35,
             }}
             fullWidth
           >
@@ -296,12 +290,6 @@ const StaffsPage = () => {
           setPageSize(newSize);
           setPage(1);
         }}
-        onSortChange={(key, direction) => {
-          setSortKey(key);
-          setSortDirection(direction);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         onView={handleView}
         onEdit={handleEdit}

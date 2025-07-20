@@ -10,7 +10,6 @@ import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTy
 import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
-import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -25,13 +24,11 @@ const DepartmentPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortKey, setSortKey] = useState<keyof DepartmentResponse>("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentResponse | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [_, setEditingId] = useState<string | null>(null);
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -45,8 +42,7 @@ const DepartmentPage = () => {
         params: {
           page: page - 1,
           size: pageSize,
-          sortBy: sortKey,
-          sortDir: sortDirection,
+
           name: filterName || undefined,
           type: filterType || undefined,
           roomNumber: filterRoom || undefined,
@@ -63,21 +59,13 @@ const DepartmentPage = () => {
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
   useEffect(() => {
     fetchDepartments();
-  }, [
-    page,
-    pageSize,
-    sortKey,
-    sortDirection,
-    filterName,
-    filterType,
-    filterRoom,
-  ]);
+  }, [page, pageSize, filterName, filterType, filterRoom]);
 
   const handleAdd = () => {
     setSelectedDepartment(null);
@@ -106,30 +94,10 @@ const DepartmentPage = () => {
     }
   };
 
-  const handleSubmit = async (data: DepartmentRequest) => {
-    try {
-      if (editingId) {
-        await axiosInstance.put(`/departments/${editingId}`, data);
-        toast.success("Sửa phòng ban thành công");
-      } else {
-        await axiosInstance.post(`/departments`, data);
-        toast.success("Tạo phòng ban thành công");
-      }
-
-      fetchDepartments();
-      setModalOpened(false);
-      setEditingId(null);
-    } catch (err) {
-      console.error("Lỗi tạo/sửa phòng ban:", err);
-      toast.error("Lỗi khi lưu phòng ban");
-    }
-  };
-
   const columns = [
     createColumn<DepartmentResponse>({
       key: "name",
       label: "Tên phòng ban",
-      sortable: true,
     }),
     createColumn<DepartmentResponse>({ key: "description", label: "Mô tả" }),
     createColumn<DepartmentResponse>({ key: "roomNumber", label: "Số phòng" }),
@@ -169,7 +137,7 @@ const DepartmentPage = () => {
             <Select
               placeholder="Chọn loại phòng"
               className="w-full"
-              styles={{ input: { height: 45 } }}
+              styles={{ input: { height: 35 } }}
               value={filterType}
               onChange={(val) => {
                 setPage(1);
@@ -194,7 +162,7 @@ const DepartmentPage = () => {
             <input
               type="text"
               placeholder="Tìm theo tên"
-              className="border rounded px-3 text-sm w-full h-[45px]"
+              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
@@ -207,7 +175,7 @@ const DepartmentPage = () => {
             <input
               type="text"
               placeholder="Tìm theo số phòng"
-              className="border rounded px-3 text-sm w-full h-[45px]"
+              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputRoom}
               onChange={(e) => setInputRoom(e.target.value)}
             />
@@ -225,13 +193,12 @@ const DepartmentPage = () => {
               setInputRoom("");
               setFilterRoom("");
               setFilterType("");
-              setSortKey("name");
-              setSortDirection("asc");
+
               setPage(1);
             }}
             style={{
-              height: 45,
-              lineHeight: "45px",
+              height: 35,
+              lineHeight: "20px",
               padding: "0 12px",
             }}
             fullWidth
@@ -249,8 +216,8 @@ const DepartmentPage = () => {
               setFilterRoom(normalizeText(inputRoom));
             }}
             style={{
-              height: 45,
-              lineHeight: "45px",
+              height: 35,
+              lineHeight: "40px",
               padding: "0 12px",
             }}
             fullWidth
@@ -271,12 +238,6 @@ const DepartmentPage = () => {
           setPageSize(newSize);
           setPage(1);
         }}
-        onSortChange={(key, direction) => {
-          setSortKey(key);
-          setSortDirection(direction);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -292,7 +253,7 @@ const DepartmentPage = () => {
           setEditingId(null);
         }}
         initialData={selectedDepartment}
-        onSubmit={(data) => handleSubmit(data as DepartmentRequest)}
+        onSubmit={() => fetchDepartments()}
       />
     </>
   );

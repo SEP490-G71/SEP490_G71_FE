@@ -32,7 +32,7 @@ const PatientStatisticsPage = () => {
   } = useBirthdayPatients();
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
   useEffect(() => {

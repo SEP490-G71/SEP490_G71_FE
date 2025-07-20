@@ -13,8 +13,9 @@ axiosInstance.interceptors.request.use(
 
     const hostname = window.location.hostname;
     console.log(hostname);
-    const subdomain = "hadong";
-    // const subdomain = hostname.split(".")[0];
+
+    const subdomain = hostname.split(".")[0];
+   //const subdomain = "hadong";
 
     console.log(subdomain);
 

@@ -17,30 +17,31 @@ import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTyp
 import StaffListTable from "./StaffListTable";
 import DepartmentFormFields from "./DepartmentFormFields";
 import useDepartmentStaffs from "../../../hooks/department-Staffs/useDepartmentStaffs";
+import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 
 interface CreateEditDepartmentModalProps {
   opened: boolean;
   onClose: () => void;
   initialData?: DepartmentResponse | null;
-  onSubmit: (data: Partial<DepartmentRequest>) => void;
   isViewMode?: boolean;
+  onSubmit?: () => void; // ✅ Dùng để reload danh sách từ bên ngoài
 }
 
 const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   opened,
   onClose,
   initialData,
-  onSubmit,
   isViewMode = false,
+  onSubmit,
 }) => {
   const [assignModalOpened, setAssignModalOpened] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [staffToRemove, setStaffToRemove] = useState<string | null>(null);
-
   const [specializations, setSpecializations] = useState<
     { id: string; name: string }[]
   >([]);
 
+  const { createDepartment, updateDepartment } = useDepartmentService();
   const { removeStaff, loading: removingStaff } =
     useRemoveStaffFromDepartment();
 
@@ -50,13 +51,12 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     refetch: refetchDepartmentStaffs,
   } = useDepartmentStaffs(initialData?.id);
 
-  // Define form with proper typing
-  const form = useForm<Partial<DepartmentRequest>>({
+  const form = useForm<DepartmentRequest>({
     initialValues: {
       name: "",
       description: "",
       roomNumber: "",
-      type: undefined,
+      type: "" as DepartmentType,
       specializationId: "",
     },
     validate: {
@@ -64,45 +64,45 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       description: (value) => validateDescription(value ?? ""),
       roomNumber: (value) => validateRoomNumber(value ?? ""),
       type: (value) => (!value ? "Loại phòng không được để trống" : null),
-      specializationId: (value, values) => {
-        return values.type === DepartmentType.CONSULTATION && !value
-          ? "Chuyên khoa là bắt buộc khi chọn loại phòng KHÁM BỆNH"
-          : null;
-      },
+      specializationId: () => null,
     },
   });
 
-  // Fetch list of specializations
   useEffect(() => {
-    const fetchSpecializations = async () => {
+    const fetchAndSet = async () => {
       try {
         const res = await axiosInstance.get("/specializations/all");
-        setSpecializations(res.data.result || []);
+        const specs = res.data.result || [];
+        setSpecializations(specs);
+
+        if (initialData) {
+          form.setValues({
+            name: initialData.name || "",
+            description: initialData.description || "",
+            roomNumber: initialData.roomNumber || "",
+            type: initialData.type as DepartmentType,
+            specializationId: initialData.specialization?.id || "",
+          });
+        } else {
+          form.setValues({
+            name: "",
+            description: "",
+            roomNumber: "",
+            type: "" as DepartmentType,
+            specializationId: "",
+          });
+        }
+
+        form.resetDirty();
       } catch (error) {
         toast.error("Không thể tải danh sách chuyên khoa.");
       }
     };
 
-    fetchSpecializations();
-  }, []);
-
-  useEffect(() => {
-    if (initialData && specializations.length > 0) {
-      form.setValues({
-        name: initialData.name || "",
-        description: initialData.description || "",
-        roomNumber: initialData.roomNumber || "",
-        type: initialData.type || "",
-        specializationId: initialData.specialization?.id ?? "",
-      });
+    if (opened) {
+      fetchAndSet();
     }
-  }, [initialData, specializations]);
-
-  useEffect(() => {
-    if (!initialData) {
-      form.reset();
-    }
-  }, [initialData, opened]);
+  }, [opened]);
 
   const handleRemoveStaff = (staffId: string) => {
     setStaffToRemove(staffId);
@@ -125,17 +125,44 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     setStaffToRemove(null);
   };
 
-  useEffect(() => {
-    if (form.values.type !== DepartmentType.CONSULTATION) {
-      form.setFieldValue("specializationId", "");
+  const handleModalClose = () => {
+    form.reset();
+    onClose();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const validation = await form.validate();
+    if (validation.hasErrors) {
+      toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
+      return;
     }
-  }, [form.values.type]);
+
+    try {
+      let result: DepartmentResponse | null = null;
+
+      if (initialData) {
+        result = await updateDepartment(initialData.id, form.values);
+      } else {
+        result = await createDepartment(form.values);
+      }
+
+      if (result) {
+        if (onSubmit) await onSubmit();
+        handleModalClose();
+      }
+    } catch (error) {
+      console.error("Lỗi khi lưu phòng ban:", error);
+      toast.error("Lỗi khi lưu phòng ban");
+    }
+  };
 
   return (
     <>
       <Modal
         opened={opened}
-        onClose={onClose}
+        onClose={handleModalClose}
         size="lg"
         radius="md"
         yOffset={90}
@@ -143,41 +170,16 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           <div>
             <h2 className="text-xl font-bold">
               {isViewMode
-                ? "View Permission"
+                ? "Xem thông tin phòng ban"
                 : initialData
                 ? "Cập nhật phòng ban"
                 : "Tạo mới phòng ban"}
             </h2>
-            <div className="mt-2 border-b border-gray-300"></div>
+            <div className="mt-2 border-b border-gray-300" />
           </div>
         }
-        styles={{
-          title: {
-            fontWeight: 600,
-            width: "100%",
-          },
-        }}
       >
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-
-            const validation = await form.validate();
-
-            if (validation.hasErrors) {
-              toast.error("Please fill in valid information.");
-              return;
-            }
-
-            try {
-              await onSubmit(form.values as DepartmentRequest);
-              onClose();
-            } catch (error) {
-              console.error("Error saving department", error);
-              toast.error("Error saving department");
-            }
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <DepartmentFormFields
             form={form}
             specializations={specializations}
@@ -191,20 +193,23 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
                   Danh sách nhân viên
                 </Text>
 
-                <Button
-                  leftSection={<IconPlus size={16} />}
-                  variant="filled"
-                  size="xs"
-                  onClick={() => setAssignModalOpened(true)}
-                >
-                  Thêm nhân viên
-                </Button>
+                {!isViewMode && (
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    variant="filled"
+                    size="xs"
+                    onClick={() => setAssignModalOpened(true)}
+                  >
+                    Thêm nhân viên
+                  </Button>
+                )}
               </Flex>
 
               {!loadingStaffs && departmentData?.staffs && (
                 <StaffListTable
                   staffs={departmentData.staffs}
                   onRemove={handleRemoveStaff}
+                  isViewMode={isViewMode}
                 />
               )}
             </div>
@@ -212,7 +217,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
 
           {!isViewMode && (
             <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" color="blue" onClick={onClose}>
+              <Button variant="outline" onClick={handleModalClose}>
                 Huỷ
               </Button>
               <Button type="submit">
@@ -223,12 +228,14 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         </form>
       </Modal>
 
-      <AssignStaffModal
-        opened={assignModalOpened}
-        onClose={() => setAssignModalOpened(false)}
-        departmentId={initialData?.id || ""}
-        onAssigned={refetchDepartmentStaffs}
-      />
+      {initialData && (
+        <AssignStaffModal
+          opened={assignModalOpened}
+          onClose={() => setAssignModalOpened(false)}
+          departmentId={initialData.id}
+          onAssigned={refetchDepartmentStaffs}
+        />
+      )}
 
       <Modal
         opened={confirmDeleteModal}
@@ -236,7 +243,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           setConfirmDeleteModal(false);
           setStaffToRemove(null);
         }}
-        title="Confirm Remove Staff"
+        title="Xác nhận xóa nhân viên"
         centered
         radius="md"
         size="sm"

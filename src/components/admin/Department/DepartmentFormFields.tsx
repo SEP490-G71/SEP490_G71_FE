@@ -2,79 +2,89 @@ import { Select, TextInput } from "@mantine/core";
 import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
 import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
 import { useForm } from "@mantine/form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export const DepartmentFormFields = ({
   form,
   specializations,
   isViewMode,
 }: {
-  form: ReturnType<typeof useForm<Partial<DepartmentRequest>>>;
+  form: ReturnType<typeof useForm<DepartmentRequest>>;
   specializations: { id: string; name: string }[];
   isViewMode: boolean;
 }) => {
-  useEffect(() => {
-    console.log("Department type:", form.values.type);
+  const [isKhamBenh, setIsKhamBenh] = useState(false);
 
-    if (form.values.type !== DepartmentType.CONSULTATION) {
-      form.setFieldValue("specializationId", "");
-    }
+  useEffect(() => {
+    setIsKhamBenh(form.values.type === ("CONSULTATION" as DepartmentType));
   }, [form.values.type]);
 
   return (
     <>
       <TextInput
         label="Tên phòng ban"
+        placeholder="Nhập tên phòng ban"
         {...form.getInputProps("name")}
+        mt="sm"
         required
         disabled={isViewMode}
       />
+
       <TextInput
         label="Mô tả"
+        placeholder="Nhập mô tả"
         {...form.getInputProps("description")}
         mt="sm"
         disabled={isViewMode}
       />
+
       <TextInput
         label="Số phòng"
+        placeholder="Nhập số phòng"
         {...form.getInputProps("roomNumber")}
         required
         mt="sm"
         disabled={isViewMode}
       />
+
       <Select
-        label="Loại phòng"
-        data={Object.entries(DepartmentType).map(([value, label]) => ({
-          value,
-          label,
+        label="Loại phòng ban"
+        placeholder="Chọn loại phòng ban"
+        data={Object.entries(DepartmentType).map(([key, value]) => ({
+          value: key, // Lưu key vào DB: "CONSULTATION", "LABORATORY", ...
+          label: value, // Hiển thị tiếng Việt
         }))}
-        value={form.values.type ?? ""}
+        value={form.values.type || ""}
         onChange={(val) => {
-          console.log("Selected Department Type:", val);
-          form.setFieldValue("type", val as DepartmentType | undefined);
+          form.setFieldValue("type", (val || "") as DepartmentType);
+          if (val !== "CONSULTATION") {
+            form.setFieldValue("specializationId", "");
+          }
         }}
         error={form.errors.type}
         mt="sm"
         required
-        clearable
+        clearable={!isViewMode}
         disabled={isViewMode}
       />
 
-      <Select
-        label="Chuyên khoa"
-        value={form.values.specializationId || ""}
-        onChange={(value) =>
-          form.setFieldValue("specializationId", value ?? "")
-        }
-        data={specializations.map((s) => ({
-          value: s.id,
-          label: s.name,
-        }))}
-        clearable
-        disabled={
-          form.values.type !== DepartmentType.CONSULTATION || isViewMode
-        }
-      />
+      {isKhamBenh && (
+        <Select
+          label="Chuyên khoa"
+          placeholder="Chọn chuyên khoa"
+          data={specializations.map((s) => ({
+            value: s.id,
+            label: s.name,
+          }))}
+          value={form.values.specializationId || ""}
+          onChange={(val) => form.setFieldValue("specializationId", val || "")}
+          error={form.errors.specializationId}
+          clearable
+          disabled={isViewMode}
+          mt="sm"
+          required
+        />
+      )}
     </>
   );
 };

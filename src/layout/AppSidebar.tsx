@@ -172,7 +172,12 @@ const navItemsByRole: Record<string, NavItem[]> = {
   ],
   DOCTOR: [
     {
-      name: "Khám lâm sàng",
+      name: "Khám tổng quát",
+      icon: <FaUserPlus />,
+      path: "/admin/medical-examination",
+    },
+    {
+      name: "khám chuyên khoa",
       icon: <FaUserPlus />,
       path: "/admin/medical-examination/clinical",
     },
