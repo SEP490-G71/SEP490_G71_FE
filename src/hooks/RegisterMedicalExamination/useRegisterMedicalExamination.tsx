@@ -24,6 +24,13 @@ interface FetchPatientsResponse {
   totalElements: number;
 }
 
+export interface Department {
+  id: string;
+  name: string;
+  code?: string;
+  roomNumber?: string;
+}
+
 export const useRegisterMedicalExamination = () => {
   // Tạo mới bệnh nhân
   const createPatient = async (
@@ -73,13 +80,13 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
-  // Đăng ký khám
   const queuePatient = async (
     patientId: string,
     registeredTime: string,
     onSuccess?: () => void,
     roomNumber?: string,
-    specializationId?: string
+    specializationId?: string,
+    isPriority?: boolean
   ) => {
     try {
       await axiosInstance.post("/queue-patients", {
@@ -87,6 +94,7 @@ export const useRegisterMedicalExamination = () => {
         registeredTime,
         roomNumber,
         specializationId,
+        isPriority,
       });
       toast.success("Đăng ký khám thành công");
       if (onSuccess) onSuccess();
@@ -122,10 +130,31 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
+  const fetchDepartmentsBySpecialization = async (
+    specializationId: string
+  ): Promise<Department[]> => {
+    if (!specializationId) return [];
+
+    try {
+      const response = await axiosInstance.get("/departments/search", {
+        params: {
+          type: "CONSULTATION", // loại khoa khám thông thường
+          specializationId,
+        },
+      });
+      return response.data?.result || [];
+    } catch (error) {
+      toast.error("Không thể tải danh sách phòng khám");
+      console.error("❌ Lỗi khi fetch departments:", error);
+      return [];
+    }
+  };
+
   return {
     createPatient,
     fetchAllPatients,
     queuePatient,
     fetchTodayRegisteredPatients,
+    fetchDepartmentsBySpecialization,
   };
 };

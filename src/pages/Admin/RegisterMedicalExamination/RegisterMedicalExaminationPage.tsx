@@ -9,6 +9,7 @@ import {
   Divider,
   Tabs,
   Paper,
+  Checkbox,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
@@ -18,7 +19,10 @@ import SearchPatientModal from "../../../components/admin/RegisterMedicalExamina
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
-import { useRegisterMedicalExamination } from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
+import {
+  Department,
+  useRegisterMedicalExamination,
+} from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
@@ -48,6 +52,8 @@ export default function RegisterMedicalExaminationPage() {
 
   const [totalTodayPatients, setTotalTodayPatients] = useState(0);
   const { options: patientOptions, searchPatients } = usePatientSearch();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
 
   const [searchFilters, setSearchFilters] = useState({
     fullName: "",
@@ -77,6 +83,7 @@ export default function RegisterMedicalExaminationPage() {
     fetchTodayRegisteredPatients,
     queuePatient,
     createPatient,
+    fetchDepartmentsBySpecialization,
   } = useRegisterMedicalExamination();
 
   const columns: Column<Patient>[] = [
@@ -143,6 +150,24 @@ export default function RegisterMedicalExaminationPage() {
   }, [setting]);
 
   useEffect(() => {
+    const loadDepartments = async () => {
+      if (!confirmedPatient?.specializationId) {
+        setDepartments([]);
+        return;
+      }
+
+      setLoadingDepartments(true);
+      const result = await fetchDepartmentsBySpecialization(
+        confirmedPatient.specializationId
+      );
+      setDepartments(result);
+      setLoadingDepartments(false);
+    };
+
+    loadDepartments();
+  }, [confirmedPatient?.specializationId]);
+
+  useEffect(() => {
     const loadTodayPatients = async () => {
       const filters = {
         patientId: submittedFilters.patientId,
@@ -186,9 +211,8 @@ export default function RegisterMedicalExaminationPage() {
     let isoSelected: string | null = null;
 
     if (selectedDate) {
-      const date = new Date(selectedDate);
-      if (!isNaN(date.getTime())) {
-        isoSelected = date.toISOString().split("T")[0];
+      if (!isNaN(selectedDate.getTime())) {
+        isoSelected = dayjs(selectedDate).format("YYYY-MM-DD");
       }
     }
 
@@ -222,7 +246,8 @@ export default function RegisterMedicalExaminationPage() {
         setTotalTodayPatients(totalElements);
       },
       updatedPatient.phongKham,
-      updatedPatient.specializationId
+      updatedPatient.specializationId,
+      updatedPatient.isPriority
     );
   };
 
@@ -242,7 +267,6 @@ export default function RegisterMedicalExaminationPage() {
       return;
     }
 
-    // Ép kiểu an toàn
     const created = await createPatient(data as Patient);
     if (!created) {
       toast.error("Tạo bệnh nhân thất bại");
@@ -607,62 +631,94 @@ export default function RegisterMedicalExaminationPage() {
 
                 {/* Thông tin đăng ký */}
                 <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
-                <Grid gutter="xs">
-                  <Grid.Col span={4}>
-                    <Select
-                      label="Chuyên khoa"
-                      placeholder="Chọn chuyên khoa"
-                      data={specializations.map((item) => ({
-                        value: item.id,
-                        label: item.name,
-                      }))}
-                      value={confirmedPatient?.specializationId || ""}
-                      onChange={(value) =>
-                        setConfirmedPatient((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                specializationId: value || "",
-                                specialization:
-                                  specializations.find((s) => s.id === value)
-                                    ?.name || "",
-                              }
-                            : prev
-                        )
-                      }
-                      searchable
-                      disabled={loadingSpecializations}
-                    />
-                  </Grid.Col>
+                {confirmedPatient && (
+                  <div className="grid grid-cols-12 gap-2">
+                    {/* Chuyên khoa */}
+                    <div className="col-span-12 md:col-span-3">
+                      <Select
+                        label="Chuyên khoa"
+                        placeholder="Chọn chuyên khoa"
+                        data={specializations.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
+                        value={confirmedPatient?.specializationId || ""}
+                        onChange={(value) =>
+                          setConfirmedPatient((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  specializationId: value || "",
+                                  specialization:
+                                    specializations.find((s) => s.id === value)
+                                      ?.name || "",
+                                  phongKham: "", // 👉 reset lại phòng khám khi đổi chuyên khoa
+                                }
+                              : prev
+                          )
+                        }
+                        searchable
+                        disabled={loadingSpecializations}
+                      />
+                    </div>
 
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Phòng khám"
-                      placeholder="Phòng khám"
-                      value={confirmedPatient?.phongKham || ""}
-                      onChange={(e) =>
-                        setConfirmedPatient((prev) =>
-                          prev ? { ...prev, phongKham: e.target.value } : prev
-                        )
-                      }
-                    />
-                  </Grid.Col>
+                    {/* Phòng khám */}
+                    <div className="col-span-12 md:col-span-3">
+                      <Select
+                        label="Phòng khám"
+                        placeholder="Chọn phòng khám"
+                        data={departments
+                          .filter((dep) => !!dep.roomNumber)
+                          .map((dep) => ({
+                            value: dep.roomNumber as string,
+                            label: dep.roomNumber as string,
+                          }))}
+                        value={confirmedPatient?.phongKham || ""}
+                        onChange={(value) =>
+                          setConfirmedPatient((prev) =>
+                            prev ? { ...prev, phongKham: value || "" } : prev
+                          )
+                        }
+                        searchable
+                        disabled={
+                          !confirmedPatient?.specializationId ||
+                          loadingDepartments
+                        }
+                      />
+                    </div>
 
-                  {/* Ngày đăng ký giữ nguyên */}
-                  <Grid.Col span={4}>
-                    <DatePickerInput
-                      label="Ngày đăng ký"
-                      value={selectedDate}
-                      onChange={(dateValue) => {
-                        const date = dateValue as Date | null;
-                        setSelectedDate(date);
-                      }}
-                      valueFormat="DD/MM/YYYY"
-                      placeholder="DD/MM/YYYY"
-                      minDate={new Date()}
-                    />
-                  </Grid.Col>
-                </Grid>
+                    {/* Ngày đăng ký */}
+                    <div className="col-span-12 md:col-span-3">
+                      <DatePickerInput
+                        label="Ngày đăng ký"
+                        value={selectedDate}
+                        onChange={(dateValue) => {
+                          const date = dateValue as Date | null;
+                          setSelectedDate(date);
+                        }}
+                        valueFormat="DD/MM/YYYY"
+                        placeholder="DD/MM/YYYY"
+                        minDate={new Date()}
+                      />
+                    </div>
+
+                    {/* Ưu tiên */}
+                    <div className="col-span-12 md:col-span-3 flex items-end">
+                      <Checkbox
+                        label="Ưu tiên"
+                        disabled={!confirmedPatient}
+                        checked={confirmedPatient?.isPriority ?? false}
+                        onChange={(e) => {
+                          if (!confirmedPatient) return;
+                          setConfirmedPatient({
+                            ...confirmedPatient,
+                            isPriority: e.currentTarget.checked,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </Tabs.Panel>
             </Tabs>
           </Paper>

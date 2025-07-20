@@ -10,7 +10,7 @@ import {
 interface Props {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateUpdatePatientRequest) => void;
+  onSubmit: (data: CreateUpdatePatientRequest) => Promise<boolean>; // ✅ Trả về true nếu thành công
   initialData?: Patient | null;
   isViewMode?: boolean;
 }
@@ -36,13 +36,16 @@ export const CreatePatientModal = ({
     }
   }, [initialData, opened]);
 
-  const handleSubmit = (values: typeof form.values) => {
+  const handleSubmit = async (values: typeof form.values) => {
     const payload: CreateUpdatePatientRequest = {
       ...values,
       dob: values.dob ? values.dob.toISOString().split("T")[0] : "",
     };
-    onSubmit(payload);
-    onClose();
+
+    const isSuccess = await onSubmit(payload); // ✅ chỉ đóng nếu thành công
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   return (
@@ -59,7 +62,7 @@ export const CreatePatientModal = ({
       }
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           form.setTouched({
             firstName: true,
@@ -71,7 +74,7 @@ export const CreatePatientModal = ({
           });
           const result = form.validate();
           if (!result.hasErrors) {
-            handleSubmit(form.values);
+            await handleSubmit(form.values);
           }
         }}
       >

@@ -43,7 +43,11 @@ export const DivideShiftPage = () => {
   }, [page, pageSize]);
 
   const handleSubmit = async (formData: CreateDivideShiftRequest) => {
-    await handleSubmitShift(formData, selectedShift);
+    const success = await handleSubmitShift(formData, selectedShift);
+    if (success) {
+      setModalOpened(false);
+      setIsViewMode(false);
+    }
   };
 
   const handleView = async (row: DivideShift) => {

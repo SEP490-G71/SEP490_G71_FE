@@ -63,7 +63,6 @@ export const CreateEditModalDivideShift = ({
 
   const handleSubmit = (values: CreateDivideShiftRequest) => {
     onSubmit(values);
-    onClose();
   };
 
   const getTitle = () => {

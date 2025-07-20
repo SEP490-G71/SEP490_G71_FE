@@ -7,4 +7,8 @@ export interface SettingAdmin {
   bankCode: string;
   latestCheckInMinutes: number;
   paginationSizeList: number[];
+  queueOpenTime: string;
+  queueCloseTime: string;
+  minBookingDaysBefore: number;
+  minLeaveDaysBefore: number;
 }

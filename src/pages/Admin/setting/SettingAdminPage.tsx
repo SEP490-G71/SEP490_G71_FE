@@ -12,7 +12,6 @@ import { useForm, isEmail } from "@mantine/form";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { PaginationSizeInput } from "../../../components/admin/settings/PaginationSizeInput";
 
-// Kiểu dữ liệu cho danh sách ngân hàng
 interface BankOption {
   value: string;
   label: string;
@@ -22,6 +21,12 @@ export const SettingAdminPage: React.FC = () => {
   const { setting, loading, updateSetting } = useSettingAdminService();
   const [bankOptions, setBankOptions] = useState<BankOption[]>([]);
   const [banksLoading, setBanksLoading] = useState<boolean>(false);
+  const timeOptions = Array.from({ length: 24 }, (_, hour) =>
+    ["00", "15", "30", "45"].map((minute) => ({
+      value: `${hour.toString().padStart(2, "0")}:${minute}`,
+      label: `${hour.toString().padStart(2, "0")}:${minute}`,
+    }))
+  ).flat();
 
   const form = useForm({
     initialValues: {
@@ -32,7 +37,11 @@ export const SettingAdminPage: React.FC = () => {
       bankAccountNumber: "",
       bankCode: "",
       paginationSizeList: [] as number[],
-      latestCheckInMinutes: "", // 🔧 Thêm trường phút đến trễ
+      latestCheckInMinutes: "",
+      queueOpenTime: "", // 🔧
+      queueCloseTime: "", // 🔧
+      minBookingDaysBefore: "", // 🔧
+      minLeaveDaysBefore: "", // 🔧
     },
     validate: {
       hospitalName: (v) => (v ? null : "Thông tin bắt buộc"),
@@ -47,8 +56,14 @@ export const SettingAdminPage: React.FC = () => {
           : null,
       latestCheckInMinutes: (v) =>
         !v || isNaN(Number(v)) || Number(v) < 1 || Number(v) > 120
-          ? "Phút đến trễ phải từ 1 đến 60"
+          ? "Phút đến trễ phải từ 1 đến 120"
           : null,
+      queueOpenTime: (v) => (!v ? "Giờ mở xếp hàng là bắt buộc" : null), // 🔧
+      queueCloseTime: (v) => (!v ? "Giờ đóng xếp hàng là bắt buộc" : null), // 🔧
+      minBookingDaysBefore: (v) =>
+        !v || isNaN(Number(v)) || Number(v) < 0 ? "Phải >= 0" : null,
+      minLeaveDaysBefore: (v) =>
+        !v || isNaN(Number(v)) || Number(v) < 0 ? "Phải >= 0" : null,
     },
   });
 
@@ -58,6 +73,8 @@ export const SettingAdminPage: React.FC = () => {
         ...setting,
         hospitalEmail: setting.hospitalEmail ?? "",
         latestCheckInMinutes: setting.latestCheckInMinutes?.toString() || "",
+        minBookingDaysBefore: setting.minBookingDaysBefore?.toString() || "", // 🔧
+        minLeaveDaysBefore: setting.minLeaveDaysBefore?.toString() || "", // 🔧
       });
     }
   }, [setting]);
@@ -90,6 +107,8 @@ export const SettingAdminPage: React.FC = () => {
     updateSetting({
       ...values,
       latestCheckInMinutes: Number(values.latestCheckInMinutes),
+      minBookingDaysBefore: Number(values.minBookingDaysBefore), // 🔧
+      minLeaveDaysBefore: Number(values.minLeaveDaysBefore), // 🔧
       paginationSizeList: values.paginationSizeList.map(Number),
     });
   };
@@ -183,6 +202,62 @@ export const SettingAdminPage: React.FC = () => {
                 placeholder="Nhập số phút cho phép đến trễ"
                 type="number"
                 {...form.getInputProps("latestCheckInMinutes")}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Select
+                label={
+                  <span>
+                    Giờ mở xếp hàng <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="Chọn giờ mở"
+                data={timeOptions}
+                searchable
+                {...form.getInputProps("queueOpenTime")}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <Select
+                label={
+                  <span>
+                    Giờ đóng xếp hàng <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="Chọn giờ đóng"
+                data={timeOptions}
+                searchable
+                {...form.getInputProps("queueCloseTime")}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label={
+                  <span>
+                    Số ngày đặt khám tối thiểu{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="2"
+                type="number"
+                {...form.getInputProps("minBookingDaysBefore")}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label={
+                  <span>
+                    Số ngày xin nghỉ tối thiểu{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="1"
+                type="number"
+                {...form.getInputProps("minLeaveDaysBefore")}
               />
             </Grid.Col>
 

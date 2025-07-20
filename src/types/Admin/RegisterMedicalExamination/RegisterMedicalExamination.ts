@@ -18,6 +18,7 @@ export interface Patient {
   status?: string;
   roomNumber?: string;
   registeredTime?: string;
+  isPriority?: boolean;
 }
 
 export interface PatientRequest {
