@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import useUserViewMedicalExamination from "../../../hooks/UserViewMedicalExamination/useUserViewMedicalExamination";
 import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExamination/UserViewMedicalExamination";
 import CustomTable from "../../../components/common/CustomTable";
@@ -51,12 +51,16 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
   },
   {
     key: "fullName",
-    label: "Tên bệnh nhân",
+    label: "Họ và tên",
   },
   {
     key: "queueOrder",
-    label: "SBD",
+    label: "Thứ tự khám",
+    render: (row) => (
+      <div style={{ textAlign: "left" }}>{row.queueOrder ?? "-"}</div>
+    ),
   },
+
   {
     key: "status",
     label: "Trạng thái",
@@ -68,6 +72,16 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
 
 const UserViewMedicalExaminationPage: React.FC = () => {
   const { queuePatients, loading } = useUserViewMedicalExamination();
+  const { setting } = useSettingAdminService();
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // lấy giá trị đầu tiên làm mặc định
+    }
+  }, [setting]);
 
   const getProcessedQueuePatients = (): Record<
     string,
@@ -109,7 +123,6 @@ const UserViewMedicalExaminationPage: React.FC = () => {
   };
 
   const groupedPatients = getProcessedQueuePatients();
-  const { setting } = useSettingAdminService();
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -126,53 +139,66 @@ const UserViewMedicalExaminationPage: React.FC = () => {
             alignItems: "stretch",
           }}
         >
-          {Object.entries(groupedPatients).map(([room, patients]) => (
-            <div
-              key={room}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                backgroundColor: "#fff",
-                minHeight: room === "NO_ROOM" ? "100%" : "450px",
-                flex: room === "NO_ROOM" ? 1 : undefined,
-                alignSelf: room === "NO_ROOM" ? "stretch" : undefined,
-              }}
-            >
-              <h3
+          {Object.entries(groupedPatients).map(([room, patients]) => {
+            const paginatedPatients = patients
+              .slice((page - 1) * pageSize, page * pageSize)
+              .map((p, i) => ({
+                ...p,
+                index: (page - 1) * pageSize + i,
+              }));
+
+            return (
+              <div
+                key={room}
                 style={{
-                  margin: 0,
-                  padding: "0.75rem",
-                  backgroundColor: "#f7f7f7",
-                  fontWeight: 600,
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                  backgroundColor: "#fff",
+                  minHeight: room === "NO_ROOM" ? "100%" : "450px",
+                  flex: room === "NO_ROOM" ? 1 : undefined,
+                  alignSelf: room === "NO_ROOM" ? "stretch" : undefined,
                 }}
               >
-                Phòng: {room === "NO_ROOM" ? "Chưa phân phòng" : room}
-              </h3>
+                <h3
+                  style={{
+                    margin: 0,
+                    padding: "0.75rem",
+                    backgroundColor: "#f7f7f7",
+                    fontWeight: 600,
+                  }}
+                >
+                  Phòng: {room === "NO_ROOM" ? "Chưa phân phòng" : room}
+                </h3>
 
-              <div style={{ padding: "1rem" }}>
-                <CustomTable
-                  data={patients.map((p, i) => ({ ...p, index: i }))}
-                  columns={columns}
-                  page={1}
-                  pageSize={5}
-                  totalItems={patients.length}
-                  onPageChange={() => {}}
-                  showActions={false}
-                  getRowStyle={(row) => ({
-                    backgroundColor: statusColor(row.status),
-                    color: statusTextColor(row.status),
-                  })}
-                  pageSizeOptions={setting?.paginationSizeList
-                    .slice()
-                    .sort((a, b) => a - b)}
-                />
+                <div style={{ padding: "1rem" }}>
+                  <CustomTable
+                    data={paginatedPatients}
+                    columns={columns}
+                    page={page}
+                    pageSize={pageSize}
+                    totalItems={patients.length}
+                    onPageChange={setPage}
+                    onPageSizeChange={(size) => {
+                      setPageSize(size);
+                      setPage(1);
+                    }}
+                    showActions={false}
+                    getRowStyle={(row) => ({
+                      backgroundColor: statusColor(row.status),
+                      color: statusTextColor(row.status),
+                    })}
+                    pageSizeOptions={setting?.paginationSizeList
+                      .slice()
+                      .sort((a, b) => a - b)}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

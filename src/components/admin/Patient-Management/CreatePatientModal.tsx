@@ -63,7 +63,6 @@ export const CreatePatientModal = ({
           e.preventDefault();
           form.setTouched({
             firstName: true,
-            middleName: true,
             lastName: true,
             dob: true,
             gender: true,
@@ -78,19 +77,21 @@ export const CreatePatientModal = ({
       >
         <TextInput
           label="Họ"
+          placeholder="Nhập họ"
           required
           {...form.getInputProps("lastName")}
           disabled={isViewMode}
         />
         <TextInput
           label="Tên đệm"
-          required
+          placeholder="Nhập tên đệm"
           {...form.getInputProps("middleName")}
           mt="sm"
           disabled={isViewMode}
         />
         <TextInput
           label="Tên"
+          placeholder="Nhập tên"
           required
           {...form.getInputProps("firstName")}
           mt="sm"
@@ -113,6 +114,8 @@ export const CreatePatientModal = ({
         />
         <Select
           label="Giới tính"
+          placeholder="Chọn giới tính"
+          required
           data={[
             { value: "MALE", label: "Nam" },
             { value: "FEMALE", label: "Nữ" },
@@ -123,7 +126,8 @@ export const CreatePatientModal = ({
         />
 
         <TextInput
-          label="SĐT"
+          label="Số điện thoại"
+          placeholder="Nhập số điện thoại"
           required
           {...form.getInputProps("phone")}
           mt="sm"
@@ -131,6 +135,7 @@ export const CreatePatientModal = ({
         />
         <TextInput
           label="Email"
+          placeholder="Nhập email"
           required
           {...form.getInputProps("email")}
           mt="sm"

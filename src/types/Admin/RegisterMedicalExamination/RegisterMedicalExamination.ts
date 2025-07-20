@@ -13,12 +13,16 @@ export interface Patient {
   ngayDangKy: string;
   email?: string;
   type?: string;
+  specialization?: string;
+  specializationId?: string;
+  status?: string;
+  roomNumber?: string;
+  registeredTime?: string;
 }
 
 export interface PatientRequest {
   id: number;
   patientCode?: string;
-  maLichHen?: string;
   firstName: string;
   middleName: string;
   lastName: string;

@@ -1,8 +1,10 @@
-import { Button, Grid, Group, Modal, TextInput } from "@mantine/core";
-import { useState, useMemo } from "react";
+import { Button, Group, Modal, TextInput } from "@mantine/core";
+import { useState, useMemo, useEffect } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
+import { FloatingLabelWrapper } from "../../common/FloatingLabelWrapper";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 interface SearchPatientModalProps {
   opened: boolean;
@@ -21,14 +23,12 @@ export default function SearchPatientModal({
   onSelect,
   onConfirm,
 }: SearchPatientModalProps) {
-  // Bộ lọc thực thi khi nhấn Enter
   const [filters, setFilters] = useState({
     maBN: "",
     name: "",
     phone: "",
   });
 
-  // Trạng thái nhập liệu (chỉ áp dụng khi nhấn Enter)
   const [inputFilters, setInputFilters] = useState({
     maBN: "",
     name: "",
@@ -37,14 +37,12 @@ export default function SearchPatientModal({
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-
-  // Xử lý Enter để cập nhật bộ lọc thực thi
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      setFilters(inputFilters);
-      setPage(1); // reset trang về 1 khi lọc
+  const { setting } = useSettingAdminService();
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
     }
-  };
+  }, [setting]);
 
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
@@ -115,41 +113,74 @@ export default function SearchPatientModal({
       centered
     >
       <div className="space-y-4">
-        <Grid gutter="xs">
-          <Grid.Col span={4}>
-            <TextInput
-              label="Mã BN"
-              placeholder="Nhập mã"
-              value={inputFilters.maBN}
-              onChange={(e) =>
-                setInputFilters((prev) => ({ ...prev, maBN: e.target.value }))
-              }
-              onKeyDown={handleKeyDown}
-            />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <TextInput
-              label="Họ tên"
-              placeholder="Nhập họ tên"
-              value={inputFilters.name}
-              onChange={(e) =>
-                setInputFilters((prev) => ({ ...prev, name: e.target.value }))
-              }
-              onKeyDown={handleKeyDown}
-            />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <TextInput
-              label="Điện thoại"
-              placeholder="Nhập SĐT"
-              value={inputFilters.phone}
-              onChange={(e) =>
-                setInputFilters((prev) => ({ ...prev, phone: e.target.value }))
-              }
-              onKeyDown={handleKeyDown}
-            />
-          </Grid.Col>
-        </Grid>
+        <div className="grid grid-cols-12 gap-4 mb-4 items-end">
+          <div className="col-span-12 md:col-span-3">
+            <FloatingLabelWrapper label="Mã BN">
+              <TextInput
+                placeholder="Nhập mã"
+                value={inputFilters.maBN}
+                onChange={(e) =>
+                  setInputFilters((prev) => ({ ...prev, maBN: e.target.value }))
+                }
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <FloatingLabelWrapper label="Họ tên bệnh nhân">
+              <TextInput
+                placeholder="Nhập họ tên"
+                value={inputFilters.name}
+                onChange={(e) =>
+                  setInputFilters((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-12 md:col-span-3">
+            <FloatingLabelWrapper label="Số điện thoại">
+              <TextInput
+                placeholder="Nhập SĐT"
+                value={inputFilters.phone}
+                onChange={(e) =>
+                  setInputFilters((prev) => ({
+                    ...prev,
+                    phone: e.target.value,
+                  }))
+                }
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-12 md:col-span-3 flex items-end gap-2">
+            <Button
+              variant="light"
+              color="gray"
+              onClick={() => {
+                setInputFilters({ maBN: "", name: "", phone: "" });
+                setFilters({ maBN: "", name: "", phone: "" });
+                setPage(1);
+              }}
+              className="w-full"
+              fullWidth
+            >
+              Tải lại
+            </Button>
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={() => {
+                setFilters(inputFilters);
+                setPage(1);
+              }}
+              className="w-full"
+              fullWidth
+            >
+              Tìm kiếm
+            </Button>
+          </div>
+        </div>
 
         <CustomTable
           data={paginatedPatients}
@@ -163,6 +194,9 @@ export default function SearchPatientModal({
             setPage(1);
           }}
           showActions={false}
+          pageSizeOptions={setting?.paginationSizeList
+            .slice()
+            .sort((a, b) => a - b)}
         />
 
         <Group justify="flex-end">
