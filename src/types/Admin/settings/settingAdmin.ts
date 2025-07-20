@@ -5,5 +5,6 @@ export interface SettingAdmin {
   hospitalAddress: string;
   bankAccountNumber: string;
   bankCode: string;
+  latestCheckInMinutes: number;
   paginationSizeList: number[];
 }

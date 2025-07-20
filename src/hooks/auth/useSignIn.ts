@@ -14,7 +14,7 @@ export const useSignIn = () => {
     CASHIER: "/admin/medical-examination/billing",
     RECEPTIONIST: "/admin/register-medical-examination",
     TECHNICIAN: "/admin/medical-examination/clinical",
-    PATIENT: "/admin/medical-examination",
+    PATIENT: "/admin/medical-records",
     user: "/admin/medical-examination",
   };
 

@@ -240,7 +240,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
     {
       name: "Xem bệnh án",
       icon: <FaFileMedical />,
-      path: "/admin/medical-examination",
+      path: "/admin/medical-records",
     },
   ],
   user: [

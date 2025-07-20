@@ -98,7 +98,7 @@ export const SpecializationsPages = () => {
       size: pageSize,
     });
 
-    return success; // Trả về true/false để xử lý reset bên trong modal
+    return success;
   };
 
   const columns = [

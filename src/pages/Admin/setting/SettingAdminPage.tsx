@@ -32,6 +32,7 @@ export const SettingAdminPage: React.FC = () => {
       bankAccountNumber: "",
       bankCode: "",
       paginationSizeList: [] as number[],
+      latestCheckInMinutes: "", // 🔧 Thêm trường phút đến trễ
     },
     validate: {
       hospitalName: (v) => (v ? null : "Thông tin bắt buộc"),
@@ -44,6 +45,10 @@ export const SettingAdminPage: React.FC = () => {
         values.length === 0 || values.some((v) => v < 1 || v > 200)
           ? "Giá trị phải từ 1 đến 200"
           : null,
+      latestCheckInMinutes: (v) =>
+        !v || isNaN(Number(v)) || Number(v) < 1 || Number(v) > 120
+          ? "Phút đến trễ phải từ 1 đến 60"
+          : null,
     },
   });
 
@@ -52,6 +57,7 @@ export const SettingAdminPage: React.FC = () => {
       form.setValues({
         ...setting,
         hospitalEmail: setting.hospitalEmail ?? "",
+        latestCheckInMinutes: setting.latestCheckInMinutes?.toString() || "",
       });
     }
   }, [setting]);
@@ -83,6 +89,7 @@ export const SettingAdminPage: React.FC = () => {
   const handleSubmit = (values: typeof form.values) => {
     updateSetting({
       ...values,
+      latestCheckInMinutes: Number(values.latestCheckInMinutes),
       paginationSizeList: values.paginationSizeList.map(Number),
     });
   };
@@ -97,25 +104,40 @@ export const SettingAdminPage: React.FC = () => {
           <Grid gutter="md">
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput
-                label="Tên bệnh viện *"
+                label={
+                  <span>
+                    Tên bệnh viện <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 placeholder="Nhập tên bệnh viện"
                 {...form.getInputProps("hospitalName")}
               />
             </Grid.Col>
+
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput
-                label="Số điện thoại *"
+                label={
+                  <span>
+                    Số điện thoại <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 placeholder="Nhập số điện thoại"
                 {...form.getInputProps("hospitalPhone")}
               />
             </Grid.Col>
+
             <Grid.Col span={12}>
               <TextInput
-                label="Địa chỉ *"
+                label={
+                  <span>
+                    Địa chỉ <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 placeholder="Nhập địa chỉ"
                 {...form.getInputProps("hospitalAddress")}
               />
             </Grid.Col>
+
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput
                 label="Email bệnh viện"
@@ -123,16 +145,26 @@ export const SettingAdminPage: React.FC = () => {
                 {...form.getInputProps("hospitalEmail")}
               />
             </Grid.Col>
+
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput
-                label="Số tài khoản *"
+                label={
+                  <span>
+                    Số tài khoản <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 placeholder="Nhập số tài khoản"
                 {...form.getInputProps("bankAccountNumber")}
               />
             </Grid.Col>
+
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Select
-                label="Ngân hàng *"
+                label={
+                  <span>
+                    Ngân hàng <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 placeholder={banksLoading ? "Đang tải..." : "Chọn ngân hàng"}
                 data={bankOptions}
                 searchable
@@ -140,6 +172,20 @@ export const SettingAdminPage: React.FC = () => {
                 disabled={banksLoading}
               />
             </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label={
+                  <span>
+                    Phút đến trễ tối đa <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="Nhập số phút cho phép đến trễ"
+                type="number"
+                {...form.getInputProps("latestCheckInMinutes")}
+              />
+            </Grid.Col>
+
             <Grid.Col span={12}>
               <PaginationSizeInput
                 values={form.values.paginationSizeList
@@ -151,6 +197,7 @@ export const SettingAdminPage: React.FC = () => {
               />
             </Grid.Col>
           </Grid>
+
           <Group justify="flex-end" mt="xl">
             <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
               Lưu thay đổi
