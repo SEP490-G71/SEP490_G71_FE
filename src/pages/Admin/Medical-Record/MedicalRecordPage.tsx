@@ -280,7 +280,7 @@ export const MedicalRecordPage = () => {
           </Button>
         </div>
       </div>
-      s
+
       <CustomTable
         data={medicalRecords}
         columns={columns}
