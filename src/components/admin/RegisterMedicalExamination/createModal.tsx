@@ -9,13 +9,12 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
-import { useRegisterMedicalExamination } from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
-import { usePatientForm } from "../../../hooks/Patient-Management/usePatientForm"; // Đã có validate ở đây
+import { usePatientForm } from "../../../hooks/Patient-Management/usePatientForm";
 
 interface CreateModalProps {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (data: Patient, resetForm: () => void) => void;
+  onSubmit: (data: Partial<Patient>, resetForm: () => void) => void;
 }
 
 export default function CreateModal({
@@ -24,7 +23,6 @@ export default function CreateModal({
   onSubmit,
 }: CreateModalProps) {
   const form = usePatientForm();
-  const { createPatient } = useRegisterMedicalExamination();
 
   const handleSubmit = async () => {
     const result = form.validate();
@@ -35,19 +33,21 @@ export default function CreateModal({
       dob: form.values.dob?.toISOString().split("T")[0] || "",
     };
 
-    const createdPatient = await createPatient(payload);
-    if (createdPatient) {
-      form.reset();
-      onClose();
-      onSubmit(createdPatient, () => form.reset());
-    }
+    onSubmit(payload, () => form.reset());
+    form.reset();
+    onClose();
   };
 
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Thêm bệnh nhân mới"
+      title={
+        <div>
+          <h2 className="text-xl font-bold">Tạo bệnh nhân mới</h2>
+          <div className="mt-2 border-b border-gray-300"></div>
+        </div>
+      }
       size="xl"
     >
       <form
@@ -56,9 +56,9 @@ export default function CreateModal({
           handleSubmit();
         }}
       >
-        <Divider label="Thông tin cá nhân" mb="md" />
+        <Divider label="Thông tin bệnh nhân" mb="md" />
         <Grid gutter="md">
-          {/* Họ - Tên đệm - Tên trên cùng 1 hàng */}
+          {/* Họ - Tên đệm - Tên */}
           <Grid.Col span={4}>
             <TextInput
               label="Họ"
@@ -71,7 +71,6 @@ export default function CreateModal({
             <TextInput
               label="Tên đệm"
               placeholder="Nhập tên đệm"
-              required
               {...form.getInputProps("middleName")}
             />
           </Grid.Col>

@@ -101,7 +101,9 @@ export const PatientManagementPage = () => {
     await deletePatientById(row.id);
   };
 
-  const handleSubmit = async (data: CreateUpdatePatientRequest) => {
+  const handleSubmit = async (
+    data: CreateUpdatePatientRequest
+  ): Promise<boolean> => {
     try {
       if (selectedPatient) {
         await axiosInstance.put(`/patients/${selectedPatient.id}`, data);
@@ -111,8 +113,10 @@ export const PatientManagementPage = () => {
         toast.success("Tạo thành công");
       }
       fetchAllPatients();
+      return true;
     } catch (error) {
       toast.error("Lỗi khi lưu thông tin bệnh nhân");
+      return false;
     }
   };
 

@@ -9,9 +9,26 @@ interface PatientFilters {
   fullName?: string;
 }
 
+interface QueuePatientFilters {
+  phone?: string;
+  patientCode?: string;
+  specialization?: string;
+  registeredTimeFrom?: string | null;
+  registeredTimeTo?: string | null;
+  status?: string;
+  roomNumber?: string;
+}
+
 interface FetchPatientsResponse {
   content: Patient[];
   totalElements: number;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  code?: string;
+  roomNumber?: string;
 }
 
 export const useRegisterMedicalExamination = () => {
@@ -37,7 +54,6 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
-  // Lấy danh sách bệnh nhân (có phân trang + lọc)
   const fetchAllPatients = async (
     page = 0,
     size = 10,
@@ -64,21 +80,23 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
-  // Đăng ký khám cho bệnh nhân
   const queuePatient = async (
     patientId: string,
-    type: string = "CONSULTATION",
     registeredTime: string,
-    onSuccess?: () => void
+    onSuccess?: () => void,
+    roomNumber?: string,
+    specializationId?: string,
+    isPriority?: boolean
   ) => {
     try {
       await axiosInstance.post("/queue-patients", {
         patientId,
-        type,
         registeredTime,
+        roomNumber,
+        specializationId,
+        isPriority,
       });
       toast.success("Đăng ký khám thành công");
-
       if (onSuccess) onSuccess();
     } catch (err) {
       console.error("❌ Lỗi đăng ký khám:", err);
@@ -86,31 +104,49 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
-  // Lấy danh sách bệnh nhân đã đăng ký hôm nay
   const fetchTodayRegisteredPatients = async (
     page = 0,
-    size = 10
+    size = 10,
+    filters: QueuePatientFilters = {}
   ): Promise<FetchPatientsResponse> => {
     try {
-      const response = await axiosInstance.get("/patients/today", {
-        params: { page, size },
+      const response = await axiosInstance.get("/queue-patients/search", {
+        params: {
+          page,
+          size,
+          ...filters,
+        },
       });
 
       const result = response.data?.result;
-
-      if (result?.content && Array.isArray(result.content)) {
-        return {
-          content: result.content,
-          totalElements: result.totalElements || result.content.length,
-        };
-      }
-
-      console.warn("⚠️ Không có danh sách content trong result:", result);
-      return { content: [], totalElements: 0 };
+      return {
+        content: result?.content || [],
+        totalElements: result?.totalElements || 0,
+      };
     } catch (error) {
-      console.error("❌ Lỗi khi fetch /patients/today:", error);
-      toast.error("Không thể tải danh sách đã đăng ký hôm nay");
+      console.error("❌ Lỗi khi fetch queue-patients/search:", error);
+      toast.error("Không thể tải danh sách đăng ký khám");
       return { content: [], totalElements: 0 };
+    }
+  };
+
+  const fetchDepartmentsBySpecialization = async (
+    specializationId: string
+  ): Promise<Department[]> => {
+    if (!specializationId) return [];
+
+    try {
+      const response = await axiosInstance.get("/departments/search", {
+        params: {
+          type: "CONSULTATION", // loại khoa khám thông thường
+          specializationId,
+        },
+      });
+      return response.data?.result || [];
+    } catch (error) {
+      toast.error("Không thể tải danh sách phòng khám");
+      console.error("❌ Lỗi khi fetch departments:", error);
+      return [];
     }
   };
 
@@ -119,5 +155,6 @@ export const useRegisterMedicalExamination = () => {
     fetchAllPatients,
     queuePatient,
     fetchTodayRegisteredPatients,
+    fetchDepartmentsBySpecialization,
   };
 };

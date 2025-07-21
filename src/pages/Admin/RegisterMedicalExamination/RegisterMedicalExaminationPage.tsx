@@ -9,6 +9,7 @@ import {
   Divider,
   Tabs,
   Paper,
+  Checkbox,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
@@ -18,10 +19,17 @@ import SearchPatientModal from "../../../components/admin/RegisterMedicalExamina
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
-import { useRegisterMedicalExamination } from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
+import {
+  Department,
+  useRegisterMedicalExamination,
+} from "../../../hooks/RegisterMedicalExamination/useRegisterMedicalExamination";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { useSpecializations } from "../../../hooks/Specializations/useSpecializations";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
+
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
@@ -41,42 +49,90 @@ export default function RegisterMedicalExaminationPage() {
     "asc" | "desc" | undefined
   >();
   const { setting } = useSettingAdminService();
-  const [registerType, setRegisterType] = useState<string>("CONSULTATION");
+
   const [totalTodayPatients, setTotalTodayPatients] = useState(0);
+  const { options: patientOptions, searchPatients } = usePatientSearch();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+
+  const [searchFilters, setSearchFilters] = useState({
+    fullName: "",
+    patientId: "",
+    phone: "",
+    patientCode: "",
+    specialization: "",
+    registeredTimeFrom: null as Date | null,
+    registeredTimeTo: null as Date | null,
+    status: "",
+  });
+
+  const [submittedFilters, setSubmittedFilters] = useState(searchFilters);
+
+  const {
+    specializations,
+    fetchAllSpecializations,
+    loading: loadingSpecializations,
+  } = useSpecializations();
+
+  useEffect(() => {
+    fetchAllSpecializations();
+  }, []);
+
+  const {
+    fetchAllPatients,
+    fetchTodayRegisteredPatients,
+    queuePatient,
+    createPatient,
+    fetchDepartmentsBySpecialization,
+  } = useRegisterMedicalExamination();
 
   const columns: Column<Patient>[] = [
-    {
-      key: "patientCode",
-      label: "Mã BN",
-      sortable: false,
-    },
-    {
-      key: "fullName",
-      label: "Họ tên",
-      sortable: false,
-    },
+    { key: "patientCode", label: "Mã BN", sortable: false },
+    { key: "fullName", label: "Họ tên", sortable: false },
     {
       key: "gender",
       label: "Giới tính",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
+    { key: "phone", label: "Số điện thoại" },
+    { key: "roomNumber", label: "Phòng khám" },
     {
-      key: "phone",
-      label: "Số điện thoại",
+      key: "specialization",
+      label: "Chuyên khoa",
+      render: (row) => row.specialization || "-",
     },
     {
-      key: "type",
-      label: "Loại đăng ký",
+      key: "registeredTime",
+      label: "Ngày đăng ký",
+      render: (row) =>
+        row.registeredTime
+          ? dayjs(row.registeredTime).format("DD/MM/YYYY")
+          : "-",
+    },
+
+    {
+      key: "status",
+      label: "Trạng thái",
       render: (row) => {
-        switch (row.type) {
-          case "CONSULTATION":
-            return "Khám bệnh";
-          case "LABORATORY":
-            return "Xét nghiệm";
-          case "ADMINISTRATION":
-            return "Hành chính";
+        switch (row.status) {
+          case "WAITING":
+            return "Chờ khám";
+          case "IN_PROGRESS":
+            return "Đang khám";
+          case "DONE":
+            return "Hoàn thành";
+          case "CANCELED":
+            return "Đã hủy";
+          case "ACTIVE":
+            return "Hoạt động";
+          case "INACTIVE":
+            return "Không hoạt động";
+          case "PENDING":
+            return "Đang xử lý";
+          case "FAILED":
+            return "Thất bại";
           default:
-            return row.type;
+            return row.status || "";
         }
       },
     },
@@ -86,47 +142,77 @@ export default function RegisterMedicalExaminationPage() {
     setConfirmedPatient(null);
     setSelectedDate(null);
   };
-  const {
-    fetchAllPatients,
-    fetchTodayRegisteredPatients,
-    queuePatient,
-    createPatient,
-  } = useRegisterMedicalExamination();
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      if (!confirmedPatient?.specializationId) {
+        setDepartments([]);
+        return;
+      }
+
+      setLoadingDepartments(true);
+      const result = await fetchDepartmentsBySpecialization(
+        confirmedPatient.specializationId
+      );
+      setDepartments(result);
+      setLoadingDepartments(false);
+    };
+
+    loadDepartments();
+  }, [confirmedPatient?.specializationId]);
+
   useEffect(() => {
     const loadTodayPatients = async () => {
+      const filters = {
+        patientId: submittedFilters.patientId,
+        fullName: submittedFilters.fullName,
+        phone: submittedFilters.phone,
+        patientCode: submittedFilters.patientCode,
+        specialization: submittedFilters.specialization,
+        registeredTimeFrom: submittedFilters.registeredTimeFrom
+          ? dayjs(submittedFilters.registeredTimeFrom)
+              .startOf("day")
+              .format("YYYY-MM-DDTHH:mm:ss")
+          : undefined,
+        registeredTimeTo: submittedFilters.registeredTimeTo
+          ? dayjs(submittedFilters.registeredTimeTo)
+              .startOf("day")
+              .format("YYYY-MM-DDTHH:mm:ss")
+          : undefined,
+        status: submittedFilters.status,
+      };
+
       const { content, totalElements } = await fetchTodayRegisteredPatients(
         page - 1,
-        pageSize
+        pageSize,
+        filters
       );
 
-      const safePatients: Patient[] = content.map((p) => ({
+      const mappedPatients = content.map((p) => ({
         ...p,
-        ngayDangKy: p.ngayDangKy ?? null,
-        stt: p.stt ?? "",
-        phongKham: p.phongKham ?? "",
+        registeredTime: p.registeredTime ?? p.ngayDangKy ?? null,
       }));
 
-      setPatientsToday(safePatients);
+      setPatientsToday(mappedPatients);
       setTotalTodayPatients(totalElements);
     };
 
     loadTodayPatients();
-  }, [page, pageSize]);
+  }, [page, pageSize, submittedFilters]);
 
   const handleSave = async () => {
     if (!confirmedPatient) return;
-
     let isoSelected: string | null = null;
+
     if (selectedDate) {
-      const date = new Date(selectedDate);
-      if (!isNaN(date.getTime())) {
-        isoSelected = date.toISOString().split("T")[0];
+      if (!isNaN(selectedDate.getTime())) {
+        isoSelected = dayjs(selectedDate).format("YYYY-MM-DD");
       }
     }
 
@@ -142,10 +228,8 @@ export default function RegisterMedicalExaminationPage() {
     );
     setConfirmedPatient(updatedPatient);
 
-    // API đăng ký khám + cập nhật danh sách hôm nay
     await queuePatient(
       updatedPatient.id.toString(),
-      registerType,
       `${isoDate}T00:00:00`,
       async () => {
         const { content, totalElements } = await fetchTodayRegisteredPatients(
@@ -160,7 +244,10 @@ export default function RegisterMedicalExaminationPage() {
         }));
         setPatientsToday(safePatients);
         setTotalTodayPatients(totalElements);
-      }
+      },
+      updatedPatient.phongKham,
+      updatedPatient.specializationId,
+      updatedPatient.isPriority
     );
   };
 
@@ -171,9 +258,16 @@ export default function RegisterMedicalExaminationPage() {
     setModalOpened(true);
   };
 
-  const handleCreatePatient = async (data: Patient, resetForm: () => void) => {
-    const created = await createPatient(data);
+  const handleCreatePatient = async (
+    data: Partial<Patient>,
+    resetForm: () => void
+  ): Promise<void> => {
+    if (!data.firstName || !data.lastName || !data.dob || !data.gender) {
+      toast.error("Vui lòng nhập đầy đủ thông tin bệnh nhân");
+      return;
+    }
 
+    const created = await createPatient(data as Patient);
     if (!created) {
       toast.error("Tạo bệnh nhân thất bại");
       return;
@@ -186,7 +280,7 @@ export default function RegisterMedicalExaminationPage() {
       phongKham: "",
     };
 
-    setPatientsToday((prev) => [...prev, newPatient]);
+    // setPatientsToday((prev) => [...prev, newPatient]);
     setConfirmedPatient(newPatient);
     setSelectedDate(new Date(newPatient.ngayDangKy));
     setCreateModalOpened(false);
@@ -235,52 +329,196 @@ export default function RegisterMedicalExaminationPage() {
 
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="w-full lg:flex-[1.3] min-w-[350px]">
-          <Paper p="md" shadow="sm" radius="md" withBorder>
-            <Grid gutter="xs" mb="sm">
-              <Grid.Col span={6}>
-                <Select
-                  label="Trạng thái"
-                  data={[]}
-                  placeholder="Chọn trạng thái"
-                />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <TextInput label="Mã KCB" placeholder="Nhập mã KCB" />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <DatePickerInput label="Từ ngày" placeholder="Chọn ngày" />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <DatePickerInput label="Đến ngày" placeholder="Chọn ngày" />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <TextInput label="Mã BN" placeholder="Nhập mã bệnh nhân" />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <TextInput label="Họ tên" placeholder="Nhập họ tên" />
-              </Grid.Col>
-            </Grid>
+          <div className="w-full lg:flex-[1.3] min-w-[350px]">
+            <Paper p="md" shadow="sm" radius="md" withBorder>
+              <div className="grid grid-cols-12 gap-4 mb-4">
+                <div className="col-span-12 md:col-span-6">
+                  <FloatingLabelWrapper label="Họ tên">
+                    <Select
+                      placeholder="Nhập họ tên"
+                      searchable
+                      data={patientOptions}
+                      onSearchChange={(query) => searchPatients(query)}
+                      onChange={(value) => {
+                        setSearchFilters({
+                          ...searchFilters,
+                          patientId: value || "",
+                        });
+                      }}
+                      value={searchFilters.patientId}
+                    />
+                  </FloatingLabelWrapper>
+                </div>
 
-            <CustomTable
-              data={patientsToday}
-              columns={columns}
-              page={page}
-              pageSize={pageSize}
-              totalItems={totalTodayPatients}
-              onPageChange={setPage}
-              onPageSizeChange={setPageSize}
-              sortKey={sortKey}
-              sortDirection={sortDirection}
-              onSortChange={(key, dir) => {
-                setSortKey(key);
-                setSortDirection(dir);
-              }}
-              showActions={false}
-              pageSizeOptions={setting?.paginationSizeList
-                .slice()
-                .sort((a, b) => a - b)}
-            />
-          </Paper>
+                <div className="col-span-12 md:col-span-6">
+                  <FloatingLabelWrapper label="Mã BN">
+                    <TextInput
+                      placeholder="Nhập mã bệnh nhân"
+                      value={searchFilters.patientCode}
+                      onChange={(e) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          patientCode: e.target.value,
+                        })
+                      }
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4">
+                  <FloatingLabelWrapper label="Số điện thoại">
+                    <TextInput
+                      placeholder="Nhập số điện thoại"
+                      value={searchFilters.phone}
+                      onChange={(e) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          phone: e.target.value,
+                        })
+                      }
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4">
+                  <FloatingLabelWrapper label="Chuyên khoa">
+                    <Select
+                      placeholder="Chọn chuyên khoa"
+                      data={specializations.map((s) => ({
+                        value: s.name,
+                        label: s.name,
+                      }))}
+                      value={searchFilters.specialization}
+                      onChange={(value) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          specialization: value || "",
+                        })
+                      }
+                      searchable
+                      clearable
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4">
+                  <FloatingLabelWrapper label="Trạng thái">
+                    <Select
+                      placeholder="Chọn trạng thái"
+                      data={[
+                        { value: "WAITING", label: "Chờ khám" },
+                        { value: "IN_PROGRESS", label: "Đang khám" },
+                        { value: "DONE", label: "Hoàn thành" },
+                        { value: "CANCELED", label: "Đã hủy" },
+                        { value: "ACTIVE", label: "Hoạt động" },
+                        { value: "INACTIVE", label: "Không hoạt động" },
+                        { value: "PENDING", label: "Đang xử lý" },
+                        { value: "FAILED", label: "Thất bại" },
+                      ]}
+                      value={searchFilters.status}
+                      onChange={(value) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          status: value || "",
+                        })
+                      }
+                      searchable
+                      clearable
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4">
+                  <FloatingLabelWrapper label="Từ ngày">
+                    <DatePickerInput
+                      placeholder="Chọn ngày"
+                      value={searchFilters.registeredTimeFrom}
+                      valueFormat="DD/MM/YYYY"
+                      maxDate={new Date()}
+                      onChange={(value) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          registeredTimeFrom: value ? new Date(value) : null,
+                        })
+                      }
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4">
+                  <FloatingLabelWrapper label="Đến ngày">
+                    <DatePickerInput
+                      placeholder="Chọn ngày"
+                      value={searchFilters.registeredTimeTo}
+                      onChange={(value) =>
+                        setSearchFilters({
+                          ...searchFilters,
+                          registeredTimeTo: value ? new Date(value) : null,
+                        })
+                      }
+                      valueFormat="DD/MM/YYYY"
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-4 flex items-end gap-2">
+                  <Button
+                    variant="light"
+                    color="gray"
+                    className="flex-1"
+                    onClick={() => {
+                      const reset = {
+                        fullName: "",
+                        patientId: "",
+                        phone: "",
+                        patientCode: "",
+                        specialization: "",
+                        registeredTimeFrom: null,
+                        registeredTimeTo: null,
+                        status: "",
+                      };
+                      setSearchFilters(reset);
+                      setSubmittedFilters(reset);
+                      setPage(1);
+                    }}
+                  >
+                    Tải lại
+                  </Button>
+                  <Button
+                    variant="filled"
+                    color="blue"
+                    className="flex-1"
+                    onClick={() => {
+                      setSubmittedFilters(searchFilters);
+                      setPage(1);
+                    }}
+                  >
+                    Tìm kiếm
+                  </Button>
+                </div>
+              </div>
+
+              <CustomTable
+                data={patientsToday}
+                columns={columns}
+                page={page}
+                pageSize={pageSize}
+                totalItems={totalTodayPatients}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSortChange={(key, dir) => {
+                  setSortKey(key);
+                  setSortDirection(dir);
+                }}
+                showActions={false}
+                pageSizeOptions={setting?.paginationSizeList
+                  ?.slice()
+                  .sort((a, b) => a - b)}
+              />
+            </Paper>
+          </div>
         </div>
 
         {/* Bên phải: Tabs thông tin chi tiết */}
@@ -393,63 +631,94 @@ export default function RegisterMedicalExaminationPage() {
 
                 {/* Thông tin đăng ký */}
                 <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
-                <Grid gutter="xs">
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Số thứ tự"
-                      placeholder="STT"
-                      value={confirmedPatient?.stt || ""}
-                      onChange={(e) =>
-                        setConfirmedPatient((prev) =>
-                          prev ? { ...prev, stt: e.target.value } : prev
-                        )
-                      }
-                    />
-                  </Grid.Col>
+                {confirmedPatient && (
+                  <div className="grid grid-cols-12 gap-2">
+                    {/* Chuyên khoa */}
+                    <div className="col-span-12 md:col-span-3">
+                      <Select
+                        label="Chuyên khoa"
+                        placeholder="Chọn chuyên khoa"
+                        data={specializations.map((item) => ({
+                          value: item.id,
+                          label: item.name,
+                        }))}
+                        value={confirmedPatient?.specializationId || ""}
+                        onChange={(value) =>
+                          setConfirmedPatient((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  specializationId: value || "",
+                                  specialization:
+                                    specializations.find((s) => s.id === value)
+                                      ?.name || "",
+                                  phongKham: "", // 👉 reset lại phòng khám khi đổi chuyên khoa
+                                }
+                              : prev
+                          )
+                        }
+                        searchable
+                        disabled={loadingSpecializations}
+                      />
+                    </div>
 
-                  <Grid.Col span={4}>
-                    <Select
-                      label="Loại đăng ký"
-                      placeholder="Chọn loại"
-                      value={registerType}
-                      onChange={(value) =>
-                        setRegisterType(value || "CONSULTATION")
-                      }
-                      data={[
-                        { value: "CONSULTATION", label: "Khám bệnh" },
-                        { value: "LABORATORY", label: "Xét nghiệm" },
-                        { value: "ADMINISTRATION", label: "Hành chính" },
-                      ]}
-                    />
-                  </Grid.Col>
+                    {/* Phòng khám */}
+                    <div className="col-span-12 md:col-span-3">
+                      <Select
+                        label="Phòng khám"
+                        placeholder="Chọn phòng khám"
+                        data={departments
+                          .filter((dep) => !!dep.roomNumber)
+                          .map((dep) => ({
+                            value: dep.roomNumber as string,
+                            label: dep.roomNumber as string,
+                          }))}
+                        value={confirmedPatient?.phongKham || ""}
+                        onChange={(value) =>
+                          setConfirmedPatient((prev) =>
+                            prev ? { ...prev, phongKham: value || "" } : prev
+                          )
+                        }
+                        searchable
+                        disabled={
+                          !confirmedPatient?.specializationId ||
+                          loadingDepartments
+                        }
+                      />
+                    </div>
 
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Phòng khám"
-                      placeholder="Phòng khám"
-                      value={confirmedPatient?.phongKham || ""}
-                      onChange={(e) =>
-                        setConfirmedPatient((prev) =>
-                          prev ? { ...prev, phongKham: e.target.value } : prev
-                        )
-                      }
-                    />
-                  </Grid.Col>
+                    {/* Ngày đăng ký */}
+                    <div className="col-span-12 md:col-span-3">
+                      <DatePickerInput
+                        label="Ngày đăng ký"
+                        value={selectedDate}
+                        onChange={(dateValue) => {
+                          const date = dateValue as Date | null;
+                          setSelectedDate(date);
+                        }}
+                        valueFormat="DD/MM/YYYY"
+                        placeholder="DD/MM/YYYY"
+                        minDate={new Date()}
+                      />
+                    </div>
 
-                  <Grid.Col span={4}>
-                    <DatePickerInput
-                      label="Ngày đăng ký"
-                      value={selectedDate}
-                      onChange={(dateValue) => {
-                        const date = dateValue as Date | null;
-                        setSelectedDate(date);
-                      }}
-                      valueFormat="DD/MM/YYYY"
-                      placeholder="DD/MM/YYYY"
-                      minDate={new Date()}
-                    />
-                  </Grid.Col>
-                </Grid>
+                    {/* Ưu tiên */}
+                    <div className="col-span-12 md:col-span-3 flex items-end">
+                      <Checkbox
+                        label="Ưu tiên"
+                        disabled={!confirmedPatient}
+                        checked={confirmedPatient?.isPriority ?? false}
+                        onChange={(e) => {
+                          if (!confirmedPatient) return;
+                          setConfirmedPatient({
+                            ...confirmedPatient,
+                            isPriority: e.currentTarget.checked,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </Tabs.Panel>
             </Tabs>
           </Paper>

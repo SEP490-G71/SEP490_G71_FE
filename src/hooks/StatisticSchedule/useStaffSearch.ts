@@ -18,7 +18,7 @@ const useStaffSearch = () => {
 
       const mapped = res.data.result.map((staff: any) => ({
         value: staff.id,
-        label: `${staff.fullName}`,
+        label: `${staff.fullName} (${staff.staffCode})`,
       }));
       setOptions(mapped);
     } catch (error) {

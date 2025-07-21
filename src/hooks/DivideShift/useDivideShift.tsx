@@ -60,7 +60,7 @@ export const useDivideShift = () => {
   const handleSubmitShift = async (
     formData: CreateDivideShiftRequest,
     selectedShift?: DivideShift | null
-  ) => {
+  ): Promise<boolean> => {
     try {
       if (selectedShift) {
         await axiosInstance.put(`/shifts/${selectedShift.id}`, formData);
@@ -69,10 +69,12 @@ export const useDivideShift = () => {
         await axiosInstance.post("/shifts", formData);
         toast.success("Tạo mới thành công");
       }
-      fetchAllShifts();
+      await fetchAllShifts();
+      return true;
     } catch (err) {
       console.error("Error submitting shift:", err);
       toast.error("Lỗi khi lưu ca làm");
+      return false;
     }
   };
 

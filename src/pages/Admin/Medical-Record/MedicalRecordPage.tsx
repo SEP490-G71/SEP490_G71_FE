@@ -107,6 +107,7 @@ export const MedicalRecordPage = () => {
       fromDate: null,
       toDate: null,
     });
+    searchPatients("");
     setPage(1);
   };
 
@@ -204,7 +205,7 @@ export const MedicalRecordPage = () => {
               onChange={(value) =>
                 setFilterInput({ ...filterInput, patientId: value || "" })
               }
-              value={filterInput.patientId}
+              value={filterInput.patientId || null}
               clearable
             />
           </FloatingLabelWrapper>

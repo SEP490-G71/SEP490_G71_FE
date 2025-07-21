@@ -21,7 +21,6 @@ export const usePatientForm = () =>
     },
     validate: {
       firstName: validateText("Tên"),
-      middleName: validateText("Tên đệm"),
       lastName: validateText("Họ"),
       dob: (value) => {
         if (!value) return "Ngày sinh là bắt buộc";
