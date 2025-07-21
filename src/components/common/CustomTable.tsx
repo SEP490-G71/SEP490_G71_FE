@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { Column } from "../../types/table";
 import { Modal, Button, Loader } from "@mantine/core";
+import { useSettingAdminService } from "../../hooks/setting/useSettingAdminService";
 
 interface CustomTableProps<T> {
   data?: T[];
@@ -38,7 +39,7 @@ function CustomTable<T>({
   page,
   pageSize,
   totalItems,
-  pageSizeOptions = [5, 10, 20, 50],
+  pageSizeOptions,
   onPageChange,
   onPageSizeChange,
   onSortChange,
@@ -56,6 +57,10 @@ function CustomTable<T>({
     () => Math.ceil(totalItems / pageSize),
     [totalItems, pageSize]
   );
+  const { setting } = useSettingAdminService();
+
+  const resolvedPageSizeOptions = pageSizeOptions ??
+    setting?.paginationSizeList ?? [5, 10, 20, 50];
 
   const handleSort = (key: keyof T) => {
     if (!onSortChange) return;
@@ -193,7 +198,7 @@ function CustomTable<T>({
               }}
               className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"
             >
-              {pageSizeOptions.map((size) => (
+              {resolvedPageSizeOptions.map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>

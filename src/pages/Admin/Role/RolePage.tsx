@@ -177,9 +177,6 @@ const RolePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreateEditModal

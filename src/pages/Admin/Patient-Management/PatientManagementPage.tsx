@@ -151,8 +151,8 @@ export const PatientManagementPage = () => {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Quản lý bệnh nhân</h1>
-        <Button onClick={handleAdd}>Tạo bệnh nhân</Button>
+        <h1 className="text-xl font-bold">Bệnh nhân</h1>
+        <Button onClick={handleAdd}>Tạo</Button>
       </div>
 
       <div className="grid grid-cols-12 gap-4 my-4">
@@ -216,9 +216,6 @@ export const PatientManagementPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          ?.slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreatePatientModal

@@ -224,12 +224,14 @@ const InvoicePage = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 my-6">
         <h1 className="text-xl font-bold">Hóa đơn</h1>
-        <button
+        <Button
+          leftSection={<LuDownload size={16} />}
           onClick={handleExport}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+          variant="filled"
+          color="blue"
         >
           Xuất Excel
-        </button>
+        </Button>
       </div>
 
       <EcommerceMetrics stats={stats} />
@@ -343,9 +345,6 @@ const InvoicePage = () => {
         }}
         loading={loadingList}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList
-          ?.slice()
-          .sort((a, b) => a - b)}
       />
     </>
   );

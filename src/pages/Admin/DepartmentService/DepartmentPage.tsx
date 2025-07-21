@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Select } from "@mantine/core";
+import { Button, Select, TextInput } from "@mantine/core";
 import { toast } from "react-toastify";
 import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
@@ -130,17 +130,14 @@ const DepartmentPage = () => {
         description="Trang quản lý phòng ban trong hệ thống"
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2  mb-4">
         <h1 className="text-xl font-bold">Phòng ban</h1>
-        <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-        >
-          + Thêm phòng ban
-        </button>
+        <Button color="blue" onClick={handleAdd}>
+          Tạo
+        </Button>
       </div>
 
-      <div className="my-4 grid grid-cols-12 gap-4 items-end">
+      <div className="grid grid-cols-12 gap-4 mb-4">
         {/* 3 ô input: chiếm 10 cột => mỗi cái ~ col-span-4 */}
         <div className="col-span-4">
           <FloatingLabelWrapper label="Chọn loại phòng">
@@ -168,10 +165,9 @@ const DepartmentPage = () => {
 
         <div className="col-span-3">
           <FloatingLabelWrapper label="Tìm theo tên">
-            <input
+            <TextInput
               type="text"
               placeholder="Nhập tên"
-              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
@@ -180,10 +176,9 @@ const DepartmentPage = () => {
 
         <div className="col-span-3">
           <FloatingLabelWrapper label="Tìm theo số phòng">
-            <input
+            <TextInput
               type="text"
               placeholder="Nhập số phòng"
-              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputRoom}
               onChange={(e) => setInputRoom(e.target.value)}
             />
@@ -191,7 +186,7 @@ const DepartmentPage = () => {
         </div>
 
         {/* Nút: chiếm 2 cột */}
-        <div className="col-span-2 flex gap-2 justify-end">
+        <div className="col-span-2  gap-2 flex items-end">
           <Button
             variant="light"
             color="gray"
@@ -227,9 +222,6 @@ const DepartmentPage = () => {
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          ?.slice()
-          ?.sort((a, b) => a - b)}
       />
 
       <CreateEditDepartmentModal

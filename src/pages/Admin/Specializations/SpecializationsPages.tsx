@@ -102,14 +102,14 @@ export const SpecializationsPages = () => {
   };
 
   const columns = [
-    createColumn<Specialization>({ key: "name", label: "Tên chuyên ngành" }),
+    createColumn<Specialization>({ key: "name", label: "Tên chuyên khoa" }),
     createColumn<Specialization>({ key: "description", label: "Mô tả" }),
   ];
 
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <h1 className="text-xl font-bold">Quản lý chuyên ngành</h1>
+        <h1 className="text-xl font-bold">Chuyên khoa</h1>
         <Button color="blue" onClick={handleAdd}>
           Tạo
         </Button>
@@ -117,11 +117,11 @@ export const SpecializationsPages = () => {
 
       <div className="grid grid-cols-12 gap-4 mb-4">
         <div className="col-span-12 md:col-span-10">
-          <FloatingLabelWrapper label="Tên chuyên ngành">
+          <FloatingLabelWrapper label="Tên chuyên khoa">
             <TextInput
               value={searchInput}
               onChange={(e) => setSearchInput(e.currentTarget.value)}
-              placeholder="Nhập tên chuyên ngành"
+              placeholder="Nhập tên chuyên khoa"
             />
           </FloatingLabelWrapper>
         </div>
@@ -157,9 +157,6 @@ export const SpecializationsPages = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          ?.slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreateEditModalSpecializations

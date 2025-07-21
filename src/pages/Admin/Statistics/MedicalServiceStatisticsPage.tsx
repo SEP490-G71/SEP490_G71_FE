@@ -151,7 +151,6 @@ const MedicalServiceStatisticsPage = () => {
         }}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </>
   );

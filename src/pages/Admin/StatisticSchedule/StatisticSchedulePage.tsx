@@ -8,8 +8,9 @@ import { Button, Select, TextInput } from "@mantine/core";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
 import { LuDownload } from "react-icons/lu";
-import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
 interface SearchFilters {
   fromDate: Date | null;
@@ -22,11 +23,13 @@ interface AppliedFilters {
   fromDate?: string;
   toDate?: string;
   staffId?: string;
+  staffCodeSearch?: string;
 }
 
 export const StatisticSchedulePage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { setting } = useSettingAdminService();
 
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     fromDate: null,
@@ -37,7 +40,6 @@ export const StatisticSchedulePage = () => {
 
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
 
-  const { setting } = useSettingAdminService();
   const { options: staffOptions, searchStaffs } = useStaffSearch();
   const {
     statistics,
@@ -55,12 +57,18 @@ export const StatisticSchedulePage = () => {
     });
   }, [page, pageSize, appliedFilters]);
 
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]);
+    }
+  }, [setting]);
+
   const filteredStatistics = statistics.filter(
     (item) =>
-      !searchFilters.staffCodeSearch ||
+      !appliedFilters.staffCodeSearch ||
       item.staffCode
         .toLowerCase()
-        .includes(searchFilters.staffCodeSearch.toLowerCase())
+        .includes(appliedFilters.staffCodeSearch.toLowerCase())
   );
 
   const paginatedData = filteredStatistics.slice(
@@ -87,6 +95,7 @@ export const StatisticSchedulePage = () => {
         ? dayjs(searchFilters.toDate).format("YYYY-MM-DD")
         : undefined,
       staffId: searchFilters.staffId || undefined,
+      staffCodeSearch: searchFilters.staffCodeSearch || undefined,
     });
     setPage(1);
   };
@@ -130,7 +139,7 @@ export const StatisticSchedulePage = () => {
   return (
     <>
       <div className="flex justify-between items-center mb-2">
-        <h1 className="text-xl font-bold">Thống kê lịch làm việc</h1>
+        <h1 className="text-xl font-bold">Hiệu suất làm việc</h1>
         <Button
           leftSection={<LuDownload size={16} />}
           onClick={handleExport}
@@ -272,9 +281,6 @@ export const StatisticSchedulePage = () => {
         }}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
     </>
   );

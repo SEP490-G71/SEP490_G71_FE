@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Select } from "@mantine/core";
+import { Button, Select, TextInput } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { toast } from "react-toastify";
@@ -216,12 +216,9 @@ const StaffsPage = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Nhân viên</h1>
-        <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-        >
-          + Thêm nhân viên
-        </button>
+        <Button color="blue" onClick={handleAdd}>
+          Tạo
+        </Button>
       </div>
 
       <div className="my-4 flex flex-col sm:flex-row sm:items-end sm:gap-4">
@@ -245,30 +242,27 @@ const StaffsPage = () => {
           </FloatingLabelWrapper>
 
           <FloatingLabelWrapper label="Tìm theo tên">
-            <input
+            <TextInput
               type="text"
               placeholder="Nhập tên"
-              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
           </FloatingLabelWrapper>
 
           <FloatingLabelWrapper label="Tìm theo mã NV">
-            <input
+            <TextInput
               type="text"
               placeholder="Nhập mã nhân viên"
-              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputStaffCode}
               onChange={(e) => setInputStaffCode(e.target.value)}
             />
           </FloatingLabelWrapper>
 
           <FloatingLabelWrapper label="Tìm theo SDT">
-            <input
+            <TextInput
               type="text"
               placeholder="Nhập SDT"
-              className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputPhone}
               onChange={(e) => setInputPhone(e.target.value)}
             />
@@ -311,9 +305,6 @@ const StaffsPage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          ?.slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreateEditStaffModal

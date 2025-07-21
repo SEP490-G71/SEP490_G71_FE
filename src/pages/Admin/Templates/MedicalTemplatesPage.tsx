@@ -11,6 +11,7 @@ import CreateEditTemplateModal, {
 import { TemplateFileType } from "../../../enums/Admin/TemplateFileType";
 import { toast } from "react-toastify";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { Button } from "@mantine/core";
 
 const MedicalTemplatesPage = () => {
   const {
@@ -30,6 +31,11 @@ const MedicalTemplatesPage = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [modalOpened, setModalOpened] = useState(false);
   const { setting } = useSettingAdminService();
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]);
+    }
+  }, [setting]);
   const paginatedTemplates = medicalTemplates.slice(
     (page - 1) * pageSize,
     page * pageSize
@@ -129,13 +135,8 @@ const MedicalTemplatesPage = () => {
         description="Trang quản lý mẫu y tế trong hệ thống"
       />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <h1 className="text-xl font-bold">Mẫu y tế</h1>
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-          onClick={() => setModalOpened(true)}
-        >
-          + Thêm mẫu y tế
-        </button>
+        <h1 className="text-xl font-bold">Mẫu in bệnh án</h1>
+        <Button onClick={() => setModalOpened(true)}>Tạo</Button>
       </div>
 
       <CustomTable
@@ -158,9 +159,6 @@ const MedicalTemplatesPage = () => {
         sortDirection={sortDirection}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
 
       <div className="mt-4 p-4 rounded bg-green-100 text-green-700 text-sm flex items-start gap-2">

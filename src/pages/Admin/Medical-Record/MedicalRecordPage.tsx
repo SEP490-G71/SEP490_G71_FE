@@ -297,9 +297,6 @@ export const MedicalRecordPage = () => {
         onSortChange={(_, dir) => setSortDir(dir)}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
     </div>
   );
