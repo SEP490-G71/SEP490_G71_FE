@@ -4,7 +4,7 @@ import { StaffsResponse } from "../../types/Admin/Staffs/StaffsTypeResponse";
 
 export interface StaffOption {
   label: string;
-  value: string; // staffId
+  value: string; 
 }
 
 export const useSearchStaffs = (searchTerm: string) => {

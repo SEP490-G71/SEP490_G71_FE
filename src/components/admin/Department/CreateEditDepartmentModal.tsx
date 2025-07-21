@@ -9,9 +9,9 @@ import { toast } from "react-toastify";
 import AssignStaffModal from "../Department-Staffs/AssignStaffModal";
 import useRemoveStaffFromDepartment from "../../../hooks/department-Staffs/useRemoveStaffFromDepartment";
 import {
-  validateName,
   validateRoomNumber,
   validateDescription,
+  validateNameForDepartmen,
 } from "../../utils/validation";
 import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
 import StaffListTable from "./StaffListTable";
@@ -24,7 +24,7 @@ interface CreateEditDepartmentModalProps {
   onClose: () => void;
   initialData?: DepartmentResponse | null;
   isViewMode?: boolean;
-  onSubmit?: () => void; // ✅ Dùng để reload danh sách từ bên ngoài
+  onSubmit?: () => void;
 }
 
 const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
@@ -56,18 +56,19 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       name: "",
       description: "",
       roomNumber: "",
-      type: "" as DepartmentType,
+      type: undefined as unknown as DepartmentType,
       specializationId: "",
     },
+    validateInputOnChange: true, // ✅ BẮT BUỘC
+    validateInputOnBlur: true, // ✅ BẮT BUỘC
     validate: {
-      name: (value) => validateName(value ?? ""),
+      name: (value) => validateNameForDepartmen(value ?? ""),
       description: (value) => validateDescription(value ?? ""),
       roomNumber: (value) => validateRoomNumber(value ?? ""),
       type: (value) => (!value ? "Loại phòng không được để trống" : null),
       specializationId: () => null,
     },
   });
-
   useEffect(() => {
     const fetchAndSet = async () => {
       try {
@@ -88,7 +89,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             name: "",
             description: "",
             roomNumber: "",
-            type: "" as DepartmentType,
+            type: "" as any,
             specializationId: "",
           });
         }
@@ -102,7 +103,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     if (opened) {
       fetchAndSet();
     }
-  }, [opened]);
+  }, [opened, initialData]);
 
   const handleRemoveStaff = (staffId: string) => {
     setStaffToRemove(staffId);
@@ -133,8 +134,9 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validation = await form.validate();
-    if (validation.hasErrors) {
+    const { hasErrors } = form.validate();
+
+    if (hasErrors) {
       toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
       return;
     }
@@ -152,9 +154,39 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         if (onSubmit) await onSubmit();
         handleModalClose();
       }
-    } catch (error) {
-      console.error("Lỗi khi lưu phòng ban:", error);
-      toast.error("Lỗi khi lưu phòng ban");
+    } catch (err: any) {
+      const resultErrors = err?.response?.data?.result;
+      const message = err?.response?.data?.message?.toLowerCase?.() ?? "";
+      //const code = err?.response?.data?.code;
+
+      const messageMap: Record<string, string> = {
+        name: "Tên phòng ban không hợp lệ",
+        description: "Mô tả không hợp lệ",
+        roomNumber: "Số phòng không hợp lệ",
+        type: "Loại phòng không hợp lệ",
+        specializationId: "Chuyên khoa không hợp lệ",
+      };
+
+      if (Array.isArray(resultErrors)) {
+        resultErrors.forEach((e: { field: string; message: string }) => {
+          const field = e.field as keyof DepartmentRequest;
+          const translated = messageMap[field] || e.message;
+          form.setFieldError(field, translated);
+        });
+        return;
+      }
+
+      if (message.includes("room number already exists")) {
+        // ✅ Cách 1 (chắc chắn nhất)
+        form.setErrors({ roomNumber: "Số phòng này đã tồn tại" });
+        form.setFieldValue("roomNumber", form.values.roomNumber + " ");
+        setTimeout(() => {
+          form.setFieldValue("roomNumber", form.values.roomNumber.trim());
+        }, 50);
+        return;
+      }
+      toast.error("❗ " + (message || "Đã xảy ra lỗi không xác định"));
+      console.error("Submit error in modal", err);
     }
   };
 

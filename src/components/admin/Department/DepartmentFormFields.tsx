@@ -1,6 +1,9 @@
 import { Select, TextInput } from "@mantine/core";
 import { DepartmentRequest } from "../../../types/Admin/Department/DepartmentTypeRequest";
-import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
+import {
+  DepartmentType,
+  DepartmentTypeLabel,
+} from "../../../enums/Admin/DepartmentEnums";
 import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 
@@ -24,42 +27,41 @@ export const DepartmentFormFields = ({
       <TextInput
         label="Tên phòng ban"
         placeholder="Nhập tên phòng ban"
-        {...form.getInputProps("name")}
-        mt="sm"
         required
+        mt="sm"
         disabled={isViewMode}
+        {...form.getInputProps("name")}
       />
 
       <TextInput
         label="Mô tả"
         placeholder="Nhập mô tả"
-        {...form.getInputProps("description")}
         mt="sm"
         disabled={isViewMode}
+        {...form.getInputProps("description")}
       />
 
       <TextInput
         label="Số phòng"
         placeholder="Nhập số phòng"
-        {...form.getInputProps("roomNumber")}
         required
         mt="sm"
         disabled={isViewMode}
+        error={form.errors.roomNumber}
+        {...form.getInputProps("roomNumber")}
       />
 
       <Select
+        key={`select-type-${form.values.type ?? "new"}`}
         label="Loại phòng ban"
         placeholder="Chọn loại phòng ban"
-        data={Object.entries(DepartmentType).map(([key, value]) => ({
-          value: key, // Lưu key vào DB: "CONSULTATION", "LABORATORY", ...
-          label: value, // Hiển thị tiếng Việt
+        data={Object.values(DepartmentType).map((key) => ({
+          value: key,
+          label: DepartmentTypeLabel[key],
         }))}
-        value={form.values.type || ""}
+        value={form.values.type ?? ""}
         onChange={(val) => {
           form.setFieldValue("type", (val || "") as DepartmentType);
-          if (val !== "CONSULTATION") {
-            form.setFieldValue("specializationId", "");
-          }
         }}
         error={form.errors.type}
         mt="sm"

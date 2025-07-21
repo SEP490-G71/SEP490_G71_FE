@@ -4,24 +4,30 @@ import { toast } from "react-toastify";
 import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
-import axiosInstance from "../../../services/axiosInstance";
-import { DepartmentType } from "../../../enums/Admin/DepartmentEnums";
+import { DepartmentTypeLabel } from "../../../enums/Admin/DepartmentEnums";
 import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
 import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 
-function getEnumLabel<T extends Record<string, string>>(
-  enumObj: T,
+function getEnumLabel(
+  enumLabelMap: Record<string, string>,
   key: string
 ): string {
-  return enumObj[key as keyof T] ?? key;
+  return enumLabelMap[key] ?? key;
 }
 
 const DepartmentPage = () => {
-  const [departments, setDepartments] = useState<DepartmentResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [totalItems, setTotalItems] = useState(0);
+  const {
+    departments,
+    totalItems,
+    loading,
+    fetchDepartments,
+    fetchDepartmentById,
+    handleDeleteDepartmentById,
+  } = useDepartmentService();
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -29,33 +35,15 @@ const DepartmentPage = () => {
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentResponse | null>(null);
   const [_, setEditingId] = useState<string | null>(null);
+
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
-  const [filterType, setFilterType] = useState("");
   const [inputRoom, setInputRoom] = useState("");
   const [filterRoom, setFilterRoom] = useState("");
-  const { setting } = useSettingAdminService();
-  const fetchDepartments = async () => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get("/departments", {
-        params: {
-          page: page - 1,
-          size: pageSize,
+  const [inputType, setInputType] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState("");
 
-          name: filterName || undefined,
-          type: filterType || undefined,
-          roomNumber: filterRoom || undefined,
-        },
-      });
-      setDepartments(res.data.result?.content || []);
-      setTotalItems(res.data.result?.totalElements || 0);
-    } catch (error) {
-      toast.error("Failed to load departments");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { setting } = useSettingAdminService();
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
@@ -64,7 +52,13 @@ const DepartmentPage = () => {
   }, [setting]);
 
   useEffect(() => {
-    fetchDepartments();
+    fetchDepartments({
+      page: page - 1,
+      size: pageSize,
+      name: filterName || undefined,
+      type: filterType || undefined,
+      roomNumber: filterRoom || undefined,
+    });
   }, [page, pageSize, filterName, filterType, filterRoom]);
 
   const handleAdd = () => {
@@ -74,37 +68,53 @@ const DepartmentPage = () => {
   };
 
   const handleEdit = async (row: DepartmentResponse) => {
-    try {
-      const res = await axiosInstance.get(`/departments/${row.id}`);
-      setSelectedDepartment(res.data.result);
+    const res = await fetchDepartmentById(row.id);
+    if (res) {
+      setSelectedDepartment(res);
       setEditingId(row.id);
       setModalOpened(true);
-    } catch {
+    } else {
       toast.error("Lỗi khi lấy thông tin phòng ban");
     }
   };
 
   const handleDelete = async (row: DepartmentResponse) => {
-    try {
-      await axiosInstance.delete(`/departments/${row.id}`);
-      toast.success("Xoá phòng ban thành công");
-      fetchDepartments();
-    } catch {
-      toast.error("Xoá phòng ban thất bại");
-    }
+    await handleDeleteDepartmentById(row.id);
+    fetchDepartments({
+      page: page - 1,
+      size: pageSize,
+      name: filterName || undefined,
+      type: filterType || undefined,
+      roomNumber: filterRoom || undefined,
+    });
+  };
+
+  const handleSearch = () => {
+    setPage(1);
+    setFilterName(inputName.trim());
+    setFilterRoom(inputRoom.trim());
+    setFilterType(inputType || "");
+  };
+
+  const handleReset = () => {
+    setInputName("");
+    setFilterName("");
+    setInputRoom("");
+    setFilterRoom("");
+    setInputType(null);
+    setFilterType("");
+    setPage(1);
+    fetchDepartments({ page: 0, size: pageSize });
   };
 
   const columns = [
-    createColumn<DepartmentResponse>({
-      key: "name",
-      label: "Tên phòng ban",
-    }),
+    createColumn<DepartmentResponse>({ key: "name", label: "Tên phòng ban" }),
     createColumn<DepartmentResponse>({ key: "description", label: "Mô tả" }),
     createColumn<DepartmentResponse>({ key: "roomNumber", label: "Số phòng" }),
     createColumn<DepartmentResponse>({
       key: "type",
       label: "Loại phòng",
-      render: (row) => getEnumLabel(DepartmentType, row.type),
+      render: (row) => getEnumLabel(DepartmentTypeLabel, row.type),
     }),
     createColumn<DepartmentResponse>({
       key: "Specialization",
@@ -130,25 +140,25 @@ const DepartmentPage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 my-4 items-end">
-        {/* Chọn loại phòng */}
-        <div className="sm:col-span-3">
+      <div className="my-4 grid grid-cols-12 gap-4 items-end">
+        {/* 3 ô input: chiếm 10 cột => mỗi cái ~ col-span-4 */}
+        <div className="col-span-4">
           <FloatingLabelWrapper label="Chọn loại phòng">
             <Select
+              key={inputType || "empty"}
               placeholder="Chọn loại phòng"
               className="w-full"
               styles={{ input: { height: 35 } }}
-              value={filterType}
-              onChange={(val) => {
-                setPage(1);
-                setFilterType(val || "");
-              }}
+              value={inputType}
+              onChange={setInputType}
               data={[
                 { value: "", label: "Tất cả" },
-                ...Object.entries(DepartmentType).map(([value, label]) => ({
-                  value,
-                  label,
-                })),
+                ...Object.entries(DepartmentTypeLabel).map(
+                  ([value, label]) => ({
+                    value,
+                    label,
+                  })
+                ),
               ]}
               clearable
               searchable
@@ -156,12 +166,11 @@ const DepartmentPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Tìm theo tên */}
-        <div className="sm:col-span-3">
+        <div className="col-span-3">
           <FloatingLabelWrapper label="Tìm theo tên">
             <input
               type="text"
-              placeholder="Tìm theo tên"
+              placeholder="Nhập tên"
               className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
@@ -169,12 +178,11 @@ const DepartmentPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Tìm theo số phòng */}
-        <div className="sm:col-span-3">
+        <div className="col-span-3">
           <FloatingLabelWrapper label="Tìm theo số phòng">
             <input
               type="text"
-              placeholder="Tìm theo số phòng"
+              placeholder="Nhập số phòng"
               className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputRoom}
               onChange={(e) => setInputRoom(e.target.value)}
@@ -182,25 +190,13 @@ const DepartmentPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Nút tìm và tải lại */}
-        <div className="sm:col-span-3 flex justify-end gap-2">
+        {/* Nút: chiếm 2 cột */}
+        <div className="col-span-2 flex gap-2 justify-end">
           <Button
             variant="light"
             color="gray"
-            onClick={() => {
-              setInputName("");
-              setFilterName("");
-              setInputRoom("");
-              setFilterRoom("");
-              setFilterType("");
-
-              setPage(1);
-            }}
-            style={{
-              height: 35,
-              lineHeight: "20px",
-              padding: "0 12px",
-            }}
+            onClick={handleReset}
+            style={{ height: 35 }}
             fullWidth
           >
             Tải lại
@@ -208,18 +204,8 @@ const DepartmentPage = () => {
           <Button
             variant="filled"
             color="blue"
-            onClick={() => {
-              const normalizeText = (text: string) =>
-                text.trim().replace(/\s+/g, " ");
-              setPage(1);
-              setFilterName(normalizeText(inputName));
-              setFilterRoom(normalizeText(inputRoom));
-            }}
-            style={{
-              height: 35,
-              lineHeight: "40px",
-              padding: "0 12px",
-            }}
+            onClick={handleSearch}
+            style={{ height: 35 }}
             fullWidth
           >
             Tìm kiếm
@@ -242,18 +228,27 @@ const DepartmentPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
+          ?.slice()
+          ?.sort((a, b) => a - b)}
       />
 
       <CreateEditDepartmentModal
         opened={modalOpened}
         onClose={() => {
           setModalOpened(false);
+          setSelectedDepartment(null);
           setEditingId(null);
         }}
         initialData={selectedDepartment}
-        onSubmit={() => fetchDepartments()}
+        onSubmit={() =>
+          fetchDepartments({
+            page: page - 1,
+            size: pageSize,
+            name: filterName || undefined,
+            type: filterType || undefined,
+            roomNumber: filterRoom || undefined,
+          })
+        }
       />
     </>
   );

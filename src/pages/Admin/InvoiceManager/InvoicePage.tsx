@@ -39,7 +39,6 @@ const InvoicePage = () => {
   const { invoices, loadingList, pagination, fetchInvoices } =
     useFilteredInvoices();
 
-  // Tách logic fetch thành useCallback để tránh re-render không cần thiết
   const fetchInvoicesWithFilters = useCallback(
     (
       status: string,
@@ -67,19 +66,17 @@ const InvoicePage = () => {
   );
 
   const handleSearch = useCallback(() => {
-    // Cập nhật filterCode trước, sau đó fetch với giá trị mới
     const newFilterCode = inputCode.trim();
     setFilterCode(newFilterCode);
-    setPage(1); // Reset về trang đầu
+    setPage(1);
 
-    // Fetch ngay lập tức với các giá trị hiện tại
     fetchInvoicesWithFilters(
       filterStatus,
       filterPatient,
-      newFilterCode, // Sử dụng giá trị mới
+      newFilterCode,
       filterFromDate,
       filterToDate,
-      0, // page 0 vì đã reset về trang 1
+      0,
       pageSize
     );
   }, [
@@ -93,7 +90,6 @@ const InvoicePage = () => {
   ]);
 
   const handleReset = useCallback(() => {
-    // Reset tất cả state
     setFilterStatus("");
     setInputCode("");
     setFilterCode("");
@@ -103,7 +99,6 @@ const InvoicePage = () => {
     setFilterToDate(null);
     setPage(1);
 
-    // Fetch với tất cả filter rỗng
     fetchInvoicesWithFilters("", "", "", null, null, 0, pageSize);
   }, [pageSize, fetchInvoicesWithFilters]);
 
@@ -134,14 +129,13 @@ const InvoicePage = () => {
     }
   }, [setting]);
 
-  // Effect để fetch khi page hoặc pageSize thay đổi
   useEffect(() => {
     applyCurrentFilters();
-  }, [page, pageSize]); // Loại bỏ applyCurrentFilters khỏi dependencies để tránh loop
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchInvoiceStats();
-  }, [fetchInvoiceStats]);
+  }, []);
 
   const handleExport = () => {
     exportInvoicesExcel({
@@ -276,10 +270,9 @@ const InvoicePage = () => {
             placeholder="Nhập tên bệnh nhân"
             searchable
             data={patientOptions}
-            value={filterPatient}
             onSearchChange={setInputPatient}
             onChange={(val) => setFilterPatient(val || "")}
-            className="w-full"
+            value={filterPatient || null}
             clearable
             styles={{ input: { height: 35, zIndex: 1 } }}
           />

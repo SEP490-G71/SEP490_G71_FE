@@ -40,7 +40,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       phone: "",
       email: "",
       gender: Gender.OTHER,
-      dob: "",
+      dob: "null",
       roleNames: [],
     },
     validate: {
@@ -49,6 +49,11 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       phone: (value) => validatePhone(value ?? ""),
       email: (value) => validateEmail(value ?? ""),
       dob: (value) => validateDob(value ?? ""),
+      roleNames: (value) =>
+        !value || value.length === 0 ? "Vui lòng chọn vai trò" : null,
+      gender: (value) => {
+        return value in Gender ? null : "Vui lòng chọn giới tính";
+      },
     },
   });
 
@@ -68,7 +73,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         <div>
           <h2 className="text-xl font-bold">
             {isViewMode
-              ? "Xem Permission"
+              ? "Xem nhân viên"
               : initialData
               ? "Cập nhật nhân viên"
               : "Tạo nhân viên mới"}
@@ -101,12 +106,14 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         onSubmit={async (e) => {
           e.preventDefault();
           const { hasErrors } = form.validate();
+
           if (!hasErrors) {
             try {
-              await onSubmit(form.values); // nếu lỗi, throw ở đây
-              onClose(); // chỉ gọi nếu không lỗi
+              await onSubmit(form.values);
+              onClose();
             } catch (err: any) {
               const resultErrors = err?.response?.data?.result;
+              const message = err?.response?.data?.message;
 
               const messageMap: Record<string, string> = {
                 email: "Email đã tồn tại",
@@ -123,6 +130,17 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
                     form.setFieldError(field, translated);
                   }
                 );
+              } else if (typeof message === "string") {
+                if (message.includes("Email")) {
+                  form.setFieldError("email", messageMap.email);
+                } else if (
+                  message.includes("phone") ||
+                  message.includes("Phone")
+                ) {
+                  form.setFieldError("phone", messageMap.phone);
+                } else {
+                  toast.error("❗ " + message);
+                }
               } else {
                 toast.error("❗ Đã xảy ra lỗi không xác định");
                 console.error("Submit error in modal", err);
@@ -203,6 +221,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           placeholder="Chọn ngày sinh"
           valueFormat="DD/MM/YYYY"
           locale="vi"
+          maxDate={new Date()}
           {...form.getInputProps("dob")}
           required
           mt="sm"

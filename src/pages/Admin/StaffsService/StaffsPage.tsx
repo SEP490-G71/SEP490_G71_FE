@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button, Select } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
-import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
 import { StaffsResponse } from "../../../types/Admin/Staffs/StaffsTypeResponse";
 import { StaffsRequest } from "../../../types/Admin/Staffs/StaffsTypeRequest";
@@ -13,6 +12,7 @@ import CreateEditStaffModal from "../../../components/admin/Staffs/CreateEditSta
 import { RoleLabels } from "../../../enums/Role/Role";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import useStaffs from "../../../hooks/staffs-service/useStaffs";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -22,48 +22,35 @@ function getEnumLabel<T extends Record<string, string>>(
 }
 
 const StaffsPage = () => {
-  const [staffs, setStaffs] = useState<StaffsResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [totalItems, setTotalItems] = useState(0);
+  const {
+    staffs,
+    totalItems,
+    loading,
+    fetchStaffList,
+    fetchStaffsById,
+    createStaffs,
+    updateStaffs,
+    deleteStaffs,
+  } = useStaffs();
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [filterRoles, setFilterRoles] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [inputRole, setInputRole] = useState<string | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffsRequest | null>(
     null
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
+  const [inputPhone, setInputPhone] = useState("");
+  const [filterPhone, setFilterPhone] = useState("");
+  const [inputStaffCode, setInputStaffCode] = useState("");
+  const [filterStaffCode, setFilterStaffCode] = useState("");
+
   const { setting } = useSettingAdminService();
-  const fetchStaffs = async () => {
-    setLoading(true);
-    try {
-      const params = {
-        page: page - 1,
-        size: pageSize,
-
-        name: filterName || undefined,
-        role: filterRoles.length > 0 ? filterRoles[0] : undefined,
-      };
-
-      const res = await axiosInstance.get(`/staffs`, { params });
-      const content = res.data.result?.content || [];
-      const total = res.data.result?.totalElements || 0;
-
-      setStaffs(content);
-      setTotalItems(total);
-
-      if (content.length === 0) {
-        toast.info("Không có dữ liệu nhân viên");
-      }
-    } catch (error: any) {
-      toast.error("Không thể tải dữ liệu nhân viên.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
@@ -72,8 +59,15 @@ const StaffsPage = () => {
   }, [setting]);
 
   useEffect(() => {
-    fetchStaffs();
-  }, [page, pageSize, filterName, filterRoles]);
+    fetchStaffList({
+      page: page - 1,
+      size: pageSize,
+      name: filterName || undefined,
+      role: filterRoles.length > 0 ? filterRoles[0] : undefined,
+      phone: filterPhone || undefined,
+      staffCode: filterStaffCode || undefined,
+    });
+  }, [page, pageSize, filterName, filterRoles, filterPhone]);
 
   const convertResponseToRequest = (res: StaffsResponse): StaffsRequest => ({
     firstName: res.firstName,
@@ -94,35 +88,37 @@ const StaffsPage = () => {
   };
 
   const handleView = async (row: StaffsResponse) => {
-    try {
-      const res = await axiosInstance.get(`/staffs/${row.id}`);
-      setSelectedStaff(convertResponseToRequest(res.data.result));
+    const res = await fetchStaffsById(row.id);
+    if (res) {
+      setSelectedStaff(convertResponseToRequest(res));
       setIsViewMode(true);
       setModalOpened(true);
-    } catch {
+    } else {
       toast.error("Không thể xem chi tiết nhân viên");
     }
   };
 
   const handleEdit = async (row: StaffsResponse) => {
-    try {
-      const res = await axiosInstance.get(`/staffs/${row.id}`);
-      setSelectedStaff(convertResponseToRequest(res.data.result));
+    const res = await fetchStaffsById(row.id);
+    if (res) {
+      setSelectedStaff(convertResponseToRequest(res));
       setEditingId(row.id);
       setModalOpened(true);
-    } catch {
+    } else {
       toast.error("Không thể tải dữ liệu nhân viên");
     }
   };
 
   const handleDelete = async (row: StaffsResponse) => {
-    try {
-      await axiosInstance.delete(`/staffs/${row.id}`);
-      toast.success("Xoá thành công");
-      fetchStaffs();
-    } catch {
-      toast.error("Xoá thất bại");
-    }
+    await deleteStaffs(row.id);
+    fetchStaffList({
+      page: page - 1,
+      size: pageSize,
+      name: filterName || undefined,
+      role: filterRoles.length > 0 ? filterRoles[0] : undefined,
+      phone: filterPhone || undefined,
+      staffCode: filterStaffCode || undefined,
+    });
   };
 
   const handleSubmit = async (data: StaffsRequest) => {
@@ -137,48 +133,59 @@ const StaffsPage = () => {
     };
 
     if (editingId) {
-      await axiosInstance.put(`/staffs/${editingId}`, normalizedData);
+      await updateStaffs(editingId, normalizedData);
       toast.success("Cập nhật thành công");
     } else {
-      await axiosInstance.post(`/staffs`, normalizedData);
+      await createStaffs(normalizedData);
       toast.success("Tạo nhân viên thành công");
     }
-
-    fetchStaffs();
+    fetchStaffList({
+      page: page - 1,
+      size: pageSize,
+      name: filterName || undefined,
+      role: filterRoles.length > 0 ? filterRoles[0] : undefined,
+      phone: filterPhone || undefined,
+      staffCode: filterStaffCode || undefined,
+    });
     setModalOpened(false);
     setEditingId(null);
   };
+
   const handleSearch = () => {
     setPage(1);
     setFilterName(inputName.trim());
+    setFilterPhone(inputPhone.trim());
+    setFilterRoles(inputRole ? [inputRole] : []);
+    setFilterStaffCode(inputStaffCode.trim());
   };
-
-  useEffect(() => {
-    fetchStaffs();
-  }, [page, pageSize, filterName, filterRoles]);
 
   const handleReset = () => {
     setInputName("");
     setFilterName("");
     setFilterRoles([]);
+    setInputPhone("");
+    setFilterPhone("");
+    setInputRole(null);
+    setFilterRoles([]);
     setPage(1);
-
-    fetchStaffs();
+    fetchStaffList({ page: 0, size: pageSize });
   };
 
   const columns = [
-    createColumn<StaffsResponse>({
-      key: "fullName",
-      label: "Họ và tên",
-      render: (row) => row.fullName,
-    }),
-    createColumn<StaffsResponse>({ key: "email", label: "Email" }),
+    createColumn<StaffsResponse>({ key: "staffCode", label: "Mã nhân viên" }),
+    createColumn<StaffsResponse>({ key: "fullName", label: "Họ và tên" }),
+    // createColumn<StaffsResponse>({ key: "email", label: "Email" }),
     createColumn<StaffsResponse>({ key: "phone", label: "SĐT" }),
     createColumn<StaffsResponse>({
       key: "roles",
       label: "Vai trò",
-      render: (row) =>
-        row.roles.map((role) => RoleLabels[role] || role).join(", "),
+      render: (row) => {
+        const fullRoles = row.roles.map((r) => RoleLabels[r] || r).join(", ");
+        const short =
+          fullRoles.length > 30 ? fullRoles.slice(0, 30) + "..." : fullRoles;
+
+        return <span title={fullRoles}>{short}</span>;
+      },
     }),
     createColumn<StaffsResponse>({
       key: "gender",
@@ -193,10 +200,10 @@ const StaffsPage = () => {
     createColumn<StaffsResponse>({
       key: "departmentInfo",
       label: "Phòng ban",
-      render: (row) => {
-        if (!row.department) return "Chưa được gán";
-        return `${row.department.roomNumber} - ${row.department.name}`;
-      },
+      render: (row) =>
+        row.department
+          ? `${row.department.roomNumber} - ${row.department.name}`
+          : "Chưa được gán",
     }),
   ];
 
@@ -206,6 +213,7 @@ const StaffsPage = () => {
         title="Quản lý nhân viên | Admin Dashboard"
         description="Trang quản lý nhân viên trong hệ thống"
       />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Nhân viên</h1>
         <button
@@ -216,19 +224,17 @@ const StaffsPage = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 my-4 items-end">
-        {/* Ô Chọn vai trò - chiếm 5/12 */}
-        <div className="sm:col-span-5">
+      <div className="my-4 flex flex-col sm:flex-row sm:items-end sm:gap-4">
+        {/* 4 ô input đều nhau */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-1">
           <FloatingLabelWrapper label="Chọn vai trò">
             <Select
-              key={filterRoles[0] || "empty"}
-              placeholder="Chọn vai trò"
+              key={inputRole || "empty"}
+              placeholder="Vai trò"
               className="w-full"
               styles={{ input: { height: 35 } }}
-              value={filterRoles.length > 0 ? filterRoles[0] : undefined}
-              onChange={(val) => {
-                setFilterRoles(val ? [val] : []);
-              }}
+              value={inputRole}
+              onChange={setInputRole}
               data={Object.entries(RoleLabels).map(([value, label]) => ({
                 value,
                 label,
@@ -237,31 +243,45 @@ const StaffsPage = () => {
               clearable
             />
           </FloatingLabelWrapper>
-        </div>
 
-        {/* Ô Tìm theo tên - cũng chiếm 5/12 */}
-        <div className="sm:col-span-5">
           <FloatingLabelWrapper label="Tìm theo tên">
             <input
               type="text"
-              placeholder="Tìm theo tên"
+              placeholder="Nhập tên"
               className="border rounded px-3 text-sm w-full h-[35px]"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
             />
           </FloatingLabelWrapper>
+
+          <FloatingLabelWrapper label="Tìm theo mã NV">
+            <input
+              type="text"
+              placeholder="Nhập mã nhân viên"
+              className="border rounded px-3 text-sm w-full h-[35px]"
+              value={inputStaffCode}
+              onChange={(e) => setInputStaffCode(e.target.value)}
+            />
+          </FloatingLabelWrapper>
+
+          <FloatingLabelWrapper label="Tìm theo SDT">
+            <input
+              type="text"
+              placeholder="Nhập SDT"
+              className="border rounded px-3 text-sm w-full h-[35px]"
+              value={inputPhone}
+              onChange={(e) => setInputPhone(e.target.value)}
+            />
+          </FloatingLabelWrapper>
         </div>
 
-        {/* 2 nút - chiếm 2/12 */}
-        <div className="sm:col-span-2 flex justify-end gap-2">
+        {/* Nút bên phải */}
+        <div className="flex gap-2 mt-4 sm:mt-0 sm:ml-4">
           <Button
             variant="light"
             color="gray"
             onClick={handleReset}
-            style={{
-              height: 35,
-            }}
-            fullWidth
+            style={{ height: 35 }}
           >
             Tải lại
           </Button>
@@ -269,10 +289,7 @@ const StaffsPage = () => {
             variant="filled"
             color="blue"
             onClick={handleSearch}
-            style={{
-              height: 35,
-            }}
-            fullWidth
+            style={{ height: 35 }}
           >
             Tìm kiếm
           </Button>
@@ -295,7 +312,7 @@ const StaffsPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         pageSizeOptions={setting?.paginationSizeList
-          .slice()
+          ?.slice()
           .sort((a, b) => a - b)}
       />
 
