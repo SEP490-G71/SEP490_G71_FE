@@ -89,21 +89,26 @@ export const useRegisterMedicalExamination = () => {
     isPriority?: boolean
   ) => {
     try {
-      await axiosInstance.post("/queue-patients", {
+      const payload: any = {
         patientId,
         registeredTime,
-        roomNumber,
         specializationId,
         isPriority,
-      });
+      };
+
+      if (roomNumber) {
+        payload.roomNumber = roomNumber;
+      }
+
+      await axiosInstance.post("/queue-patients", payload);
       toast.success("Đăng ký khám thành công");
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Lỗi đăng ký khám:", err);
-      toast.error("Đăng ký khám thất bại");
+      const message = err?.response?.data?.message || "Đăng ký khám thất bại";
+      toast.error(message);
     }
   };
-
   const fetchTodayRegisteredPatients = async (
     page = 0,
     size = 10,
@@ -138,7 +143,6 @@ export const useRegisterMedicalExamination = () => {
     try {
       const response = await axiosInstance.get("/departments/search", {
         params: {
-          type: "CONSULTATION", // loại khoa khám thông thường
           specializationId,
         },
       });

@@ -55,14 +55,15 @@ export default function RegisterMedicalExaminationPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
 
+  const today = dayjs().startOf("day").toDate();
   const [searchFilters, setSearchFilters] = useState({
     fullName: "",
     patientId: "",
     phone: "",
     patientCode: "",
     specialization: "",
-    registeredTimeFrom: null as Date | null,
-    registeredTimeTo: null as Date | null,
+    registeredTimeFrom: today,
+    registeredTimeTo: today,
     status: "",
   });
 
@@ -76,6 +77,22 @@ export default function RegisterMedicalExaminationPage() {
 
   useEffect(() => {
     fetchAllSpecializations();
+
+    // Gán filter mặc định là ngày hôm nay ngay khi load
+    const today = dayjs().startOf("day").toDate();
+    const defaultFilters = {
+      fullName: "",
+      patientId: "",
+      phone: "",
+      patientCode: "",
+      specialization: "",
+      registeredTimeFrom: today,
+      registeredTimeTo: today,
+      status: "",
+    };
+
+    setSearchFilters(defaultFilters);
+    setSubmittedFilters(defaultFilters);
   }, []);
 
   const {
@@ -178,11 +195,13 @@ export default function RegisterMedicalExaminationPage() {
         registeredTimeFrom: submittedFilters.registeredTimeFrom
           ? dayjs(submittedFilters.registeredTimeFrom)
               .startOf("day")
+              .subtract(1, "millisecond")
               .format("YYYY-MM-DDTHH:mm:ss")
           : undefined,
         registeredTimeTo: submittedFilters.registeredTimeTo
           ? dayjs(submittedFilters.registeredTimeTo)
-              .startOf("day")
+              .endOf("day")
+              .subtract(1, "millisecond")
               .format("YYYY-MM-DDTHH:mm:ss")
           : undefined,
         status: submittedFilters.status,
@@ -208,12 +227,19 @@ export default function RegisterMedicalExaminationPage() {
 
   const handleSave = async () => {
     if (!confirmedPatient) return;
+
     let isoSelected: string | null = null;
 
-    if (selectedDate) {
-      if (!isNaN(selectedDate.getTime())) {
-        isoSelected = dayjs(selectedDate).format("YYYY-MM-DD");
+    try {
+      const date =
+        selectedDate instanceof Date
+          ? selectedDate
+          : new Date(selectedDate ?? "");
+      if (!isNaN(date.getTime())) {
+        isoSelected = dayjs(date).format("YYYY-MM-DD");
       }
+    } catch (error) {
+      console.error("❌ Lỗi khi xử lý selectedDate:", error);
     }
 
     const isoDate =
@@ -222,20 +248,38 @@ export default function RegisterMedicalExaminationPage() {
         : confirmedPatient.ngayDangKy;
 
     const updatedPatient = { ...confirmedPatient, ngayDangKy: isoDate };
-
-    setPatientsToday((prev) =>
-      prev.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
-    );
     setConfirmedPatient(updatedPatient);
 
     await queuePatient(
       updatedPatient.id.toString(),
       `${isoDate}T00:00:00`,
       async () => {
+        const filters = {
+          patientId: submittedFilters.patientId,
+          fullName: submittedFilters.fullName,
+          phone: submittedFilters.phone,
+          patientCode: submittedFilters.patientCode,
+          specialization: submittedFilters.specialization,
+          registeredTimeFrom: submittedFilters.registeredTimeFrom
+            ? dayjs(submittedFilters.registeredTimeFrom)
+                .startOf("day")
+                .subtract(1, "millisecond")
+                .format("YYYY-MM-DDTHH:mm:ss")
+            : undefined,
+          registeredTimeTo: submittedFilters.registeredTimeTo
+            ? dayjs(submittedFilters.registeredTimeTo)
+                .endOf("day")
+                .format("YYYY-MM-DDTHH:mm:ss")
+            : undefined,
+          status: submittedFilters.status,
+        };
+
         const { content, totalElements } = await fetchTodayRegisteredPatients(
           page - 1,
-          pageSize
+          pageSize,
+          filters
         );
+
         const safePatients: Patient[] = content.map((p) => ({
           ...p,
           ngayDangKy: p.ngayDangKy ?? null,
@@ -244,8 +288,10 @@ export default function RegisterMedicalExaminationPage() {
         }));
         setPatientsToday(safePatients);
         setTotalTodayPatients(totalElements);
+        setConfirmedPatient(null);
+        setSelectedDate(null);
       },
-      updatedPatient.phongKham,
+      updatedPatient.phongKham || undefined,
       updatedPatient.specializationId,
       updatedPatient.isPriority
     );
@@ -288,23 +334,23 @@ export default function RegisterMedicalExaminationPage() {
   };
 
   useEffect(() => {
-    try {
-      if (
-        confirmedPatient?.ngayDangKy &&
-        !isNaN(Date.parse(confirmedPatient.ngayDangKy))
-      ) {
-        setSelectedDate(new Date(confirmedPatient.ngayDangKy));
-      } else {
-        setSelectedDate(new Date());
+    if (
+      confirmedPatient?.ngayDangKy &&
+      !isNaN(Date.parse(confirmedPatient.ngayDangKy))
+    ) {
+      const date = new Date(confirmedPatient.ngayDangKy);
+      const isDifferent =
+        !(selectedDate instanceof Date) ||
+        date.toDateString() !== selectedDate.toDateString();
+
+      if (isDifferent) {
+        setSelectedDate(date);
       }
-    } catch (error) {
-      console.error("❌ Lỗi khi xử lý ngày đăng ký:", error);
-      setSelectedDate(new Date());
     }
-  }, [confirmedPatient]);
+  }, [confirmedPatient?.ngayDangKy]);
 
   return (
-    <Container fluid size="100%" className="p-4 max-w-[1600px] mx-auto">
+    <Container fluid size="100%" className="pt-6 px-6   max-w-[1600px] mx-auto">
       <Title order={3} className="mb-4 text-xl font-semibold">
         Đăng ký khám bệnh
       </Title>
@@ -327,7 +373,7 @@ export default function RegisterMedicalExaminationPage() {
         onSubmit={handleCreatePatient}
       />
 
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 mt-6">
         <div className="w-full lg:flex-[1.3] min-w-[350px]">
           <div className="w-full lg:flex-[1.3] min-w-[350px]">
             <Paper p="md" shadow="sm" radius="md" withBorder>
@@ -434,11 +480,10 @@ export default function RegisterMedicalExaminationPage() {
                       placeholder="Chọn ngày"
                       value={searchFilters.registeredTimeFrom}
                       valueFormat="DD/MM/YYYY"
-                      maxDate={new Date()}
                       onChange={(value) =>
                         setSearchFilters({
                           ...searchFilters,
-                          registeredTimeFrom: value ? new Date(value) : null,
+                          registeredTimeFrom: value ? new Date(value) : today,
                         })
                       }
                     />
@@ -453,7 +498,7 @@ export default function RegisterMedicalExaminationPage() {
                       onChange={(value) =>
                         setSearchFilters({
                           ...searchFilters,
-                          registeredTimeTo: value ? new Date(value) : null,
+                          registeredTimeTo: value ? new Date(value) : today,
                         })
                       }
                       valueFormat="DD/MM/YYYY"
@@ -467,14 +512,15 @@ export default function RegisterMedicalExaminationPage() {
                     color="gray"
                     className="flex-1"
                     onClick={() => {
+                      const now = dayjs().startOf("day").toDate();
                       const reset = {
                         fullName: "",
                         patientId: "",
                         phone: "",
                         patientCode: "",
                         specialization: "",
-                        registeredTimeFrom: null,
-                        registeredTimeTo: null,
+                        registeredTimeFrom: now,
+                        registeredTimeTo: now,
                         status: "",
                       };
                       setSearchFilters(reset);
@@ -484,6 +530,7 @@ export default function RegisterMedicalExaminationPage() {
                   >
                     Tải lại
                   </Button>
+
                   <Button
                     variant="filled"
                     color="blue"
