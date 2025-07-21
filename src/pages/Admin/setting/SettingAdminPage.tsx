@@ -38,10 +38,10 @@ export const SettingAdminPage: React.FC = () => {
       bankCode: "",
       paginationSizeList: [] as number[],
       latestCheckInMinutes: "",
-      queueOpenTime: "", // 🔧
-      queueCloseTime: "", // 🔧
-      minBookingDaysBefore: "", // 🔧
-      minLeaveDaysBefore: "", // 🔧
+      queueOpenTime: "",
+      queueCloseTime: "",
+      minBookingDaysBefore: "",
+      minLeaveDaysBefore: "",
     },
     validate: {
       hospitalName: (v) => (v ? null : "Thông tin bắt buộc"),
@@ -58,8 +58,8 @@ export const SettingAdminPage: React.FC = () => {
         !v || isNaN(Number(v)) || Number(v) < 1 || Number(v) > 120
           ? "Phút đến trễ phải từ 1 đến 120"
           : null,
-      queueOpenTime: (v) => (!v ? "Giờ mở xếp hàng là bắt buộc" : null), // 🔧
-      queueCloseTime: (v) => (!v ? "Giờ đóng xếp hàng là bắt buộc" : null), // 🔧
+      queueOpenTime: (v) => (!v ? "Giờ mở xếp hàng là bắt buộc" : null),
+      queueCloseTime: (v) => (!v ? "Giờ đóng xếp hàng là bắt buộc" : null),
       minBookingDaysBefore: (v) =>
         !v || isNaN(Number(v)) || Number(v) < 0 ? "Phải >= 0" : null,
       minLeaveDaysBefore: (v) =>
@@ -69,12 +69,17 @@ export const SettingAdminPage: React.FC = () => {
 
   useEffect(() => {
     if (setting) {
+      const convertTime = (timeStr: string | undefined | null) =>
+        timeStr?.slice(0, 5) || "";
+
       form.setValues({
         ...setting,
         hospitalEmail: setting.hospitalEmail ?? "",
         latestCheckInMinutes: setting.latestCheckInMinutes?.toString() || "",
-        minBookingDaysBefore: setting.minBookingDaysBefore?.toString() || "", // 🔧
-        minLeaveDaysBefore: setting.minLeaveDaysBefore?.toString() || "", // 🔧
+        minBookingDaysBefore: setting.minBookingDaysBefore?.toString() || "",
+        minLeaveDaysBefore: setting.minLeaveDaysBefore?.toString() || "",
+        queueOpenTime: convertTime(setting.queueOpenTime),
+        queueCloseTime: convertTime(setting.queueCloseTime),
       });
     }
   }, [setting]);
@@ -107,8 +112,8 @@ export const SettingAdminPage: React.FC = () => {
     updateSetting({
       ...values,
       latestCheckInMinutes: Number(values.latestCheckInMinutes),
-      minBookingDaysBefore: Number(values.minBookingDaysBefore), // 🔧
-      minLeaveDaysBefore: Number(values.minLeaveDaysBefore), // 🔧
+      minBookingDaysBefore: Number(values.minBookingDaysBefore),
+      minLeaveDaysBefore: Number(values.minLeaveDaysBefore),
       paginationSizeList: values.paginationSizeList.map(Number),
     });
   };

@@ -4,26 +4,36 @@ import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExami
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { Title } from "@mantine/core";
 
 const statusColor = (status: string): string => {
   switch (status) {
     case "WAITING":
-      return "#f9a825";
+      return "#FFE082"; // Yellow 300
     case "CALLING":
-      return "#ef6c00";
+      return "#FFB74D"; // Orange 300
     case "IN_PROGRESS":
-      return "#1e88e5";
+      return "#64B5F6"; // Blue 300
     case "DONE":
-      return "#2e7d32";
+      return "#81C784"; // Green 300
     case "CANCELED":
-      return "#c62828";
+      return "#EF5350"; // Red 400
     default:
-      return "#616161";
+      return "#E0E0E0"; // Light grey
   }
 };
 
-const statusTextColor = (_status: string): string => {
-  return "#000"; // chữ đen cho dễ đọc trên nền nhạt
+const statusTextColor = (status: string): string => {
+  switch (status) {
+    case "CANCELED":
+    case "DONE":
+    case "IN_PROGRESS":
+    case "CALLING":
+    case "WAITING":
+      return "#000"; // hoặc "#fff" nếu bạn dùng màu nền đậm
+    default:
+      return "#000";
+  }
 };
 
 const statusLabel = (status: string): string => {
@@ -60,12 +70,22 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
       <div style={{ textAlign: "left" }}>{row.queueOrder ?? "-"}</div>
     ),
   },
-
   {
     key: "status",
     label: "Trạng thái",
     render: (row) => (
-      <span style={{ fontWeight: 600 }}>{statusLabel(row.status)}</span>
+      <span
+        style={{
+          fontWeight: 600,
+          padding: "4px 10px",
+          borderRadius: "6px",
+          backgroundColor: statusColor(row.status),
+          color: statusTextColor(row.status),
+          display: "inline-block",
+        }}
+      >
+        {statusLabel(row.status)}
+      </span>
     ),
   },
 ];
@@ -79,7 +99,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // lấy giá trị đầu tiên làm mặc định
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
@@ -125,81 +145,83 @@ const UserViewMedicalExaminationPage: React.FC = () => {
   const groupedPatients = getProcessedQueuePatients();
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2 style={{ marginBottom: "1rem" }}>Danh sách bệnh nhân theo phòng</h2>
-
+    <div>
       {loading ? (
         <p>Đang tải dữ liệu...</p>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
-            gap: "2rem",
-            alignItems: "stretch",
-          }}
-        >
-          {Object.entries(groupedPatients).map(([room, patients]) => {
-            const paginatedPatients = patients
-              .slice((page - 1) * pageSize, page * pageSize)
-              .map((p, i) => ({
-                ...p,
-                index: (page - 1) * pageSize + i,
-              }));
+        <>
+          <div style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}>
+            <Title order={3} className="text-xl font-semibold">
+              Danh sách bệnh nhân theo phòng
+            </Title>
+          </div>
 
-            return (
-              <div
-                key={room}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                  backgroundColor: "#fff",
-                  minHeight: room === "NO_ROOM" ? "100%" : "450px",
-                  flex: room === "NO_ROOM" ? 1 : undefined,
-                  alignSelf: room === "NO_ROOM" ? "stretch" : undefined,
-                }}
-              >
-                <h3
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+              gap: "2rem",
+              alignItems: "stretch",
+            }}
+          >
+            {Object.entries(groupedPatients).map(([room, patients]) => {
+              const paginatedPatients = patients
+                .slice((page - 1) * pageSize, page * pageSize)
+                .map((p, i) => ({
+                  ...p,
+                  index: (page - 1) * pageSize + i,
+                }));
+
+              return (
+                <div
+                  key={room}
                   style={{
-                    margin: 0,
-                    padding: "0.75rem",
-                    backgroundColor: "#f7f7f7",
-                    fontWeight: 600,
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                    backgroundColor: "#fff",
+                    minHeight: room === "NO_ROOM" ? "100%" : "450px",
+                    flex: room === "NO_ROOM" ? 1 : undefined,
+                    alignSelf: room === "NO_ROOM" ? "stretch" : undefined,
                   }}
                 >
-                  Phòng: {room === "NO_ROOM" ? "Chưa phân phòng" : room}
-                </h3>
-
-                <div style={{ padding: "1rem" }}>
-                  <CustomTable
-                    data={paginatedPatients}
-                    columns={columns}
-                    page={page}
-                    pageSize={pageSize}
-                    totalItems={patients.length}
-                    onPageChange={setPage}
-                    onPageSizeChange={(size) => {
-                      setPageSize(size);
-                      setPage(1);
+                  <h3
+                    style={{
+                      margin: 0,
+                      padding: "0.75rem",
+                      backgroundColor: "#f7f7f7",
+                      fontWeight: 600,
                     }}
-                    showActions={false}
-                    getRowStyle={(row) => ({
-                      backgroundColor: statusColor(row.status),
-                      color: statusTextColor(row.status),
-                    })}
-                    pageSizeOptions={setting?.paginationSizeList
-                      .slice()
-                      .sort((a, b) => a - b)}
-                  />
+                  >
+                    Phòng: {room === "NO_ROOM" ? "Chưa phân phòng" : room}
+                  </h3>
+
+                  <div style={{ padding: "1rem" }}>
+                    <CustomTable
+                      data={paginatedPatients}
+                      columns={columns}
+                      page={page}
+                      pageSize={pageSize}
+                      totalItems={patients.length}
+                      onPageChange={setPage}
+                      onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setPage(1);
+                      }}
+                      showActions={false}
+                      pageSizeOptions={setting?.paginationSizeList
+                        .slice()
+                        .sort((a, b) => a - b)}
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
