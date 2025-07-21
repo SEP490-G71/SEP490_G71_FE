@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
-import FilterPanel from "../../../components/common/FilterSection";
+//import FilterPanel from "../../../components/common/FilterSection";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import ServiceExecutionPanel from "../../../components/medical/ServiceExecutionPanel";
 import HeaderBar from "../../../components/medical/HeaderBar";
@@ -81,7 +81,7 @@ const ClinicalPage = () => {
       {/* Cột trái: Danh sách hồ sơ */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
         <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
-          <FilterPanel />
+          {/* <FilterPanel /> */}
         </Paper>
 
         <Paper shadow="xs" radius="md" p="md" withBorder>

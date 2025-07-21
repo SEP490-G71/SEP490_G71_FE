@@ -2,12 +2,14 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../services/axiosInstance";
 
-// ✅ Type definitions (gộp chung trong file)
 interface MedicalServiceStatisticItem {
-  serviceCode: string;
+    serviceCode: string;
   name: string;
   price: number;
   totalUsage: number;
+  totalOriginal: number;  
+  totalDiscount: number;   
+  totalVat: number;        
   totalRevenue: number;
 }
 
@@ -20,7 +22,6 @@ interface MedicalServiceStatisticSummary {
   mostUsedService: MostUsedService | null;
 }
 
-// ✅ Hook chính
 export const useMedicalServiceStatistic = () => {
   const [statistics, setStatistics] = useState<MedicalServiceStatisticItem[]>([]);
   const [summary, setSummary] = useState<MedicalServiceStatisticSummary>({
@@ -42,7 +43,7 @@ export const useMedicalServiceStatistic = () => {
   ) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get("/invoice-item/statistics", {
+      const res = await axiosInstance.get("/invoice-items/statistics", {
         params: {
           page,
           size,
@@ -74,7 +75,7 @@ export const useMedicalServiceStatistic = () => {
     toDate?: string;
   }) => {
     try {
-      const res = await axiosInstance.get("/invoice-item/export", {
+      const res = await axiosInstance.get("/invoice-items/export", {
         params: {
           fromDate: filters?.fromDate,
           toDate: filters?.toDate,

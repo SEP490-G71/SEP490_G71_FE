@@ -69,7 +69,7 @@ export default function EcommerceMetrics({ stats }: Props) {
               Doanh thu
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              {stats.totalAmount.toLocaleString()} ₫
+              {stats.totalAmount.toLocaleString()} VND
             </h4>
           </div>
           <Badge color="error">

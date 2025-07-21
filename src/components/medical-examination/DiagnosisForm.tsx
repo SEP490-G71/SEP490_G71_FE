@@ -17,7 +17,7 @@ const DiagnosisForm = ({ values, onChange }: Props) => {
           minRows={2}
           autosize
           value={values.symptoms}
-          onChange={(e) => onChange("symptoms", e.target.value)}
+          //onChange={(e) => onChange("symptoms", e.target.value)}
         />
       </Grid.Col>
 
@@ -27,7 +27,7 @@ const DiagnosisForm = ({ values, onChange }: Props) => {
           minRows={2}
           autosize
           value={values.notes}
-          onChange={(e) => onChange("notes", e.target.value)}
+          // onChange={(e) => onChange("notes", e.target.value)}
         />
       </Grid.Col>
     </Grid>

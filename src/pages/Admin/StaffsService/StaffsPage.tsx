@@ -13,6 +13,7 @@ import { RoleLabels } from "../../../enums/Role/Role";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
+import useRoleService from "../../../hooks/role/useRoleService";
 
 function getEnumLabel<T extends Record<string, string>>(
   enumObj: T,
@@ -52,6 +53,11 @@ const StaffsPage = () => {
 
   const { setting } = useSettingAdminService();
 
+  const { roles, fetchAllRoles } = useRoleService();
+
+  useEffect(() => {
+    fetchAllRoles(0, 100);
+  }, []);
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
       setPageSize(setting.paginationSizeList[0]);
@@ -174,7 +180,6 @@ const StaffsPage = () => {
   const columns = [
     createColumn<StaffsResponse>({ key: "staffCode", label: "Mã nhân viên" }),
     createColumn<StaffsResponse>({ key: "fullName", label: "Họ và tên" }),
-    // createColumn<StaffsResponse>({ key: "email", label: "Email" }),
     createColumn<StaffsResponse>({ key: "phone", label: "SĐT" }),
     createColumn<StaffsResponse>({
       key: "roles",
@@ -232,9 +237,9 @@ const StaffsPage = () => {
               styles={{ input: { height: 35 } }}
               value={inputRole}
               onChange={setInputRole}
-              data={Object.entries(RoleLabels).map(([value, label]) => ({
-                value,
-                label,
+              data={roles.map((r) => ({
+                value: r.name,
+                label: r.description || r.name,
               }))}
               searchable
               clearable
@@ -317,6 +322,7 @@ const StaffsPage = () => {
         }}
         initialData={selectedStaff}
         onSubmit={handleSubmit}
+        roles={roles}
       />
     </>
   );

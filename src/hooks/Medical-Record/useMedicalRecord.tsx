@@ -11,7 +11,7 @@ const useMedicalRecord = () => {
   const fetchAllMedicalRecords = async (
     page: number = 0,
     size: number = 5,
-    sortDir: "asc" | "desc" = "asc",
+
     filters?: {
       medicalRecordCode?: string;
       patientName?: string;
@@ -29,7 +29,7 @@ const useMedicalRecord = () => {
         params: {
           page,
           size,
-          sortDir,
+
           ...filters,
         },
       });

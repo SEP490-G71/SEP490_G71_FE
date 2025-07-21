@@ -19,7 +19,7 @@ const MedicalServiceStatisticsPage = () => {
   const { setting } = useSettingAdminService();
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
   useEffect(() => {
@@ -56,15 +56,36 @@ const MedicalServiceStatisticsPage = () => {
     createColumn({ key: "serviceCode", label: "Mã dịch vụ" }),
     createColumn({ key: "name", label: "Tên dịch vụ" }),
     createColumn({
-      key: "price",
-      label: "Giá",
-      render: (row) => row.price.toLocaleString() + " ₫",
+      key: "totalUsage",
+      label: "Lượt sử dụng",
+      render: (row) => (
+        <div style={{ textAlign: "center", paddingRight: 27 }}>
+          {row.totalUsage}
+        </div>
+      ),
     }),
-    createColumn({ key: "totalUsage", label: "Lượt sử dụng" }),
+
+    createColumn({
+      key: "totalOriginal",
+      label: "Giá gốc",
+      render: (row) =>
+        (row.totalOriginal ?? 0).toLocaleString("vi-VN") + " VND",
+    }),
+    createColumn({
+      key: "totalDiscount",
+      label: "Giảm giá",
+      render: (row) =>
+        (row.totalDiscount ?? 0).toLocaleString("vi-VN") + " VND",
+    }),
+    createColumn({
+      key: "totalVat",
+      label: "VAT",
+      render: (row) => (row.totalVat ?? 0).toLocaleString("vi-VN") + " VND",
+    }),
     createColumn({
       key: "totalRevenue",
-      label: "Doanh thu",
-      render: (row) => row.totalRevenue.toLocaleString() + " ₫",
+      label: "Tổng thanh toán",
+      render: (row) => (row.totalRevenue ?? 0).toLocaleString("vi-VN") + " VND",
     }),
   ];
 
@@ -95,7 +116,7 @@ const MedicalServiceStatisticsPage = () => {
         <div className="bg-indigo-50 border border-indigo-200 rounded shadow p-4 text-indigo-700">
           <div className="font-medium">Tổng doanh thu</div>
           <div className="text-xl font-bold">
-            {summary.totalRevenue.toLocaleString()} ₫
+            {summary.totalRevenue.toLocaleString()} VND
           </div>
         </div>
         {summary.mostUsedService && (
