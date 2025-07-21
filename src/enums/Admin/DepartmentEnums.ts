@@ -4,7 +4,7 @@ export enum DepartmentType {
   ADMINISTRATION = "ADMINISTRATION",
 }
 export const DepartmentTypeLabel: Record<DepartmentType, string> = {
-  [DepartmentType.CONSULTATION]: "KHÁM BỆNH",
-  [DepartmentType.LABORATORY]: "PHÒNG THÍ NGHIỆM",
-  [DepartmentType.ADMINISTRATION]: "QUẢN LÝ",
+  [DepartmentType.CONSULTATION]: "Khám bệnh",
+  [DepartmentType.LABORATORY]: "Phòng thí nghiệm",
+  [DepartmentType.ADMINISTRATION]: "Quản lý",
 };

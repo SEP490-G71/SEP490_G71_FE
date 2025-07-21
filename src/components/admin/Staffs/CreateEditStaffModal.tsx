@@ -13,7 +13,6 @@ import {
 
 import "dayjs/locale/vi";
 import "@mantine/dates/styles.css";
-import { RoleLabels } from "../../../enums/Role/Role";
 import { toast } from "react-toastify";
 
 interface CreateEditStaffModalProps {
@@ -22,6 +21,7 @@ interface CreateEditStaffModalProps {
   initialData?: StaffsRequest | null;
   onSubmit: (data: StaffsRequest) => void;
   isViewMode?: boolean;
+  roles: { name: string; description?: string }[];
 }
 
 const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
@@ -30,6 +30,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
   initialData,
   onSubmit,
   isViewMode = false,
+  roles,
 }) => {
   const form = useForm<StaffsRequest>({
     initialValues: {
@@ -40,7 +41,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
       phone: "",
       email: "",
       gender: Gender.OTHER,
-      dob: "null",
+      dob: "",
       roleNames: [],
     },
     validate: {
@@ -175,16 +176,15 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
         <MultiSelect
           label="Vai trò"
           placeholder="Chọn vai trò"
-          data={Object.entries(RoleLabels).map(([value, label]) => ({
-            value,
-            label,
+          data={roles.map((r) => ({
+            value: r.name,
+            label: r.description || r.name,
           }))}
           {...form.getInputProps("roleNames")}
           required
           mt="sm"
           disabled={isViewMode}
         />
-
         <TextInput
           label="Số điện thoại"
           placeholder="Nhập số điện thoại"

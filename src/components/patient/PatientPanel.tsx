@@ -1,124 +1,139 @@
-import {
-  Flex,
-  Grid,
-  Pagination,
-  Paper,
-  ScrollArea,
-  Select,
-  Table,
-  Title,
-  Text,
-} from "@mantine/core";
-
-import { Patient } from "../../types/Patient/Patient";
-import StatusCell from "./StatusCell";
-import { Group } from "@mantine/core";
-import React from "react";
+import { useMemo } from "react";
+import { Title } from "@mantine/core";
+import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
+import CustomTable from "../common/CustomTable";
 import FilterPanel from "../common/FilterSection";
+import { Column } from "../../types/table";
+import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
+import { GenderLabel } from "../../enums/Gender";
+import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
 
-type Props = {
-  selectedPatient: Patient | null;
-  onSelectPatient: (p: Patient) => void;
-  patientList: Patient[];
-  setPatientList: (list: Patient[]) => void;
-};
+interface PatientPanelProps {
+  selectedPatient: QueuePatient | null;
+  onSelectPatient: (p: QueuePatient) => void;
+  patients: QueuePatient[];
+  totalElements: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  loading: boolean;
+  setPageSize: (size: number) => void;
+  setCurrentPage: (page: number) => void;
+  setFilters: (filters: any) => void;
+  department?: DepartmentResponse | null;
+}
 
 const PatientPanel = ({
   selectedPatient,
   onSelectPatient,
-  patientList,
-}: Props) => {
-  return (
-    <Grid.Col span={{ base: 12, md: 4 }}>
-      <Flex direction="column">
-        {/* Tìm kiếm */}
-        <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
-          <Grid gutter="xs">
-            <FilterPanel />
-          </Grid>
+  patients,
+  totalElements,
+  pageSize,
+  currentPage,
+  loading,
+  setPageSize,
+  setCurrentPage,
+  setFilters,
+  department,
+}: PatientPanelProps) => {
+  const columns: Column<QueuePatient>[] = useMemo(
+    () => [
+      {
+        key: "status",
+        label: "Trạng thái",
+        render: (row) => {
+          const colorMap: Record<Status, string> = {
+            [Status.ACTIVE]: "green",
+            [Status.INACTIVE]: "gray",
+            [Status.WAITING]: "orange",
+            [Status.DONE]: "blue",
+            [Status.CANCELED]: "red",
+            [Status.IN_PROGRESS]: "indigo",
+            [Status.PENDING]: "yellow",
+            [Status.FAILED]: "red",
+          };
 
-          <Title order={5} mb="md">
-            Danh sách đăng ký
-          </Title>
+          const status = row.status as Status;
+          const color = colorMap[status];
 
-          <ScrollArea offsetScrollbars scrollbarSize={8} h="auto">
-            <Table
-              withColumnBorders
-              highlightOnHover
-              style={{
-                minWidth: 700,
-                borderCollapse: "separate",
-                borderSpacing: "2px",
-              }}
+          return (
+            <span
+              className={`text-sm font-medium px-2 py-1 rounded-full bg-${color}-100 text-${color}-700`}
             >
-              <thead style={{ backgroundColor: "#dee2e6" }}>
-                <tr>
-                  <th style={{ textAlign: "center" }}>TT</th>
-                  <th style={{ textAlign: "center" }}>STT</th>
-                  <th style={{ textAlign: "center" }}>Mã BN</th>
-                  <th style={{ textAlign: "left", paddingLeft: "20px" }}>
-                    Tên BN
-                  </th>
-                  <th style={{ textAlign: "center" }}>Điện thoại</th>
-                </tr>
-              </thead>
+              {StatusLabel[status]}
+            </span>
+          );
+        },
+      },
+      {
+        key: "patientCode",
+        label: "Mã BN",
+      },
+      {
+        key: "fullName",
+        label: "Họ tên",
+      },
+      {
+        key: "gender",
+        label: "Giới tính",
+        render: (row) =>
+          GenderLabel[row.gender as keyof typeof GenderLabel] ?? "Không rõ",
+      },
+      {
+        key: "phone",
+        label: "Điện thoại",
+      },
+    ],
+    [currentPage, pageSize]
+  );
 
-              <tbody>
-                {patientList.map((p, index) => {
-                  const isSelected =
-                    selectedPatient?.patientCode === p.patientCode;
+  const handleSearch = (filters: any) => {
+    const enrichedFilters = {
+      ...filters,
+      roomNumber: department?.roomNumber,
+      type: department?.type,
+    };
+    setFilters(enrichedFilters);
+    setCurrentPage(0);
+  };
 
-                  return (
-                    <tr
-                      key={p.id}
-                      onClick={() => onSelectPatient(p)}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor: isSelected
-                          ? "#cce5ff"
-                          : index % 2 === 0
-                          ? "#f8f9fa"
-                          : "#e9ecef",
-                        borderBottom: "1px solid #adb5bd",
-                      }}
-                    >
-                      <td style={{ textAlign: "center" }}>
-                        <StatusCell status={"Đang khám"} />{" "}
-                        {/* mock nếu chưa có p.trangThai */}
-                      </td>
-                      <td style={{ textAlign: "center" }}>{index + 1}</td>
-                      <td style={{ textAlign: "center" }}>{p.patientCode}</td>
-                      <td style={{ textAlign: "left", paddingLeft: "20px" }}>
-                        {p.fullName}
-                      </td>
-                      <td style={{ textAlign: "center" }}>{p.phone}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
-          </ScrollArea>
+  const handleReset = () => {
+    const resetFilters = {
+      roomNumber: department?.roomNumber,
+      type: department?.type,
+    };
+    setFilters(resetFilters);
+    setCurrentPage(0);
+  };
 
-          {/* Pagination & controls */}
-          <Group justify="space-between" mt="sm">
-            <Text size="sm">
-              1–{patientList.length} của {patientList.length}
-            </Text>
+  return (
+    <div className="flex flex-col">
+      <FilterPanel onSearch={handleSearch} onReset={handleReset} />
+      <Title order={5} mb="md">
+        Danh sách đăng ký
+      </Title>
 
-            <Group>
-              <Select
-                data={["10", "20", "50"]}
-                defaultValue="10"
-                w={100}
-                variant="filled"
-                size="xs"
-              />
-              <Pagination total={1} value={1} size="sm" />
-            </Group>
-          </Group>
-        </Paper>
-      </Flex>
-    </Grid.Col>
+      <CustomTable<QueuePatient>
+        data={patients}
+        columns={columns}
+        page={currentPage + 1}
+        pageSize={pageSize}
+        totalItems={totalElements}
+        onPageChange={(p) => setCurrentPage(p - 1)}
+        onPageSizeChange={setPageSize}
+        loading={loading}
+        showActions={false}
+        getRowStyle={(row) => ({
+          backgroundColor:
+            selectedPatient?.patientCode === row.patientCode
+              ? "#cce5ff"
+              : undefined,
+          cursor: "pointer",
+        })}
+        onView={onSelectPatient}
+      />
+    </div>
   );
 };
-export default React.memo(PatientPanel);
+
+export default PatientPanel;

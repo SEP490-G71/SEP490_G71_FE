@@ -1,48 +1,57 @@
-import { Grid, Select } from "@mantine/core";
+import { Grid, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
+import { useEffect } from "react";
 
 interface Props {
-  form: any; // useForm instance
-  doctorOptions: { value: string; label: string }[];
-  departmentOptions: { value: string; label: string }[];
-  staffLoading: boolean;
-  departmentLoading: boolean;
+  form: any;
+  doctorId: string;
+  doctorName: string;
+  departmentId: string;
+  departmentName: string;
 }
 
 const ExaminationInfoForm = ({
   form,
-  doctorOptions,
-  departmentOptions,
-  staffLoading,
-  departmentLoading,
+  doctorId,
+  doctorName,
+  departmentId,
+  departmentName,
 }: Props) => {
+  useEffect(() => {
+    form.setFieldValue("doctor", doctorId);
+    form.setFieldValue("department", departmentId);
+  }, [doctorId, departmentId]);
+
   return (
     <Grid gutter="xs">
       <Grid.Col span={4}>
-        <DateTimePicker label="Ngày khám" value={new Date()} required />
-      </Grid.Col>
-
-      <Grid.Col span={4}>
-        <Select
-          label="Bác sĩ"
-          placeholder={staffLoading ? "Đang tải..." : "Chọn bác sĩ"}
-          data={doctorOptions}
-          searchable
-          disabled={staffLoading || !form.values.department}
+        <DateTimePicker
+          label="Ngày khám"
+          value={form.values.appointmentDate}
+          onChange={(value) => form.setFieldValue("appointmentDate", value)}
           required
-          {...form.getInputProps("doctor")}
         />
       </Grid.Col>
 
       <Grid.Col span={4}>
-        <Select
+        <TextInput
+          label="Bác sĩ"
+          value={doctorName}
+          readOnly
+          variant="filled"
+          radius="md"
+          size="sm"
+        />
+      </Grid.Col>
+
+      <Grid.Col span={4}>
+        <TextInput
           label="Phòng khám"
-          placeholder={departmentLoading ? "Đang tải..." : "Chọn phòng khám"}
-          data={departmentOptions}
-          searchable
-          disabled={departmentLoading}
-          required
-          {...form.getInputProps("department")}
+          value={departmentName}
+          readOnly
+          variant="filled"
+          radius="md"
+          size="sm"
         />
       </Grid.Col>
     </Grid>

@@ -1,10 +1,10 @@
 import { Paper, Title, Grid, Group, Text } from "@mantine/core";
-import { Patient } from "../../types/Patient/Patient";
 import React from "react";
 import dayjs from "dayjs";
+import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 
 interface Props {
-  patient: Patient | null;
+  patient: QueuePatient | null;
   onEndExamination?: () => void;
 }
 

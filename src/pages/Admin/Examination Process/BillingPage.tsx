@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import { PaymentType } from "../../../enums/Payment/PaymentType";
-import FilterPanel from "../../../components/common/FilterSection";
+//import FilterPanel from "../../../components/common/FilterSection";
 import { Pagination } from "@mantine/core";
 import ServiceTable from "../../../components/medical-examination/MedicalServiceTable";
 import { ServiceRow } from "../../../types/serviceRow";
@@ -170,7 +170,7 @@ const BillingPage = () => {
       {/* Cột trái: Danh sách hóa đơn */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
         <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
-          <FilterPanel />
+          {/* <FilterPanel /> */}
         </Paper>
 
         <Paper shadow="xs" radius="md" p="md" withBorder>

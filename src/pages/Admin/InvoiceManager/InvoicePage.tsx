@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, Input, Select } from "@mantine/core";
+import { Button, Input, Modal, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import { LuEye, LuDownload } from "react-icons/lu";
@@ -145,6 +145,17 @@ const InvoicePage = () => {
     });
   };
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [modalOpened, setModalOpened] = useState(false);
+
+  const handlePreview = async (invoiceId: string) => {
+    const url = await previewInvoice(invoiceId);
+    if (url) {
+      setPdfUrl(url);
+      setModalOpened(true);
+    }
+  };
+
   const columns = [
     createColumn<InvoiceResponse>({
       key: "status",
@@ -176,7 +187,7 @@ const InvoicePage = () => {
     createColumn<InvoiceResponse>({
       key: "total",
       label: "Đơn giá",
-      render: (row) => row.total?.toLocaleString("vi-VN") + " ₫",
+      render: (row) => row.total?.toLocaleString("vi-VN") + " VND",
     }),
     createColumn<InvoiceResponse>({
       key: "actions",
@@ -187,7 +198,7 @@ const InvoicePage = () => {
             size="xs"
             variant="light"
             color="blue"
-            onClick={() => previewInvoice(row.invoiceId)}
+            onClick={() => handlePreview(row.invoiceId)}
             className="p-1 w-8 h-8 flex items-center justify-center"
             title="Xem trước"
           >
@@ -331,6 +342,22 @@ const InvoicePage = () => {
           </Button>
         </div>
       </div>
+
+      <Modal
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        title="Xem trước hóa đơn"
+        size="xl"
+        radius="md"
+        styles={{ body: { padding: 0 } }}
+      >
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
+            style={{ width: "100%", height: "80vh", border: "none" }}
+          />
+        )}
+      </Modal>
 
       <CustomTable
         data={invoices}
