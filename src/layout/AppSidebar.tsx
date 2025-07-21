@@ -27,9 +27,9 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Thông tin chung",
       icon: <IconCalendarEvent />,
       subItems: [
-        { name: "Quản lý dịch vụ khám", path: "/admin/medical-service" },
         { name: "Quản lý chuyên khoa", path: "/admin/specializations" },
         { name: "Quản lý phòng ban", path: "/admin/departments" },
+        { name: "Quản lý dịch vụ khám", path: "/admin/medical-service" },
         { name: "Quản lý ca làm", path: "/admin/divide-shift" },
       ],
     },
@@ -40,7 +40,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
         { name: "Quản lý nhân viên", path: "/admin/staffs" },
         { name: "Quản lý bệnh nhân", path: "/admin/patients" },
         { name: "Quản lý lịch làm việc", path: "/admin/work-schedule" },
-        { name: "Đơn xin nghỉ", path: "/admin/Leave" },
+        { name: "Quản lý đơn xin nghỉ", path: "/admin/Leave" },
       ],
     },
     // {
@@ -106,12 +106,18 @@ const navItemsByRole: Record<string, NavItem[]> = {
       subItems: [
         { name: "Doanh thu", path: "/admin/invoice" },
         {
+          name: "Doanh thu theo dịch vụ",
+          path: "/admin/statistic-medical-service",
+        },
+        {
           name: "Bệnh án",
           path: "/admin/medical-records",
         },
-        { name: "Lịch làm việc tổng quan", path: "/admin/statistic-schedule" },
-        { name: "Theo dịch vụ", path: "/admin/statistic-medical-service" },
-        { name: "Khách hàng trong tháng", path: "/admin/statistic-patient" },
+        { name: "Hiệu suất làm việc", path: "/admin/statistic-schedule" },
+        {
+          name: "Sinh nhật khách hàng",
+          path: "/admin/statistic-patient",
+        },
       ],
     },
     {

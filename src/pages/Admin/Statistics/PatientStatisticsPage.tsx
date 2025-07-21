@@ -79,7 +79,7 @@ const PatientStatisticsPage = () => {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Thống kê sinh nhật bệnh nhân</h1>
+        <h1 className="text-xl font-bold">Sinh nhật khách hàng trong tháng</h1>
         <Button
           leftSection={<LuDownload size={16} />}
           onClick={handleExportExcel}
@@ -129,7 +129,6 @@ const PatientStatisticsPage = () => {
         }}
         loading={loading}
         showActions={false}
-        pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
       />
     </>
   );

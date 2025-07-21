@@ -102,7 +102,7 @@ export const DivideShiftPage = () => {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Chia Ca Làm Việc</h1>
+        <h1 className="text-xl font-bold">Ca làm việc</h1>
         <Button
           onClick={() => {
             setSelectedShift(null);
@@ -160,9 +160,6 @@ export const DivideShiftPage = () => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         showActions
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreateEditModalDivideShift

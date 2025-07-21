@@ -219,7 +219,7 @@ const MedicalServicePage = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h1 className="text-xl font-bold">Dịch Vụ Khám</h1>
         <Button onClick={handleAdd} color="blue">
           Tạo
@@ -290,9 +290,6 @@ const MedicalServicePage = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
 
       <CreateEditModal

@@ -119,7 +119,9 @@ const LeaveAdminPage = () => {
 
       await updateStatus(payload);
       fetchData();
-    } catch {}
+    } catch {
+      toast.error("Cập nhật trạng thái thất bại");
+    }
   };
 
   useEffect(() => {
@@ -301,15 +303,6 @@ const LeaveAdminPage = () => {
                   })
                 ),
               ]}
-              className="w-full"
-              styles={{
-                input: {
-                  height: 36,
-                  marginTop: "2px",
-                  paddingTop: "0.5rem",
-                  paddingBottom: "0.5rem",
-                },
-              }}
             />
           </FloatingLabelWrapper>
         </div>
@@ -406,20 +399,10 @@ const LeaveAdminPage = () => {
 
         {/* Nút */}
         <div className="col-span-12 md:col-span-2 flex items-end gap-2 justify-end">
-          <Button
-            variant="light"
-            color="gray"
-            onClick={handleResetFilters}
-            className="h-[38px] min-w-[80px] max-w-[90px] px-2"
-          >
+          <Button variant="light" color="gray" onClick={handleResetFilters}>
             Tải lại
           </Button>
-          <Button
-            variant="filled"
-            color="blue"
-            onClick={handleSearch}
-            className="h-[38px] min-w-[80px] max-w-[90px] px-2"
-          >
+          <Button variant="filled" color="blue" onClick={handleSearch}>
             Tìm kiếm
           </Button>
         </div>
@@ -438,9 +421,6 @@ const LeaveAdminPage = () => {
         }}
         loading={loading}
         onDelete={handleDelete}
-        pageSizeOptions={setting?.paginationSizeList
-          .slice()
-          .sort((a, b) => a - b)}
       />
     </>
   );
