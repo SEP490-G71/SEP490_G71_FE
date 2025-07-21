@@ -193,16 +193,10 @@ export default function RegisterMedicalExaminationPage() {
         patientCode: submittedFilters.patientCode,
         specialization: submittedFilters.specialization,
         registeredTimeFrom: submittedFilters.registeredTimeFrom
-          ? dayjs(submittedFilters.registeredTimeFrom)
-              .startOf("day")
-              .subtract(1, "millisecond")
-              .format("YYYY-MM-DDTHH:mm:ss")
+          ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
           : undefined,
         registeredTimeTo: submittedFilters.registeredTimeTo
-          ? dayjs(submittedFilters.registeredTimeTo)
-              .endOf("day")
-              .subtract(1, "millisecond")
-              .format("YYYY-MM-DDTHH:mm:ss")
+          ? dayjs(submittedFilters.registeredTimeTo).format("YYYY-MM-DD")
           : undefined,
         status: submittedFilters.status,
       };
@@ -260,17 +254,23 @@ export default function RegisterMedicalExaminationPage() {
           phone: submittedFilters.phone,
           patientCode: submittedFilters.patientCode,
           specialization: submittedFilters.specialization,
+          // registeredTimeFrom: submittedFilters.registeredTimeFrom
+          //   ? dayjs(submittedFilters.registeredTimeFrom)
+          //       .startOf("day")
+          //       .format("YYYY-MM-DDTHH:mm:ss")
+          //   : undefined,
+          // registeredTimeTo: submittedFilters.registeredTimeTo
+          //   ? dayjs(submittedFilters.registeredTimeTo)
+          //       .endOf("day")
+          //       .format("YYYY-MM-DDTHH:mm:ss")
+          //   : undefined,
           registeredTimeFrom: submittedFilters.registeredTimeFrom
-            ? dayjs(submittedFilters.registeredTimeFrom)
-                .startOf("day")
-                .subtract(1, "millisecond")
-                .format("YYYY-MM-DDTHH:mm:ss")
+            ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
             : undefined,
           registeredTimeTo: submittedFilters.registeredTimeTo
-            ? dayjs(submittedFilters.registeredTimeTo)
-                .endOf("day")
-                .format("YYYY-MM-DDTHH:mm:ss")
+            ? dayjs(submittedFilters.registeredTimeTo).format("YYYY-MM-DD")
             : undefined,
+
           status: submittedFilters.status,
         };
 

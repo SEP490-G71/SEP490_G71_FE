@@ -9,22 +9,31 @@ import { Title } from "@mantine/core";
 const statusColor = (status: string): string => {
   switch (status) {
     case "WAITING":
-      return "#f9a825";
+      return "#FFE082"; // Yellow 300
     case "CALLING":
-      return "#ef6c00";
+      return "#FFB74D"; // Orange 300
     case "IN_PROGRESS":
-      return "#1e88e5";
+      return "#64B5F6"; // Blue 300
     case "DONE":
-      return "#2e7d32";
+      return "#81C784"; // Green 300
     case "CANCELED":
-      return "#c62828";
+      return "#EF5350"; // Red 400
     default:
-      return "#616161";
+      return "#E0E0E0"; // Light grey
   }
 };
 
-const statusTextColor = (_status: string): string => {
-  return "#000"; // chữ đen cho dễ đọc trên nền nhạt
+const statusTextColor = (status: string): string => {
+  switch (status) {
+    case "CANCELED":
+    case "DONE":
+    case "IN_PROGRESS":
+    case "CALLING":
+    case "WAITING":
+      return "#000"; // hoặc "#fff" nếu bạn dùng màu nền đậm
+    default:
+      return "#000";
+  }
 };
 
 const statusLabel = (status: string): string => {
@@ -61,12 +70,22 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
       <div style={{ textAlign: "left" }}>{row.queueOrder ?? "-"}</div>
     ),
   },
-
   {
     key: "status",
     label: "Trạng thái",
     render: (row) => (
-      <span style={{ fontWeight: 600 }}>{statusLabel(row.status)}</span>
+      <span
+        style={{
+          fontWeight: 600,
+          padding: "4px 10px",
+          borderRadius: "6px",
+          backgroundColor: statusColor(row.status),
+          color: statusTextColor(row.status),
+          display: "inline-block",
+        }}
+      >
+        {statusLabel(row.status)}
+      </span>
     ),
   },
 ];
@@ -80,7 +99,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // lấy giá trị đầu tiên làm mặc định
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
@@ -193,10 +212,6 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                         setPage(1);
                       }}
                       showActions={false}
-                      getRowStyle={(row) => ({
-                        backgroundColor: statusColor(row.status),
-                        color: statusTextColor(row.status),
-                      })}
                       pageSizeOptions={setting?.paginationSizeList
                         .slice()
                         .sort((a, b) => a - b)}
