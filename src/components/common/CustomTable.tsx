@@ -30,6 +30,7 @@ interface CustomTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   showActions?: boolean;
+  onRowClick?: (row: T) => void;
   getRowStyle?: (row: T) => React.CSSProperties;
 }
 
@@ -50,6 +51,7 @@ function CustomTable<T>({
   onView,
   onEdit,
   onDelete,
+  onRowClick,
   showActions = true,
   getRowStyle,
 }: CustomTableProps<T>) {
@@ -130,7 +132,12 @@ function CustomTable<T>({
               data.map((row, idx) => (
                 <tr
                   key={idx}
-                  className="transition-colors"
+                  className={`transition-colors ${
+                    onRowClick
+                      ? "hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      : ""
+                  }`}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
                   style={getRowStyle ? getRowStyle(row) : {}}
                 >
                   {columns.map((col) => (

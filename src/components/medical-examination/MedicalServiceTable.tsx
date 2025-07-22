@@ -184,14 +184,17 @@ const ServiceTable = ({
             paddingLeft: 0,
           }}
         >
-          <Button
-            variant="subtle"
-            size="xs"
-            color="red"
-            onClick={() => handleRemoveRow(index)}
-          >
-            <FaTrash />
-          </Button>
+          {/* Ẩn nút nếu là dòng cuối và chưa chọn dịch vụ */}
+          {!(index === serviceRows.length - 1 && !row.serviceId) && (
+            <Button
+              variant="subtle"
+              size="xs"
+              color="red"
+              onClick={() => handleRemoveRow(index)}
+            >
+              <FaTrash />
+            </Button>
+          )}
         </td>
       )}
     </tr>
@@ -199,7 +202,7 @@ const ServiceTable = ({
 
   return (
     <ScrollArea offsetScrollbars scrollbarSize={8}>
-      <div className="min-w-[1200px]">
+      <div className="min-w-[800px]">
         <Table>
           <thead style={{ backgroundColor: "#f1f1f1" }}>
             <tr>
