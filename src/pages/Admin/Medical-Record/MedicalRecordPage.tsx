@@ -66,12 +66,12 @@ export const MedicalRecordPage = () => {
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
   useEffect(() => {
-    fetchAllMedicalRecords(page - 1, pageSize, sortDir, filters);
+    fetchAllMedicalRecords(page - 1, pageSize, filters);
   }, [page, pageSize, sortDir, filters]);
 
   const handleSearch = () => {

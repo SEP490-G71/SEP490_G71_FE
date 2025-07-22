@@ -34,7 +34,8 @@ const DepartmentPage = () => {
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentResponse | null>(null);
-  const [_, setEditingId] = useState<string | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [, setEditingId] = useState<string | null>(null);
 
   const [inputName, setInputName] = useState("");
   const [filterName, setFilterName] = useState("");
@@ -66,7 +67,16 @@ const DepartmentPage = () => {
     setEditingId(null);
     setModalOpened(true);
   };
-
+  const handleView = async (row: DepartmentResponse) => {
+    const res = await fetchDepartmentById(row.id);
+    if (res) {
+      setSelectedDepartment(res);
+      setIsViewMode(true);
+      setModalOpened(true);
+    } else {
+      toast.error("Không thể xem chi tiết phòng ban");
+    }
+  };
   const handleEdit = async (row: DepartmentResponse) => {
     const res = await fetchDepartmentById(row.id);
     if (res) {
@@ -109,7 +119,16 @@ const DepartmentPage = () => {
 
   const columns = [
     createColumn<DepartmentResponse>({ key: "name", label: "Tên phòng ban" }),
-    createColumn<DepartmentResponse>({ key: "description", label: "Mô tả" }),
+    createColumn<DepartmentResponse>({
+      key: "description",
+      label: "Mô tả",
+      render: (row) => {
+        const desc = row.description || "";
+        const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
+
+        return <span title={desc}>{short}</span>;
+      },
+    }),
     createColumn<DepartmentResponse>({ key: "roomNumber", label: "Số phòng" }),
     createColumn<DepartmentResponse>({
       key: "type",
@@ -220,12 +239,14 @@ const DepartmentPage = () => {
           setPage(1);
         }}
         loading={loading}
+        onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
 
       <CreateEditDepartmentModal
         opened={modalOpened}
+        isViewMode={isViewMode}
         onClose={() => {
           setModalOpened(false);
           setSelectedDepartment(null);

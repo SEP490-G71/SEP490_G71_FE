@@ -59,8 +59,8 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       type: undefined as unknown as DepartmentType,
       specializationId: "",
     },
-    validateInputOnChange: true, // ✅ BẮT BUỘC
-    validateInputOnBlur: true, // ✅ BẮT BUỘC
+    validateInputOnChange: true,
+    validateInputOnBlur: true,
     validate: {
       name: (value) => validateNameForDepartmen(value ?? ""),
       description: (value) => validateDescription(value ?? ""),
@@ -134,8 +134,11 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { hasErrors } = form.validate();
+    if (isViewMode) {
+      return;
+    }
 
+    const { hasErrors } = form.validate();
     if (hasErrors) {
       toast.error("Vui lòng điền đầy đủ thông tin hợp lệ.");
       return;
@@ -157,8 +160,6 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
     } catch (err: any) {
       const resultErrors = err?.response?.data?.result;
       const message = err?.response?.data?.message?.toLowerCase?.() ?? "";
-      //const code = err?.response?.data?.code;
-
       const messageMap: Record<string, string> = {
         name: "Tên phòng ban không hợp lệ",
         description: "Mô tả không hợp lệ",
@@ -177,7 +178,6 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       }
 
       if (message.includes("room number already exists")) {
-        // ✅ Cách 1 (chắc chắn nhất)
         form.setErrors({ roomNumber: "Số phòng này đã tồn tại" });
         form.setFieldValue("roomNumber", form.values.roomNumber + " ");
         setTimeout(() => {
@@ -185,6 +185,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
         }, 50);
         return;
       }
+
       toast.error("❗ " + (message || "Đã xảy ra lỗi không xác định"));
       console.error("Submit error in modal", err);
     }

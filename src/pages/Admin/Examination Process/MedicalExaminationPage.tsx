@@ -16,6 +16,8 @@ import useMyDepartment from "../../../hooks/department-service/useMyDepartment";
 import { useUserInfo } from "../../../hooks/auth/useUserInfo";
 
 const MedicalExaminationPage = () => {
+  const { userInfo } = useUserInfo();
+  const { department } = useMyDepartment();
   const [selectedPatient, setSelectedPatient] = useState<QueuePatient | null>(
     null
   );
@@ -28,10 +30,10 @@ const MedicalExaminationPage = () => {
     setCurrentPage,
     setPageSize,
     loading,
-    setFilters,
-    fetchQueuePatients,
-  } = useQueuePatientService();
-
+    updateFilters,
+  } = useQueuePatientService(
+    department?.roomNumber ? { roomNumber: department.roomNumber } : {}
+  );
   const form = useForm({
     initialValues: {
       appointmentDate: new Date(),
@@ -53,21 +55,22 @@ const MedicalExaminationPage = () => {
     { id: 1, serviceId: null, quantity: 1 },
   ]);
 
-  const { medicalServices } = useMedicalService();
+  const { medicalServices, fetchAllMedicalServicesNoPagination } =
+    useMedicalService();
   const serviceOptions = medicalServices.map((item) => ({
     value: item.id,
     label: item.name,
   }));
 
-  const { department } = useMyDepartment();
-  const { userInfo } = useUserInfo();
   useEffect(() => {
-    if (department?.roomNumber) {
-      setFilters({ roomNumber: department.roomNumber });
-      setCurrentPage(0);
-      fetchQueuePatients({ roomNumber: department.roomNumber, page: 0 });
-    }
-  }, [department]);
+    fetchAllMedicalServicesNoPagination();
+  }, []);
+
+  // useEffect(() => {
+  //   if (department?.roomNumber) {
+  //     updateFilters({ roomNumber: department.roomNumber });
+  //   }
+  // }, [department]);
 
   const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -102,8 +105,8 @@ const MedicalExaminationPage = () => {
             loading={loading}
             setPageSize={setPageSize}
             setCurrentPage={setCurrentPage}
-            setFilters={setFilters}
             department={department}
+            updateFilters={updateFilters}
           />
         </Grid.Col>
 

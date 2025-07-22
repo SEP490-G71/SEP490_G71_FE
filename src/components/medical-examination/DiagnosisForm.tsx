@@ -8,7 +8,7 @@ interface Props {
   onChange: (field: keyof Props["values"], value: string) => void;
 }
 
-const DiagnosisForm = ({ values, onChange }: Props) => {
+const DiagnosisForm = ({ values }: Props) => {
   return (
     <Grid gutter="xs" mt="md">
       <Grid.Col span={6}>

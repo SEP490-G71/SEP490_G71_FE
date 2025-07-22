@@ -19,8 +19,8 @@ interface PatientPanelProps {
   loading: boolean;
   setPageSize: (size: number) => void;
   setCurrentPage: (page: number) => void;
-  setFilters: (filters: any) => void;
   department?: DepartmentResponse | null;
+  updateFilters: (filters: any) => void;
 }
 
 const PatientPanel = ({
@@ -33,8 +33,8 @@ const PatientPanel = ({
   loading,
   setPageSize,
   setCurrentPage,
-  setFilters,
   department,
+  updateFilters,
 }: PatientPanelProps) => {
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
@@ -93,8 +93,7 @@ const PatientPanel = ({
       roomNumber: department?.roomNumber,
       type: department?.type,
     };
-    setFilters(enrichedFilters);
-    setCurrentPage(0);
+    updateFilters(enrichedFilters);
   };
 
   const handleReset = () => {
@@ -102,8 +101,7 @@ const PatientPanel = ({
       roomNumber: department?.roomNumber,
       type: department?.type,
     };
-    setFilters(resetFilters);
-    setCurrentPage(0);
+    updateFilters(resetFilters);
   };
 
   return (
