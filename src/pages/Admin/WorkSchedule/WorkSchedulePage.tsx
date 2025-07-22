@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { useWorkSchedule } from "../../../hooks/workSchedule/useWorkSchedule";
-import {
-  WorkSchedule,
-  WorkScheduleDetail,
-} from "../../../types/Admin/WorkSchedule/WorkSchedule";
-import WorkScheduleListModal from "../../../components/admin/WorkSchedule/WorkScheduleListModal";
+import { WorkSchedule } from "../../../types/Admin/WorkSchedule/WorkSchedule";
 import WorkScheduleFormModal from "../../../components/admin/WorkSchedule/WorkScheduleFormModal";
 import { Button, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
@@ -14,6 +10,8 @@ import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import { useShifts } from "../../../hooks/workSchedule/useShifts";
+import { DetailScheduleStaffModal } from "../../../components/admin/WorkSchedule/DetailScheduleStaffModal";
 
 export const WorkSchedulePage = () => {
   const [page, setPage] = useState(1);
@@ -23,17 +21,14 @@ export const WorkSchedulePage = () => {
     workSchedules,
     loading,
     fetchWorkSchedules,
-    fetchWorkScheduleDetailByStaffId,
     updateWorkSchedule,
     deleteWorkScheduleByStaff,
     createWorkSchedule,
   } = useWorkSchedule();
 
-  const [detailModalOpened, setDetailModalOpened] = useState(false);
   const [editModalOpened, setEditModalOpened] = useState(false);
-  const [workScheduleDetails, setWorkScheduleDetails] = useState<
-    WorkScheduleDetail[]
-  >([]);
+  const [viewModalOpened, setViewModalOpened] = useState(false);
+
   const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(
     null
   );
@@ -55,16 +50,18 @@ export const WorkSchedulePage = () => {
   });
 
   const { options: staffOptions, searchStaffs } = useStaffSearch();
+  const { shifts: shiftOptions } = useShifts();
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
   useEffect(() => {
     fetchWorkSchedules(page - 1, pageSize, {
-      shift: filters.shift || undefined,
+      staffId: filters.staffId || undefined,
+      shiftId: filters.shift || undefined,
       fromDate: filters.fromDate
         ? dayjs(filters.fromDate).format("YYYY-MM-DD")
         : undefined,
@@ -94,10 +91,8 @@ export const WorkSchedulePage = () => {
   };
 
   const handleView = async (row: WorkSchedule) => {
-    const details = await fetchWorkScheduleDetailByStaffId(row.staffId);
-    setWorkScheduleDetails(Array.isArray(details) ? details : []);
     setSelectedSchedule(row);
-    setDetailModalOpened(true);
+    setViewModalOpened(true);
   };
 
   const handleEdit = async (row: WorkSchedule) => {
@@ -111,11 +106,17 @@ export const WorkSchedulePage = () => {
   };
 
   const handleSubmit = async (formData: any) => {
+    const payload = {
+      ...formData,
+      shiftIds: formData.shiftIds,
+    };
+
     if (selectedSchedule) {
-      await updateWorkSchedule(formData);
+      await updateWorkSchedule(payload);
     } else {
-      await createWorkSchedule(formData);
+      await createWorkSchedule(payload);
     }
+
     setEditModalOpened(false);
     setSelectedSchedule(null);
     fetchWorkSchedules(page - 1, pageSize);
@@ -136,13 +137,7 @@ export const WorkSchedulePage = () => {
       key: "shifts",
       label: "Ca trực",
       render: (row) => {
-        const map = {
-          MORNING: "Ca sáng",
-          AFTERNOON: "Ca chiều",
-          NIGHT: "Ca tối",
-          FULL_DAY: "Cả ngày",
-        };
-        return row.shifts.map((s) => map[s] || s).join(", ");
+        return row.shifts?.map((s: any) => s.name || "Không rõ").join(", ");
       },
     }),
     createColumn<WorkSchedule>({
@@ -190,7 +185,6 @@ export const WorkSchedulePage = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-4 mb-4">
-        {/* Nhân viên - 2/12 */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Nhân viên">
             <Select
@@ -210,26 +204,21 @@ export const WorkSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Ca trực - 2/12 */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Ca trực">
             <Select
-              data={[
-                { value: "MORNING", label: "Sáng" },
-                { value: "AFTERNOON", label: "Chiều" },
-                { value: "NIGHT", label: "Tối" },
-              ]}
+              data={shiftOptions}
               value={filterInput.shift}
               onChange={(value) =>
                 setFilterInput({ ...filterInput, shift: value || "" })
               }
               placeholder="Chọn ca trực"
               clearable
+              searchable
             />
           </FloatingLabelWrapper>
         </div>
 
-        {/* Từ ngày - 2/12 */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Từ ngày">
             <DatePickerInput
@@ -246,7 +235,6 @@ export const WorkSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Đến ngày - 2/12 */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Đến ngày">
             <DatePickerInput
@@ -260,7 +248,6 @@ export const WorkSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Thứ - 2/12 */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Thứ">
             <Select
@@ -283,7 +270,6 @@ export const WorkSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Nút hành động - 2/12 */}
         <div className="col-span-12 lg:col-span-2 flex items-end gap-2">
           <Button color="gray" variant="light" onClick={handleReset} fullWidth>
             Tải lại
@@ -317,24 +303,11 @@ export const WorkSchedulePage = () => {
         onDelete={handleDelete}
       />
 
-      <WorkScheduleListModal
-        opened={detailModalOpened}
-        onClose={() => setDetailModalOpened(false)}
-        schedules={workScheduleDetails}
+      <DetailScheduleStaffModal
+        opened={viewModalOpened}
+        onClose={() => setViewModalOpened(false)}
+        staffId={selectedSchedule?.staffId || ""}
         staffName={selectedSchedule?.staffName}
-        onReloadDetail={async () => {
-          if (selectedSchedule) {
-            const details = await fetchWorkScheduleDetailByStaffId(
-              selectedSchedule.staffId
-            );
-            setWorkScheduleDetails(details);
-          }
-        }}
-        onReloadList={() => {
-          fetchWorkSchedules(page - 1, pageSize);
-        }}
-        startDate={selectedSchedule?.startDate}
-        endDate={selectedSchedule?.endDate}
       />
 
       <WorkScheduleFormModal

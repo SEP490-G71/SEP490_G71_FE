@@ -8,77 +8,73 @@ import { WorkScheduleDetail } from "../../../types/Admin/WorkSchedule/WorkSchedu
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 
+const getColorByShiftName = (name: string) => {
+  switch (name) {
+    case "Ca sáng":
+      return {
+        backgroundColor: "#FFF9DB",
+        textColor: "#8D6B00",
+      };
+    case "Ca chiều":
+      return {
+        backgroundColor: "#D9F6D0",
+        textColor: "#2F9E44",
+      };
+    case "Ca tối":
+      return {
+        backgroundColor: "#E7D9FE",
+        textColor: "#6741D9",
+      };
+    default:
+      return {
+        backgroundColor: "#FFE59E",
+        textColor: "#8D6B00",
+      };
+  }
+};
+
 const WorkScheduleDetailStaff: React.FC = () => {
   const { schedules, loading, checkInWorkSchedule } =
     useWorkScheduleDetailStaff();
 
   const shiftLabelMap: Record<string, string> = {
-    MORNING: "Sáng ☀️",
-    AFTERNOON: "Chiều 🌤️",
-    NIGHT: "Tối 🌙",
-    FULL_DAY: "Cả ngày 🕐",
-  };
-
-  const shiftColorMap: Record<string, string> = {
-    MORNING: "#fef08a",
-    AFTERNOON: "#a5f3fc",
-    NIGHT: "#c4b5fd",
-    FULL_DAY: "#fca5a5",
+    MORNING: "Ca sáng",
+    AFTERNOON: "Ca chiều",
+    NIGHT: "Ca tối",
   };
 
   const statusLabelMap: Record<string, string> = {
-    SCHEDULED: "Đã phân công",
-    ATTENDED: "Đã điểm danh",
-    ABSENT: "Vắng mặt",
-    ON_LEAVE: "Đã xin nghỉ",
+    SCHEDULED: "(Chờ điểm danh)",
+    ATTENDED: "(Đã điểm danh)",
+    ABSENT: "(Vắng mặt)",
+    ON_LEAVE: "(Đã nghỉ)",
   };
 
-  const events = schedules.map((item: WorkScheduleDetail) => ({
-    id: item.id,
-    title: `${shiftLabelMap[item.shift]} - ${
-      statusLabelMap[item.status] || item.status
-    }`,
-    start: item.shiftDate,
-    allDay: true,
-    extendedProps: {
-      shift: item.shift,
-      color: shiftColorMap[item.shift] || "#e0e7ff",
-      rawDate: item.shiftDate,
-      status: item.status,
-    },
-  }));
+  const events = schedules.map((item: WorkScheduleDetail) => {
+    const shiftKey = item.shift.name as keyof typeof shiftLabelMap;
+    const shiftName = shiftLabelMap[shiftKey] || item.shift.name;
+    const statusLabel = statusLabelMap[item.status] || item.status;
+    const { backgroundColor, textColor } = getColorByShiftName(shiftName);
 
-  const renderEventContent = (eventInfo: any) => {
-    return (
-      <div
-        style={{
-          backgroundColor: eventInfo.event.extendedProps.color,
-          color: "#111827",
-          padding: "4px 6px",
-          borderRadius: "6px",
-          fontSize: "12px",
-          fontWeight: 500,
-          lineHeight: "1.2",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          wordBreak: "break-word",
-          border: "1px solid #e5e7eb",
-          whiteSpace: "normal",
-          cursor: "pointer",
-        }}
-      >
-        {eventInfo.event.title}
-      </div>
-    );
-  };
+    return {
+      id: item.id,
+      title: `${shiftName} ${statusLabel}`,
+      start: item.shiftDate,
+      allDay: true,
+      backgroundColor,
+      textColor,
+      extendedProps: {
+        rawDate: item.shiftDate,
+        status: item.status,
+      },
+    };
+  });
 
   const handleEventClick = (info: any) => {
     const { rawDate, status } = info.event.extendedProps;
     const eventDate = dayjs(rawDate).startOf("day");
     const today = dayjs().startOf("day");
 
-    // Chỉ cho chấm công nếu là hôm nay và status là SCHEDULED
     if (eventDate.isBefore(today)) {
       toast.warning("Không thể chấm công cho ca làm trong quá khứ.");
       return;
@@ -94,38 +90,43 @@ const WorkScheduleDetailStaff: React.FC = () => {
       return;
     }
 
-    // Hợp lệ: thực hiện chấm công
-    const workScheduleId = info.event.id;
-    checkInWorkSchedule(workScheduleId);
+    checkInWorkSchedule(info.event.id);
   };
 
   return (
     <div style={{ padding: 16 }}>
       <style>{`
-        div .fc .fc-toolbar-title {
-          font-size: 22px !important;
-          font-weight: 600 !important;
-          color: #111827 !important;
-          text-transform: uppercase !important;
+        .fc .fc-toolbar-title {
+          text-transform: uppercase;
+          font-size: 20px !important;
+          font-weight: 700 !important;
+          text-align: center;
+          width: 100%;
         }
-        div .fc .fc-col-header-cell-cushion {
-          font-size: 15px !important;
-          font-weight: 500 !important;
-          color: #374151 !important;
+        .fc .fc-toolbar-chunk:nth-child(2) {
+          flex: 1;
+          justify-content: center;
+          display: flex;
         }
-        div .fc .fc-button {
-          border-radius: 6px !important;
-          background-color: #e0f2fe !important;
-          border: 1px solid #bae6fd !important;
-          color: #0284c7 !important;
-          font-weight: 500 !important;
-          padding: 6px 12px !important;
+        .fc .fc-button {
+          background-color: #228be6 !important;
+          border-color: #228be6 !important;
+          color: white !important;
+          font-weight: 500;
+          padding: 6px 12px;
+          border-radius: 6px;
         }
-        div .fc .fc-button:hover {
-          background-color: #bae6fd !important;
+        .fc .fc-button:hover {
+          background-color: #1c7ed6 !important;
+          border-color: #1c7ed6 !important;
         }
-        div .fc .fc-button-primary:not(:disabled):active {
-          background-color: #7dd3fc !important;
+        .fc .fc-button:focus {
+          box-shadow: 0 0 0 0.2rem rgba(34, 139, 230, 0.5) !important;
+        }
+        .fc .fc-button-primary:disabled {
+          background-color: #a5d8ff !important;
+          border-color: #a5d8ff !important;
+          color: #f8f9fa !important;
         }
       `}</style>
 
@@ -137,20 +138,14 @@ const WorkScheduleDetailStaff: React.FC = () => {
           initialView="dayGridMonth"
           locales={[viLocale]}
           locale="vi"
+          events={events}
+          eventClick={handleEventClick}
+          height="auto"
+          eventDisplay="block"
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            end: "",
-          }}
-          events={events}
-          eventContent={renderEventContent}
-          eventClick={handleEventClick}
-          height="auto"
-          dayMaxEventRows={3}
-          views={{
-            dayGridMonth: {
-              dayMaxEventRows: 4,
-            },
+            right: "",
           }}
         />
       )}
