@@ -1,31 +1,34 @@
-import { Grid, Select, TextInput, Button, Group, Loader } from "@mantine/core";
-import { FloatingLabelWrapper } from "../../components/common/FloatingLabelWrapper";
+import { Grid, TextInput, Select, Button, Group, Loader } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useState } from "react";
-import { Status } from "../../enums/Queue-Patient/Status";
 
-type Props = {
-  onSearch: (filters: any) => void;
-  onReset: () => void;
+export type FilterField<T = any> = {
+  key: keyof T | string;
+  label: string;
+  placeholder?: string;
+  type: "text" | "select" | "date";
+  options?: { value: string; label: string }[];
+  wrapper?: React.ComponentType<{ label: string; children: React.ReactNode }>;
 };
 
-const FilterPanel = ({ onSearch, onReset }: Props) => {
-  const today = new Date();
+interface Props<T = any> {
+  fields: FilterField<T>[];
+  onSearch: (filters: T) => void;
+  onReset: () => void;
+  initialValues: T;
+}
 
-  const defaultFilters = {
-    name: "",
-    phone: "",
-    patientCode: "",
-    status: "",
-    registeredTimeFrom: today,
-    registeredTimeTo: today,
-  };
-
-  const [filters, setFilters] = useState(defaultFilters);
+const FilterPanel = <T extends Record<string, any>>({
+  fields,
+  onSearch,
+  onReset,
+  initialValues,
+}: Props<T>) => {
+  const [filters, setFilters] = useState<T>(initialValues);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (field: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (key: keyof T, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSearch = async () => {
@@ -40,89 +43,71 @@ const FilterPanel = ({ onSearch, onReset }: Props) => {
   const handleReset = async () => {
     setLoading(true);
     try {
-      setFilters(defaultFilters);
+      setFilters(initialValues);
       await onReset();
     } finally {
       setLoading(false);
     }
   };
 
+  const renderField = (field: FilterField<T>) => {
+    const Wrapper = field.wrapper ?? (({ children }) => <>{children}</>);
+    const key = field.key as keyof T;
+    const value = filters[key];
+
+    if (field.type === "text") {
+      return (
+        <Wrapper label={field.label}>
+          <TextInput
+            placeholder={field.placeholder}
+            value={value ?? ""}
+            onChange={(e) => handleChange(key, e.currentTarget.value)}
+            disabled={loading}
+          />
+        </Wrapper>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <Wrapper label={field.label}>
+          <Select
+            placeholder={field.placeholder}
+            data={field.options || []}
+            value={value ?? null}
+            onChange={(v) => handleChange(key, v)}
+            clearable
+            disabled={loading}
+          />
+        </Wrapper>
+      );
+    }
+
+    if (field.type === "date") {
+      return (
+        <Wrapper label={field.label}>
+          <DatePickerInput
+            placeholder={field.placeholder}
+            value={value ?? null}
+            onChange={(v) => handleChange(key, v)}
+            valueFormat="DD/MM/YYYY"
+            clearable
+            disabled={loading}
+          />
+        </Wrapper>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <Grid gutter="xs">
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Trạng thái">
-          <Select
-            placeholder="Chọn trạng thái"
-            data={Object.values(Status).map((value) => ({
-              value,
-              label: value,
-            }))}
-            value={filters.status}
-            onChange={(v) => handleChange("status", v)}
-            clearable
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
-
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Họ tên">
-          <TextInput
-            placeholder="Nhập họ tên"
-            value={filters.name}
-            onChange={(e) => handleChange("name", e.currentTarget.value)}
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
-
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Từ ngày">
-          <DatePickerInput
-            placeholder="Chọn ngày bắt đầu"
-            value={filters.registeredTimeFrom}
-            onChange={(v) => handleChange("registeredTimeFrom", v)}
-            valueFormat="DD/MM/YYYY"
-            clearable
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
-
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Đến ngày">
-          <DatePickerInput
-            placeholder="Chọn ngày kết thúc"
-            value={filters.registeredTimeTo}
-            onChange={(v) => handleChange("registeredTimeTo", v)}
-            valueFormat="DD/MM/YYYY"
-            clearable
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
-
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Mã BN">
-          <TextInput
-            placeholder="Nhập mã BN"
-            value={filters.patientCode}
-            onChange={(e) => handleChange("patientCode", e.currentTarget.value)}
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
-
-      <Grid.Col span={6}>
-        <FloatingLabelWrapper label="Số điện thoại">
-          <TextInput
-            placeholder="Nhập số điện thoại"
-            value={filters.phone}
-            onChange={(e) => handleChange("phone", e.currentTarget.value)}
-            disabled={loading}
-          />
-        </FloatingLabelWrapper>
-      </Grid.Col>
+      {fields.map((field) => (
+        <Grid.Col span={6} key={field.key.toString()}>
+          {renderField(field)}
+        </Grid.Col>
+      ))}
 
       <Grid.Col span={12}>
         <Group justify="flex-end" mt="sm">

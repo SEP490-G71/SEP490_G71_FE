@@ -194,7 +194,7 @@ function CustomTable<T>({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-gray-800 border-t text-sm text-gray-600 dark:text-gray-300">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-500">
           <div className="flex items-center gap-2">
-            <span>Hiển thị tối đa</span>
+            <span>Hiển thị </span>
             <select
               value={pageSize}
               onChange={async (e) => {
