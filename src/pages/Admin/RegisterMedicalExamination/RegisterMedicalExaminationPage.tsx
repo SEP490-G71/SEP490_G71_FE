@@ -104,32 +104,19 @@ export default function RegisterMedicalExaminationPage() {
   } = useRegisterMedicalExamination();
 
   const columns: Column<Patient>[] = [
-    { key: "patientCode", label: "Mã BN", sortable: false },
-    { key: "fullName", label: "Họ tên", sortable: false },
+    { key: "patientCode", label: "Mã BN", sortable: false, align: "left" },
+    { key: "fullName", label: "Họ tên", sortable: false, align: "left" },
     {
       key: "gender",
       label: "Giới tính",
+      align: "left",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
-    { key: "phone", label: "Số điện thoại" },
-    { key: "roomNumber", label: "Phòng khám" },
-    {
-      key: "specialization",
-      label: "Chuyên khoa",
-      render: (row) => row.specialization || "-",
-    },
-    {
-      key: "registeredTime",
-      label: "Ngày đăng ký",
-      render: (row) =>
-        row.registeredTime
-          ? dayjs(row.registeredTime).format("DD/MM/YYYY")
-          : "-",
-    },
-
+    { key: "roomNumber", label: "Phòng khám", align: "center" },
     {
       key: "status",
       label: "Trạng thái",
+      align: "left",
       render: (row) => {
         switch (row.status) {
           case "WAITING":
@@ -152,6 +139,22 @@ export default function RegisterMedicalExaminationPage() {
             return row.status || "";
         }
       },
+    },
+    {
+      key: "specialization",
+      label: "Chuyên khoa",
+      align: "left",
+      render: (row) => row.specialization || "-",
+    },
+    { key: "phone", label: "Số điện thoại", align: "right" },
+    {
+      key: "registeredTime",
+      label: "Ngày đăng ký",
+      align: "right",
+      render: (row) =>
+        row.registeredTime
+          ? dayjs(row.registeredTime).format("DD/MM/YYYY")
+          : "-",
     },
   ];
 
@@ -254,16 +257,6 @@ export default function RegisterMedicalExaminationPage() {
           phone: submittedFilters.phone,
           patientCode: submittedFilters.patientCode,
           specialization: submittedFilters.specialization,
-          // registeredTimeFrom: submittedFilters.registeredTimeFrom
-          //   ? dayjs(submittedFilters.registeredTimeFrom)
-          //       .startOf("day")
-          //       .format("YYYY-MM-DDTHH:mm:ss")
-          //   : undefined,
-          // registeredTimeTo: submittedFilters.registeredTimeTo
-          //   ? dayjs(submittedFilters.registeredTimeTo)
-          //       .endOf("day")
-          //       .format("YYYY-MM-DDTHH:mm:ss")
-          //   : undefined,
           registeredTimeFrom: submittedFilters.registeredTimeFrom
             ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
             : undefined,

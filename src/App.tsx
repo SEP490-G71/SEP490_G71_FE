@@ -51,6 +51,7 @@ import DivideShiftPage from "./pages/Admin/DivideShift/DivideShiftPage";
 import MedicalServiceStatisticsPage from "./pages/Admin/Statistics/MedicalServiceStatisticsPage";
 import PatientStatisticsPage from "./pages/Admin/Statistics/PatientStatisticsPage";
 import { SpecializationsPages } from "./pages/Admin/Specializations/SpecializationsPages";
+import EditProfilePage from "./pages/Admin/Profile/EditProfilePage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -138,6 +139,7 @@ export default function App() {
             <Route path="/buttons" element={<Buttons />} />
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/edit-profile" element={<EditProfilePage />} />
 
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />

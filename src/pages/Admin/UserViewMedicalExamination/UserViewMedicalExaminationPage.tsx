@@ -58,17 +58,20 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     key: "index",
     label: "STT",
     render: (row) => row.index + 1,
+    align: "left",
   },
   {
     key: "fullName",
     label: "Họ và tên",
+    align: "left",
   },
   {
     key: "queueOrder",
     label: "Thứ tự khám",
     render: (row) => (
-      <div style={{ textAlign: "left" }}>{row.queueOrder ?? "-"}</div>
+      <div style={{ textAlign: "center" }}>{row.queueOrder ?? "-"}</div>
     ),
+    align: "center",
   },
   {
     key: "status",
@@ -87,6 +90,7 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
         {statusLabel(row.status)}
       </span>
     ),
+    align: "left", // Text => căn trái
   },
 ];
 

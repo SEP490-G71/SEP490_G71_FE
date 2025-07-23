@@ -31,7 +31,8 @@ export const usePatientForm = () =>
       gender: (value) => (!value ? "Giới tính là bắt buộc" : null),
       phone: (value) => {
         if (!value.trim()) return "Số điện thoại là bắt buộc";
-        if (!/^\d{10,15}$/.test(value)) return "SĐT phải từ 10–15 chữ số";
+        if (!/^\d{10}$/.test(value))
+          return "Số điện thoại phải gồm đúng 10 chữ số";
         return null;
       },
       email: (value) => {
