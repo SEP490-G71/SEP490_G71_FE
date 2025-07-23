@@ -1,9 +1,10 @@
-import { Modal, TextInput, Select, Button, MultiSelect } from "@mantine/core";
+import { Modal, TextInput, MultiSelect, Button, Select } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import { WorkSchedule } from "../../../types/Admin/WorkSchedule/WorkSchedule";
 import axiosInstance from "../../../services/axiosInstance";
 import { DatePickerInput } from "@mantine/dates";
+import { useShifts } from "../../../hooks/workSchedule/useShifts";
 
 interface StaffOption {
   value: string;
@@ -16,7 +17,7 @@ interface WorkScheduleFormModalProps {
   initialData?: WorkSchedule | null;
   onSubmit: (data: {
     staffId: string;
-    shift: string;
+    shiftIds: string[];
     daysOfWeek: string[];
     startDate: string;
     endDate: string;
@@ -35,13 +36,6 @@ const dayOptions = [
   { value: "SUNDAY", label: "Chủ nhật" },
 ];
 
-const shiftOptions = [
-  { value: "MORNING", label: "Ca sáng" },
-  { value: "AFTERNOON", label: "Ca chiều" },
-  { value: "NIGHT", label: "Ca tối" },
-  { value: "FULL_DAY", label: "Cả ngày" },
-];
-
 const WorkScheduleFormModal = ({
   opened,
   onClose,
@@ -51,7 +45,7 @@ const WorkScheduleFormModal = ({
 }: WorkScheduleFormModalProps) => {
   const form = useForm<{
     staffId: string;
-    shift: string;
+    shiftIds: string[];
     daysOfWeek: string[];
     startDate: string;
     endDate: string;
@@ -59,7 +53,7 @@ const WorkScheduleFormModal = ({
   }>({
     initialValues: {
       staffId: "",
-      shift: "MORNING",
+      shiftIds: [],
       daysOfWeek: [],
       startDate: "",
       endDate: "",
@@ -67,15 +61,23 @@ const WorkScheduleFormModal = ({
     },
     validate: {
       staffId: (value) => (!value ? "Thiếu mã nhân viên" : null),
-      shift: (value) => (!value ? "Ca trực là bắt buộc" : null),
+      shiftIds: (value) =>
+        value.length === 0 ? "Phải chọn ít nhất một ca trực" : null,
       daysOfWeek: (value) =>
         value.length === 0 ? "Phải chọn ít nhất một ngày" : null,
       startDate: (value) => (!value ? "Từ ngày là bắt buộc" : null),
-      endDate: (value) => (!value ? "Đến ngày là bắt buộc" : null),
+      endDate: (value, values) => {
+        if (!value) return "Đến ngày là bắt buộc";
+        if (values.startDate && new Date(value) < new Date(values.startDate)) {
+          return "Đến ngày không được nhỏ hơn Từ ngày";
+        }
+        return null;
+      },
     },
   });
 
   const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+  const { shifts: shiftOptions } = useShifts();
 
   useEffect(() => {
     if (!initialData) {
@@ -94,7 +96,7 @@ const WorkScheduleFormModal = ({
     if (initialData) {
       form.setValues({
         staffId: initialData.staffId,
-        shift: initialData.shifts?.[0] || "MORNING",
+        shiftIds: initialData.shifts?.map((s: any) => s.id || s.value) || [],
         daysOfWeek: initialData.daysOfWeek || [],
         startDate: initialData.startDate,
         endDate: initialData.endDate,
@@ -130,13 +132,14 @@ const WorkScheduleFormModal = ({
           {...form.getInputProps("staffId")}
           required
           disabled={isViewMode || !!initialData}
+          searchable
         />
 
-        <Select
+        <MultiSelect
           label="Ca trực"
           placeholder="Chọn ca trực"
           data={shiftOptions}
-          {...form.getInputProps("shift")}
+          {...form.getInputProps("shiftIds")}
           required
           disabled={isViewMode}
           mt="sm"

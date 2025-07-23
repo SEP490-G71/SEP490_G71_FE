@@ -16,11 +16,19 @@ export interface WorkSchedule {
   note: string | null;
 }
 
+export interface Shift {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  description: string;
+}
+
 export interface WorkScheduleDetail {
   id: string;
   staffId: string;
   staffName: string;
-  shift: "MORNING" | "AFTERNOON" | "NIGHT" | "FULL_DAY";
+  shift: Shift;
   shiftDate: string;
   status: string;
   note: string | null;
