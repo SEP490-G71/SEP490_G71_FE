@@ -103,7 +103,16 @@ export const SpecializationsPages = () => {
 
   const columns = [
     createColumn<Specialization>({ key: "name", label: "Tên chuyên khoa" }),
-    createColumn<Specialization>({ key: "description", label: "Mô tả" }),
+    createColumn<Specialization>({
+      key: "description",
+      label: "Mô tả",
+      render: (row) => {
+        const desc = row.description || "";
+        const short = desc.length > 55 ? desc.slice(0, 55) + "..." : desc;
+
+        return <span title={desc}>{short}</span>;
+      },
+    }),
   ];
 
   return (

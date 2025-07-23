@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Title } from "@mantine/core";
+import { Divider, Paper, Title } from "@mantine/core";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import CustomTable from "../common/CustomTable";
 import FilterPanel from "../common/FilterSection";
@@ -19,8 +19,8 @@ interface PatientPanelProps {
   loading: boolean;
   setPageSize: (size: number) => void;
   setCurrentPage: (page: number) => void;
-  setFilters: (filters: any) => void;
   department?: DepartmentResponse | null;
+  updateFilters: (filters: any) => void;
 }
 
 const PatientPanel = ({
@@ -33,8 +33,8 @@ const PatientPanel = ({
   loading,
   setPageSize,
   setCurrentPage,
-  setFilters,
   department,
+  updateFilters,
 }: PatientPanelProps) => {
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
@@ -93,8 +93,7 @@ const PatientPanel = ({
       roomNumber: department?.roomNumber,
       type: department?.type,
     };
-    setFilters(enrichedFilters);
-    setCurrentPage(0);
+    updateFilters(enrichedFilters);
   };
 
   const handleReset = () => {
@@ -102,37 +101,41 @@ const PatientPanel = ({
       roomNumber: department?.roomNumber,
       type: department?.type,
     };
-    setFilters(resetFilters);
-    setCurrentPage(0);
+    updateFilters(resetFilters);
   };
 
   return (
-    <div className="flex flex-col">
-      <FilterPanel onSearch={handleSearch} onReset={handleReset} />
-      <Title order={5} mb="md">
-        Danh sách đăng ký
-      </Title>
+    <Paper p="md" shadow="xs" withBorder radius={0}>
+      <div className="flex flex-col">
+        <FilterPanel onSearch={handleSearch} onReset={handleReset} />
+        <Divider mt="md" mb={15} />
+        <Title order={5} mb="md">
+          Danh sách đăng ký
+        </Title>
 
-      <CustomTable<QueuePatient>
-        data={patients}
-        columns={columns}
-        page={currentPage + 1}
-        pageSize={pageSize}
-        totalItems={totalElements}
-        onPageChange={(p) => setCurrentPage(p - 1)}
-        onPageSizeChange={setPageSize}
-        loading={loading}
-        showActions={false}
-        getRowStyle={(row) => ({
-          backgroundColor:
-            selectedPatient?.patientCode === row.patientCode
-              ? "#cce5ff"
-              : undefined,
-          cursor: "pointer",
-        })}
-        onView={onSelectPatient}
-      />
-    </div>
+        <CustomTable<QueuePatient>
+          data={patients}
+          columns={columns}
+          page={currentPage + 1}
+          pageSize={pageSize}
+          totalItems={totalElements}
+          onPageChange={(p) => setCurrentPage(p - 1)}
+          onPageSizeChange={setPageSize}
+          loading={loading}
+          showActions={false}
+          getRowStyle={(row) => ({
+            backgroundColor:
+              selectedPatient?.patientCode === row.patientCode
+                ? "#cce5ff"
+                : undefined,
+            cursor: "pointer",
+          })}
+          onRowClick={(row) => {
+            onSelectPatient(row);
+          }}
+        />
+      </div>
+    </Paper>
   );
 };
 

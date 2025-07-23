@@ -12,7 +12,17 @@ export interface MedicalServiceRow {
 interface SubmitPayload {
   patientId: string;
   staffId: string;
+  visitId: string;
   diagnosisText: string;
+  temperature: number;
+  respiratoryRate: number;
+  bloodPressure: string;
+  heartRate: number;
+  heightCm: number;
+  weightKg: number;
+  bmi: number;
+  spo2: number;
+  notes: string;
   services: MedicalServiceRow[];
 }
 
@@ -36,12 +46,21 @@ export const useMedicalRecord = () => {
         return;
       }
 
-      const res = await axiosInstance.post(
-        "https://api.datnd.id.vn/medical-diagnosis/medical-records",
+      const res = await axiosInstance.post("/medical-records",
         {
           patientId: payload.patientId,
           staffId: payload.staffId,
+          visitId: payload.visitId,
           diagnosisText: payload.diagnosisText || "Chẩn đoán: chưa nhập",
+          temperature: payload.temperature,
+          respiratoryRate: payload.respiratoryRate,
+          bloodPressure: payload.bloodPressure,
+          heartRate: payload.heartRate,
+          heightCm: payload.heightCm,
+          weightKg: payload.weightKg,
+          bmi: payload.bmi,
+          spo2: payload.spo2,
+          notes: payload.notes,
           services: cleanedServices,
         }
       );

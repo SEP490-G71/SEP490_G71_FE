@@ -13,81 +13,76 @@ const PatientInfoPanel = ({ patient }: Props) => {
     <>
       <Group mb="xs" gap="xs" style={{ fontSize: "14px" }}></Group>
 
-      <Paper mb="md">
-        <Title order={4} mb="sm">
-          Thông tin người đăng ký
-        </Title>
-
-        <Grid gutter="xs">
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Mã BN:{" "}
-              <Text span fw={700} size="md">
-                {patient?.patientCode ?? "---"}
-              </Text>
+      <Grid gutter="xs">
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Mã BN:{" "}
+            <Text span fw={700} size="md">
+              {patient?.patientCode ?? "---"}
             </Text>
-          </Grid.Col>
+          </Text>
+        </Grid.Col>
 
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Họ tên:{" "}
-              <Text span fw={700} size="md">
-                {patient?.fullName ?? "---"}
-              </Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Họ tên:{" "}
+            <Text span fw={700} size="md">
+              {patient?.fullName ?? "---"}
             </Text>
-          </Grid.Col>
+          </Text>
+        </Grid.Col>
 
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Điện thoại:{" "}
-              <Text span fw={700} size="md">
-                {patient?.phone ?? "---"}
-              </Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Giới tính:{" "}
+            <Text span fw={700} size="md">
+              {patient?.gender === "MALE"
+                ? "Nam"
+                : patient?.gender === "FEMALE"
+                ? "Nữ"
+                : "---"}
             </Text>
-          </Grid.Col>
+          </Text>
+        </Grid.Col>
 
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Ngày sinh:{" "}
-              <Text span fw={700} size="md">
-                {patient?.dob ? dayjs(patient.dob).format("DD/MM/YYYY") : "---"}
-              </Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            SDT:{" "}
+            <Text span fw={700} size="md">
+              {patient?.phone ?? "---"}
             </Text>
-          </Grid.Col>
+          </Text>
+        </Grid.Col>
 
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Giới tính:{" "}
-              <Text span fw={700} size="md">
-                {patient?.gender === "MALE"
-                  ? "Nam"
-                  : patient?.gender === "FEMALE"
-                  ? "Nữ"
-                  : "---"}
-              </Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Chuyên khoa:{" "}
+            <Text span fw={700} size="md">
+              {patient?.specialization}
             </Text>
-          </Grid.Col>
+          </Text>
+        </Grid.Col>
 
-          {/* Bạn có thể mở lại các trường dưới đây nếu cần */}
-          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Ngày đăng ký: <Text span fw={700} size="md">---</Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Ngày sinh:{" "}
+            <Text span fw={700} size="md">
+              {patient?.dob ? dayjs(patient.dob).format("DD/MM/YYYY") : "---"}
             </Text>
-          </Grid.Col> */}
+          </Text>
+        </Grid.Col>
 
-          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Số đăng ký: <Text span fw={700} size="md">---</Text>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Text span size="md">
+            Ngày đăng kí:{" "}
+            <Text span fw={700} size="md">
+              {patient?.registeredTime
+                ? dayjs(patient.registeredTime).format("DD/MM/YYYY")
+                : "---"}
             </Text>
-          </Grid.Col> */}
-
-          {/* <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-            <Text span size="md">
-              Địa chỉ: <Text span fw={700} size="md">---</Text>
-            </Text>
-          </Grid.Col> */}
-        </Grid>
-      </Paper>
+          </Text>
+        </Grid.Col>
+      </Grid>
     </>
   );
 };

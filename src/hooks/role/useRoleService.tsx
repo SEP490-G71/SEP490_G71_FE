@@ -38,6 +38,31 @@ const useRoleService = () => {
     }
   };
 
+  const fetchRolesExceptPatient = async (
+    page: number = 0,
+    size: number = 100
+  ) => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get("/roles", {
+        params: {
+          page,
+          size,
+        },
+      });
+
+      const allRoles: Role[] = res.data.result.content;
+      const filtered = allRoles.filter((role) => role.name !== "PATIENT");
+
+      setRoles(filtered);
+      setTotalItems(filtered.length);
+    } catch (error) {
+      console.error("Failed to fetch roles (excluding PATIENT):", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchRoleById = async (id: string) => {
     try {
       console.log(`Fetching role by id: ${id}`);
@@ -70,6 +95,7 @@ const useRoleService = () => {
     loading,
     setLoading,
     fetchAllRoles,
+    fetchRolesExceptPatient,
     fetchRoleById,
     handleDeleteRoleById,
   };
