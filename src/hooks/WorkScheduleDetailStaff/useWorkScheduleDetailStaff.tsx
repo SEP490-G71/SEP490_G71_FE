@@ -18,7 +18,7 @@ export const useWorkScheduleDetailStaff = () => {
       }
 
       const resSchedule = await axiosInstance.get(
-        `/work-schedule/staff/${userId}`
+        `/work-schedules/staff/${userId}`
       );
       const result = resSchedule?.data?.result ?? [];
       setSchedules(result);
@@ -32,7 +32,7 @@ export const useWorkScheduleDetailStaff = () => {
 
   const checkInWorkSchedule = async (workScheduleId: string) => {
     try {
-      await axiosInstance.post(`/work-schedule/check-in/${workScheduleId}`);
+      await axiosInstance.post(`/work-schedules/check-in/${workScheduleId}`);
       toast.success("Chấm công thành công");
       fetchWorkScheduleDetail(); // cập nhật lại danh sách ca
     } catch (err) {

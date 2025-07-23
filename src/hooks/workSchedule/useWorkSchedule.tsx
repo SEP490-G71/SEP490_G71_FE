@@ -13,7 +13,7 @@ export const useWorkSchedule = () => {
     size: number = 10,
     filters?: {
       staffId?: string;
-      shift?: string;
+      shiftId?: string;
       fromDate?: string;
       toDate?: string;
       dayOfWeek?: string;
