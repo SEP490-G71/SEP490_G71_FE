@@ -1,4 +1,4 @@
-import { Paper, Title, Grid, Group, Text } from "@mantine/core";
+import { Grid, Group, Text } from "@mantine/core";
 import React from "react";
 import dayjs from "dayjs";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
