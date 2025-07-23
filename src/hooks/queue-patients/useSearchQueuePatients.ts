@@ -1,4 +1,4 @@
-// ✅ useQueuePatientService.ts - phiên bản chuẩn đã fix gọi API 3 lần
+
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";

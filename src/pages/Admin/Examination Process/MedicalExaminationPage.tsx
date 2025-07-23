@@ -47,9 +47,11 @@ const MedicalExaminationPage = () => {
     setPageSize,
     loading,
     updateFilters,
-  } = useQueuePatientService(
-    department?.roomNumber ? { roomNumber: department.roomNumber } : {}
-  );
+  } = useQueuePatientService({
+    roomNumber: department?.roomNumber ?? "",
+    registeredTimeFrom: new Date().toISOString().split("T")[0],
+    registeredTimeTo: new Date().toISOString().split("T")[0],
+  });
 
   const form = useForm({
     initialValues: {
@@ -130,11 +132,11 @@ const MedicalExaminationPage = () => {
     fetchAllMedicalServicesNoPagination();
   }, []);
 
-  useEffect(() => {
-    if (department?.roomNumber) {
-      updateFilters({ roomNumber: department.roomNumber });
-    }
-  }, [department]);
+  // useEffect(() => {
+  //   if (department?.roomNumber) {
+  //     updateFilters({ roomNumber: department.roomNumber });
+  //   }
+  // }, [department]);
 
   useEffect(() => {
     const fetchDoctorName = async () => {
