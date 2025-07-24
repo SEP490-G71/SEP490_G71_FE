@@ -9,6 +9,7 @@ interface Props {
 }
 
 const PatientInfoPanel = ({ patient }: Props) => {
+  console.log("📊 PatientInfoPanel nhận:", patient);
   return (
     <>
       <Group mb="xs" gap="xs" style={{ fontSize: "14px" }}></Group>

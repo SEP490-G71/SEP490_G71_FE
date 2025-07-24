@@ -1,27 +1,36 @@
-import {
-  Grid,
-  Paper,
-  ScrollArea,
-  Table,
-  Text,
-  Loader,
-  Pagination,
-  Select,
-  Group,
-  Title,
-} from "@mantine/core";
-import { useEffect, useState } from "react";
-//import FilterPanel from "../../../components/common/FilterSection";
+import { Autocomplete, Divider, Grid, Paper, Text, Title } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
+import FilterPanel, {
+  FilterField,
+} from "../../../components/common/FilterSection";
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import PatientInfoPanel from "../../../components/patient/PatientInfoPanel";
 import ServiceExecutionPanel from "../../../components/medical/ServiceExecutionPanel";
 import HeaderBar from "../../../components/medical/HeaderBar";
 import ServiceResultPanel from "../../../components/medical/ServiceResultPanel";
+import ClinicList from "../../../components/subClinical/ClinicList";
+
 import useMedicalRecordList from "../../../hooks/medicalRecord/useMedicalRecordList";
-import { MedicalRecordStatusMap } from "../../../enums/MedicalRecord/MedicalRecordStatus";
 import useMedicalRecordDetail from "../../../hooks/medicalRecord/useMedicalRecordDetail";
+import useMedicalOrdersByDepartment from "../../../hooks/medicalRecord/useMedicalOrdersByDepartment";
+import useQueuePatientService from "../../../hooks/queue-patients/useSearchQueuePatients";
+import useStaffs from "../../../hooks/staffs-service/useStaffs";
+import useMyDepartment from "../../../hooks/department-service/useMyDepartment";
+import { useUserInfo } from "../../../hooks/auth/useUserInfo";
+import { usePatientManagement } from "../../../hooks/Patient-Management/usePatientManagement";
+import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
+
 import { MedicalRecordOrder } from "../../../types/MedicalRecord/MedicalRecordDetail";
+import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
+import {
+  MedicalRecordStatus,
+  MedicalRecordStatusMap,
+} from "../../../enums/MedicalRecord/MedicalRecordStatus";
 
 const ClinicalPage = () => {
+  //  State
   const [selectedOrder, setSelectedOrder] = useState<MedicalRecordOrder | null>(
     null
   );
@@ -29,30 +38,191 @@ const ClinicalPage = () => {
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [filterKey, setFilterKey] = useState(0);
+  const [filters, setFilters] = useState({
+    patientId: "",
+    medicalRecordCode: "",
+    fromDate: new Date(),
+    toDate: new Date(),
+    status: MedicalRecordStatus.TESTING,
+  });
+
+  const [patientCode, setPatientCode] = useState<string | null>(null);
+  const [selectedQueuePatient, setSelectedQueuePatient] =
+    useState<QueuePatient | null>(null);
+
+  //  Hooks
+  const { userInfo } = useUserInfo();
+  const { fetchStaffsById } = useStaffs();
+  const { department } = useMyDepartment();
+  const { fetchPatientById } = usePatientManagement();
+
+  const { orders: departmentOrders } = useMedicalOrdersByDepartment(
+    department?.id || ""
+  );
   const { records, loading, pagination, fetchMedicalRecords } =
     useMedicalRecordList();
-
   const { recordDetail, fetchMedicalRecordDetail } = useMedicalRecordDetail();
+  const { patients: queuePatients, updateFilters } = useQueuePatientService();
 
+  const [technicalName, setTechnicalName] = useState("Không rõ");
+
+  // Load bác sĩ kỹ thuật
+  useEffect(() => {
+    const fetch = async () => {
+      if (userInfo?.userId) {
+        const data = await fetchStaffsById(userInfo.userId);
+        if (data) setTechnicalName(data.fullName || "Không rõ");
+      }
+    };
+    fetch();
+  }, [userInfo?.userId]);
+
+  //  Load danh sách hồ sơ theo filter
   useEffect(() => {
     fetchMedicalRecords({
+      patientId: filters.patientId,
+      medicalRecordCode: filters.medicalRecordCode,
+      fromDate: dayjs(filters.fromDate).format("YYYY-MM-DD"),
+      toDate: dayjs(filters.toDate).format("YYYY-MM-DD"),
       page: page - 1,
-      size: 10,
+      size: pageSize,
+      status: filters.status,
     });
-  }, [page]);
+  }, [page, pageSize, filters]);
 
+  //  Load chi tiết hồ sơ
   useEffect(() => {
     if (selectedRecordId) {
       fetchMedicalRecordDetail(selectedRecordId);
+      console.log("🩺 Hồ sơ được chọn:", selectedRecordId);
     }
   }, [selectedRecordId]);
+
+  //  Khi đã có recordDetail → fetch bệnh nhân → lấy patientCode → tìm QueuePatient
   useEffect(() => {
-    fetchMedicalRecords({
-      page: page - 1,
-      size: pageSize,
-      status: "TESTING",
+    const load = async () => {
+      if (!recordDetail?.patientId) return;
+      const patient = await fetchPatientById(recordDetail.patientId);
+      console.log("👤 Thông tin bệnh nhân:", patient);
+      if (!patient?.patientCode) {
+        toast.error("Không tìm thấy mã bệnh nhân");
+        return;
+      }
+      setPatientCode(patient.patientCode);
+      console.log("✅ Set patientCode:", patient.patientCode);
+    };
+    load();
+  }, [recordDetail?.patientId]);
+
+  //  Khi có patientCode → gọi queue search
+  useEffect(() => {
+    if (patientCode) {
+      console.log("📨 Gửi filter patientCode:", patientCode);
+      updateFilters({ patientCode });
+    }
+  }, [patientCode]);
+
+  // 👉 Khi có kết quả queue
+  useEffect(() => {
+    console.log("📦 Danh sách queuePatients:", queuePatients);
+    if (queuePatients.length > 0) {
+      console.log("📥 Kết quả QueuePatients:", queuePatients);
+      setSelectedQueuePatient(queuePatients[0]);
+    } else {
+      console.log("⚠️ Không có queuePatient nào tìm thấy");
+    }
+  }, [queuePatients]);
+
+  // 👉 Filter fields cho bên trái
+  const filterFields: FilterField[] = [
+    {
+      key: "patientId",
+      label: "Tên bệnh nhân",
+      customRender: ({ value, onChange, loading }) => {
+        const [inputValue, setInputValue] = useState("");
+        const [searchTerm, setSearchTerm] = useState("");
+        const { options: searchOptions } = useSearchPatients(searchTerm);
+
+        useEffect(() => {
+          const found = searchOptions.find((opt) => opt.value === value);
+          if (found) setInputValue(found.label);
+        }, [value, searchOptions]);
+
+        return (
+          <FloatingLabelWrapper label="Tên bệnh nhân">
+            <Autocomplete
+              placeholder="Nhập tên bệnh nhân"
+              data={searchOptions}
+              value={inputValue}
+              onChange={(val) => {
+                const selected = searchOptions.find((opt) => opt.label === val);
+                if (selected) {
+                  setInputValue(selected.label);
+                  onChange(selected.value);
+                } else {
+                  setInputValue(val);
+                  onChange("");
+                }
+              }}
+              onInput={(e) => {
+                setInputValue(e.currentTarget.value);
+                setSearchTerm(e.currentTarget.value);
+              }}
+              disabled={loading}
+              clearable
+            />
+          </FloatingLabelWrapper>
+        );
+      },
+    },
+    {
+      key: "medicalRecordCode",
+      label: "Mã hồ sơ",
+      type: "text",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "fromDate",
+      label: "Từ ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "toDate",
+      label: "Đến ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "status",
+      label: "Trạng thái",
+      type: "select",
+      wrapper: FloatingLabelWrapper,
+      options: Object.entries(MedicalRecordStatusMap).map(([value, label]) => ({
+        value,
+        label,
+      })),
+    },
+  ];
+
+  const handleSearch = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilters({
+      patientId: "",
+      medicalRecordCode: "",
+      fromDate: new Date(),
+      toDate: new Date(),
+      status: MedicalRecordStatus.TESTING,
     });
-  }, [page, pageSize]);
+    setPage(1);
+    setFilterKey((prev) => prev + 1);
+  };
+
   const handleSelectOrder = (order: MedicalRecordOrder) => {
     setSelectedOrder(order);
     setIsResultMode(true);
@@ -63,188 +233,111 @@ const ClinicalPage = () => {
     setIsResultMode(false);
   };
 
-  const handleSelectInfo = () => {
-    setIsResultMode(false);
-  };
-  const testingRecords = records.filter(
-    (record) => record.status === "TESTING"
+  const displayedRecords = records;
+
+  const filteredOrders = useMemo(
+    () => new Set(departmentOrders.map((o) => o.orderId)),
+    [departmentOrders]
   );
 
-  const pendingOrders =
-    recordDetail?.orders.filter((order) => order.status !== "COMPLETED") ?? [];
+  const pendingOrders = useMemo(
+    () =>
+      recordDetail?.orders.filter(
+        (o) => o.status !== "COMPLETED" && filteredOrders.has(o.id)
+      ) ?? [],
+    [recordDetail?.orders, filteredOrders]
+  );
 
   const doneOrders =
-    recordDetail?.orders.filter((order) => order.status === "COMPLETED") ?? [];
+    recordDetail?.orders.filter((o) => o.status === "COMPLETED") ?? [];
+
+  // 👉 Render
 
   return (
     <Grid>
-      {/* Cột trái: Danh sách hồ sơ */}
+      <Grid.Col span={12} style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <Text
+          fw={700}
+          c="red"
+          size="lg"
+          style={{
+            marginTop: 0,
+            marginBottom: 0,
+            lineHeight: 1.2,
+          }}
+        >
+          {department?.roomNumber} – {department?.name}
+        </Text>
+      </Grid.Col>
+      {/* FILTER SECTION */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
-        <Paper shadow="xs" p="md" radius="md" mb="md" withBorder>
-          {/* <FilterPanel /> */}
-        </Paper>
-
-        <Paper shadow="xs" radius="md" p="md" withBorder>
+        <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
+          <Title order={5} mb="sm">
+            Bộ lọc hồ sơ
+          </Title>
+          <FilterPanel
+            key={filterKey}
+            fields={filterFields}
+            initialValues={filters}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          />
+          <Divider mt="md" mb={15} />
           <Title order={5} mb="md">
             Danh sách hồ sơ
           </Title>
-
-          {loading ? (
-            <Loader />
-          ) : (
-            <>
-              <ScrollArea offsetScrollbars scrollbarSize={8} h="auto">
-                <Table
-                  withColumnBorders
-                  highlightOnHover
-                  style={{
-                    minWidth: 700,
-                    borderCollapse: "separate",
-                    borderSpacing: "2px",
-                  }}
-                >
-                  <thead style={{ backgroundColor: "#dee2e6" }}>
-                    <tr>
-                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                        Trạng thái
-                      </th>
-                      <th style={{ textAlign: "center" }}>Mã hồ sơ</th>
-                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                        Tên bệnh nhân
-                      </th>
-                      <th style={{ textAlign: "left", paddingLeft: "10px" }}>
-                        Người kê đơn
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {testingRecords.map((record, index) => {
-                      const isSelected = selectedRecordId === record.id;
-                      return (
-                        <tr
-                          key={record.id}
-                          onClick={() => setSelectedRecordId(record.id)}
-                          style={{
-                            cursor: "pointer",
-                            backgroundColor: isSelected
-                              ? "#cce5ff"
-                              : index % 2 === 0
-                              ? "#f8f9fa"
-                              : "#e9ecef",
-                            borderBottom: "1px solid #adb5bd",
-                          }}
-                        >
-                          <td
-                            style={{
-                              paddingLeft: "10px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {MedicalRecordStatusMap[record.status] ||
-                              record.status}
-                          </td>
-                          <td
-                            style={{
-                              textAlign: "center",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {record.medicalRecordCode}
-                          </td>
-                          <td
-                            style={{
-                              paddingLeft: "10px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {record.patientName}
-                          </td>
-                          <td
-                            style={{
-                              paddingLeft: "10px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {record.doctorName}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
-              </ScrollArea>
-
-              {/* Pagination + Info */}
-              <Group justify="space-between" mt="sm">
-                <Text size="sm">
-                  {testingRecords.length > 0
-                    ? `${(page - 1) * pageSize + 1}–${
-                        (page - 1) * pageSize + testingRecords.length
-                      } của ${pagination.totalElements}`
-                    : "Không có hồ sơ "}
-                </Text>
-
-                <Group>
-                  <Select
-                    data={["5", "10", "20"]}
-                    value={pageSize.toString()}
-                    onChange={(value) => {
-                      if (value) {
-                        setPageSize(parseInt(value));
-                        setPage(1);
-                      }
-                    }}
-                    w={100}
-                    variant="filled"
-                    size="xs"
-                  />
-
-                  <Pagination
-                    total={pagination.totalPages}
-                    value={page}
-                    onChange={setPage}
-                    size="sm"
-                  />
-                </Group>
-              </Group>
-            </>
-          )}
+          <ClinicList
+            records={displayedRecords}
+            loading={loading}
+            selectedRecordId={selectedRecordId}
+            setSelectedRecordId={setSelectedRecordId}
+            page={page}
+            setPage={setPage}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pagination={pagination}
+          />
         </Paper>
       </Grid.Col>
 
-      {/* Cột phải: Thông tin chi tiết và kết quả */}
+      {/* DETAIL VIEW SECTION */}
       <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
-        <div style={{ marginTop: "-14px", marginBottom: "12px" }}>
+        <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
+          <Title order={5} mb="xs">
+            Thông tin khám & thực hiện dịch vụ
+          </Title>
           <HeaderBar
             selectedOrder={selectedOrder}
             isResultMode={isResultMode}
-            onSelectInfo={handleSelectInfo}
+            onSelectInfo={() => setIsResultMode(false)}
             onViewResult={() => setIsResultMode(true)}
             onCloseOrder={handleCloseOrder}
           />
-        </div>
 
-        {selectedOrder && isResultMode ? (
-          <ServiceResultPanel
-            medicalOrderId={selectedOrder.id}
-            serviceName={selectedOrder.serviceName}
-            onSubmit={(result) => {
-              console.log("🧾 Kết quả lưu:", result);
-              handleCloseOrder();
-            }}
-            onCancel={handleCloseOrder}
-          />
-        ) : (
-          <Paper shadow="xs" radius="md" p="md" withBorder mb="md">
-            <PatientInfoPanel patient={null} />
-            <ServiceExecutionPanel
-              pendingServices={pendingOrders}
-              doneServices={doneOrders}
-              onAction={handleSelectOrder}
+          {selectedOrder && isResultMode ? (
+            <ServiceResultPanel
+              medicalOrderId={selectedOrder.id}
+              serviceName={selectedOrder.serviceName}
+              technicalId={userInfo?.userId || ""}
+              technicalName={technicalName}
+              onSubmit={async () => {
+                await fetchMedicalRecordDetail(selectedRecordId!);
+                handleCloseOrder();
+              }}
+              onCancel={handleCloseOrder}
             />
-          </Paper>
-        )}
+          ) : (
+            <>
+              <PatientInfoPanel patient={selectedQueuePatient} />
+              <ServiceExecutionPanel
+                pendingServices={pendingOrders}
+                doneServices={doneOrders}
+                onAction={handleSelectOrder}
+                recordStatus={recordDetail?.status as MedicalRecordStatus}
+              />
+            </>
+          )}
+        </Paper>
       </Grid.Col>
     </Grid>
   );

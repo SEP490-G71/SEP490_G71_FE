@@ -8,6 +8,7 @@ export interface MedicalRecordOrder {
 
 export interface MedicalRecordDetail {
   id: string;
+  patientId:string;
   medicalRecordCode: string;
   patientName: string;
   createdBy: string;
