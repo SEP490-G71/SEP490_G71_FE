@@ -1,13 +1,19 @@
 import { useState } from "react";
+import { useAppointmentForm } from "../../hooks/LandingPagesUser/useAppointmentForm";
 
 export const AppointmentForm = () => {
+  const { loading, submitAppointment } = useAppointmentForm();
+
+  // 1️⃣ Sửa: tách fullName thành các trường riêng
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
     email: "",
-    phone: "",
-    date: "",
-    department: "",
-    doctor: "",
+    phoneNumber: "",
+    registeredAt: "",
+    dob: "",
+    gender: "",
     message: "",
   });
 
@@ -17,6 +23,39 @@ export const AppointmentForm = () => {
     >
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // 3️⃣ Sửa: dùng trực tiếp firstName, middleName, lastName
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formattedData = {
+      firstName: form.firstName,
+      middleName: form.middleName,
+      lastName: form.lastName,
+      dob: form.dob,
+      gender: form.gender as "MALE" | "FEMALE" | "OTHER",
+      email: form.email,
+      phoneNumber: form.phoneNumber,
+      registeredAt: form.registeredAt,
+      message: form.message,
+    };
+
+    const success = await submitAppointment(formattedData);
+    if (success) {
+      // 4️⃣ Reset form
+      setForm({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        registeredAt: "",
+        dob: "",
+        gender: "",
+        message: "",
+      });
+    }
   };
 
   return (
@@ -30,17 +69,37 @@ export const AppointmentForm = () => {
         tôi. Chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.
       </p>
 
-      <form className="space-y-6">
-        {/* Row 1 */}
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        {/* 2️⃣ Sửa: tách Họ - Tên đệm - Tên */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
-            name="name"
+            name="firstName"
             type="text"
-            placeholder="Họ và Tên"
-            value={form.name}
+            placeholder="Họ"
+            value={form.firstName}
             onChange={handleChange}
             className="border px-4 py-3 w-full rounded-sm text-sm"
           />
+          <input
+            name="middleName"
+            type="text"
+            placeholder="Tên đệm"
+            value={form.middleName}
+            onChange={handleChange}
+            className="border px-4 py-3 w-full rounded-sm text-sm"
+          />
+          <input
+            name="lastName"
+            type="text"
+            placeholder="Tên"
+            value={form.lastName}
+            onChange={handleChange}
+            className="border px-4 py-3 w-full rounded-sm text-sm"
+          />
+        </div>
+
+        {/* Email, SĐT */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             name="email"
             type="email"
@@ -50,65 +109,64 @@ export const AppointmentForm = () => {
             className="border px-4 py-3 w-full rounded-sm text-sm"
           />
           <input
-            name="phone"
+            name="phoneNumber"
             type="tel"
             placeholder="Số điện thoại"
-            value={form.phone}
+            value={form.phoneNumber}
             onChange={handleChange}
             className="border px-4 py-3 w-full rounded-sm text-sm"
           />
         </div>
 
-        {/* Row 2 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Ngày sinh & Giới tính */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-            name="date"
-            type="datetime-local"
-            value={form.date}
+            name="dob"
+            type="date"
+            value={form.dob}
             onChange={handleChange}
             className="border px-4 py-3 w-full rounded-sm text-sm"
           />
           <select
-            name="department"
-            value={form.department}
+            name="gender"
+            value={form.gender}
             onChange={handleChange}
             className="border px-4 py-3 w-full rounded-sm text-sm text-gray-700"
           >
-            <option value="">Chọn chuyên khoa</option>
-            <option value="cardiology">Nội tiết</option>
-            <option value="dermatology">Xương Khớp</option>
-            <option value="neurology">Tai mũi họng</option>
-          </select>
-          <select
-            name="Bác sĩ"
-            value={form.doctor}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm text-gray-700"
-          >
-            <option value="">Chọn bác sĩ</option>
-            <option value="dr-a">Dr. A</option>
-            <option value="dr-b">Dr. B</option>
-            <option value="dr-c">Dr. C</option>
+            <option value="">Chọn giới tính</option>
+            <option value="MALE">Nam</option>
+            <option value="FEMALE">Nữ</option>
+            <option value="OTHER">Khác</option>
           </select>
         </div>
 
-        {/* Message */}
+        {/* Ngày hẹn */}
+        <input
+          name="registeredAt"
+          type="datetime-local"
+          value={form.registeredAt}
+          onChange={handleChange}
+          className="border px-4 py-3 w-full rounded-sm text-sm"
+        />
+
+        {/* Ghi chú */}
         <textarea
           name="message"
           rows={4}
-          placeholder="Message (Optional)"
+          placeholder="Lời nhắn (tuỳ chọn)"
           value={form.message}
           onChange={handleChange}
           className="border px-4 py-3 w-full rounded-sm text-sm"
         />
 
-        {/* Submit Button */}
+        {/* Submit */}
         <div className="text-center">
           <button
             type="submit"
+            disabled={loading}
             className="bg-blue-600 text-white px-6 py-3 !rounded-full hover:bg-blue-700 transition-all text-sm font-medium"
           >
-            Đặt lịch hẹn
+            {loading ? "Đang xử lý..." : "Đặt lịch hẹn"}
           </button>
         </div>
       </form>
