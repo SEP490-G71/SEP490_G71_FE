@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Group, Select, Title } from "@mantine/core";
+import { Badge, Button, Group, Title, Loader, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { LeaveRequestStatusLabels } from "../../enums/Admin/LeaveRequestStatus";
@@ -14,20 +14,19 @@ import CreateEditLeaveModal, {
 } from "../../components/staff/EditLeaveModal";
 import { useCreateLeaveRequest } from "../../hooks/leave/staff/useCreateLeaveRequest";
 import { useSettingAdminService } from "../../hooks/setting/useSettingAdminService";
+import { useUserInfo } from "../../hooks/auth/useUserInfo";
 
 const LeaveStaffPage = () => {
+  const { userInfo, loading: loadingUser } = useUserInfo();
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [editingLeave, setEditingLeave] = useState<LeaveRequestResponse | null>(
     null
   );
   const { setting } = useSettingAdminService();
-
+  const { staffs, fetchStaffs } = useStaffs();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] =
-    useState<keyof LeaveRequestResponse>("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const { createLeaveRequest } = useCreateLeaveRequest();
   const {
     leaves: data,
@@ -36,7 +35,12 @@ const LeaveStaffPage = () => {
     fetchLeaves,
   } = useLeaveRequestsByStaff(selectedStaffId || "");
 
-  const { staffs, fetchStaffs } = useStaffs();
+  // Gán selectedStaffId khi userInfo đã có
+  useEffect(() => {
+    if (userInfo?.userId) {
+      setSelectedStaffId(userInfo.userId);
+    }
+  }, [userInfo]);
 
   useEffect(() => {
     fetchStaffs();
@@ -44,14 +48,9 @@ const LeaveStaffPage = () => {
 
   useEffect(() => {
     if (selectedStaffId) {
-      fetchLeaves({}, page - 1, pageSize, sortKey, sortDirection);
+      fetchLeaves({}, page - 1, pageSize);
     }
-  }, [selectedStaffId, page, pageSize, sortKey, sortDirection]);
-
-  const staffOptions = staffs.map((s) => ({
-    value: s.id,
-    label: `${s.fullName}`,
-  }));
+  }, [selectedStaffId, page, pageSize]);
 
   const handleSubmit = async (
     form: CreateEditLeaveFormValues
@@ -94,7 +93,7 @@ const LeaveStaffPage = () => {
       }
 
       setEditingLeave(null);
-      fetchLeaves({}, page - 1, pageSize, sortKey, sortDirection);
+      fetchLeaves({}, page - 1, pageSize);
       return true;
     } catch (err: any) {
       toast.error(
@@ -171,6 +170,10 @@ const LeaveStaffPage = () => {
     }),
   ];
 
+  if (loadingUser || !selectedStaffId) {
+    return <Loader size="lg" mt="xl" />;
+  }
+
   return (
     <>
       <Title order={3} mb="md">
@@ -178,20 +181,12 @@ const LeaveStaffPage = () => {
       </Title>
 
       <Group mb="sm" justify="space-between" align="end">
-        <Select
-          label="Chọn nhân viên"
-          placeholder="Chọn một người..."
-          data={staffOptions}
-          value={selectedStaffId}
-          onChange={(val) => {
-            setSelectedStaffId(val);
-            setPage(1);
-          }}
-          searchable
-          clearable
-          nothingFoundMessage="Không có nhân viên nào"
-          w={350}
-        />
+        {/* Hiển thị tên nhân viên hiện tại (không cho chọn) */}
+        <Text fw={500}>
+          Nhân viên:{" "}
+          {staffs.find((s) => s.id === selectedStaffId)?.fullName ||
+            "Đang tải..."}
+        </Text>
 
         <Button
           onClick={() => {
@@ -215,12 +210,6 @@ const LeaveStaffPage = () => {
           setPageSize(size);
           setPage(1);
         }}
-        onSortChange={(key, dir) => {
-          setSortKey(key);
-          setSortDirection(dir);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         showActions={false}
         pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}

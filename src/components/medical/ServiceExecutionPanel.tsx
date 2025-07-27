@@ -7,7 +7,7 @@ interface Props {
   pendingServices: MedicalRecordOrder[];
   doneServices?: MedicalRecordOrder[];
   onAction?: (item: MedicalRecordOrder) => void;
-  recordStatus?: MedicalRecordStatus; // 👈 thêm status của hồ sơ
+  recordStatus?: MedicalRecordStatus;
 }
 
 const ServiceExecutionPanel = ({

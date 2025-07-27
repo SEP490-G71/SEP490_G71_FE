@@ -26,22 +26,24 @@ export const useUpdateInvoiceItems = () => {
         throw new Error("Cập nhật thất bại hoặc dữ liệu không hợp lệ.");
       }
 
-      const mapped: InvoiceResponse = {
-        invoiceId: result.invoiceId,
-        invoiceCode: result.invoiceCode ?? "---",
-        status: result.status ?? "UNKNOWN",
-        total: result.total ?? 0,
-        amount: result.total ?? 0,
-        discountTotal: result.discountTotal ?? null,
-        originalTotal: result.originalTotal ?? null,
-        vatTotal: result.vatTotal ?? null,
-        paymentType: result.paymentType ?? null,
-        patientName: result.patientName?.split(" - ")[0] ?? "---",
-        confirmedBy: result.confirmedBy ?? "---",
-        confirmedAt: result.confirmedAt ?? null,
-       createdAt: result.createdAt ? new Date(result.createdAt).toISOString() : null,
-        description: result.description ?? null,
-      };
+    const mapped: InvoiceResponse = {
+  invoiceId: result.invoiceId,
+  invoiceCode: result.invoiceCode ?? "---",
+  status: result.status ?? "UNKNOWN",
+  total: result.total ?? 0,
+  amount: result.total ?? 0,
+  discountTotal: result.discountTotal ?? null,
+  originalTotal: result.originalTotal ?? null,
+  vatTotal: result.vatTotal ?? null,
+  paymentType: result.paymentType ?? null,
+  patientName: result.patientName?.split(" - ")[0] ?? "---",
+  patientCode: result.patientCode ?? "---", 
+  confirmedBy: result.confirmedBy ?? "---",
+  confirmedAt: result.confirmedAt ?? null,
+  createdAt: result.createdAt ? new Date(result.createdAt).toISOString() : null,
+  description: result.description ?? null,
+};
+
 
       setUpdatedInvoice(mapped);
       return mapped;

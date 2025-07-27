@@ -137,10 +137,20 @@ const PatientPanel = ({
     registeredTimeTo: today,
   };
 
+  const todayStr = toDateString(today);
+  const toDateStringSafe = (value: any) => {
+    if (typeof value === "string") return value;
+    if (value instanceof Date) return value.toISOString().split("T")[0];
+    return undefined;
+  };
+
   const handleSearch = (filters: any) => {
     updateFilters({
       ...filters,
       roomNumber: department?.roomNumber,
+      registeredTimeFrom:
+        toDateStringSafe(filters.registeredTimeFrom) ?? todayStr,
+      registeredTimeTo: toDateStringSafe(filters.registeredTimeTo) ?? todayStr,
     });
   };
 

@@ -1,7 +1,6 @@
 import { Autocomplete, Divider, Grid, Paper, Text, Title } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
-import { toast } from "react-toastify";
 import FilterPanel, {
   FilterField,
 } from "../../../components/common/FilterSection";
@@ -11,26 +10,23 @@ import ServiceExecutionPanel from "../../../components/medical/ServiceExecutionP
 import HeaderBar from "../../../components/medical/HeaderBar";
 import ServiceResultPanel from "../../../components/medical/ServiceResultPanel";
 import ClinicList from "../../../components/subClinical/ClinicList";
-
 import useMedicalRecordList from "../../../hooks/medicalRecord/useMedicalRecordList";
 import useMedicalRecordDetail from "../../../hooks/medicalRecord/useMedicalRecordDetail";
 import useMedicalOrdersByDepartment from "../../../hooks/medicalRecord/useMedicalOrdersByDepartment";
-import useQueuePatientService from "../../../hooks/queue-patients/useSearchQueuePatients";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import useMyDepartment from "../../../hooks/department-service/useMyDepartment";
 import { useUserInfo } from "../../../hooks/auth/useUserInfo";
-import { usePatientManagement } from "../../../hooks/Patient-Management/usePatientManagement";
 import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
-
 import { MedicalRecordOrder } from "../../../types/MedicalRecord/MedicalRecordDetail";
 import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
 import {
   MedicalRecordStatus,
   MedicalRecordStatusMap,
 } from "../../../enums/MedicalRecord/MedicalRecordStatus";
+import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
+import { mapDetailToQueuePatient } from "../../../components/common/patient.mapper";
 
 const ClinicalPage = () => {
-  //  State
   const [selectedOrder, setSelectedOrder] = useState<MedicalRecordOrder | null>(
     null
   );
@@ -47,15 +43,12 @@ const ClinicalPage = () => {
     status: MedicalRecordStatus.TESTING,
   });
 
-  const [patientCode, setPatientCode] = useState<string | null>(null);
   const [selectedQueuePatient, setSelectedQueuePatient] =
     useState<QueuePatient | null>(null);
 
-  //  Hooks
   const { userInfo } = useUserInfo();
   const { fetchStaffsById } = useStaffs();
   const { department } = useMyDepartment();
-  const { fetchPatientById } = usePatientManagement();
 
   const { orders: departmentOrders } = useMedicalOrdersByDepartment(
     department?.id || ""
@@ -63,11 +56,9 @@ const ClinicalPage = () => {
   const { records, loading, pagination, fetchMedicalRecords } =
     useMedicalRecordList();
   const { recordDetail, fetchMedicalRecordDetail } = useMedicalRecordDetail();
-  const { patients: queuePatients, updateFilters } = useQueuePatientService();
 
   const [technicalName, setTechnicalName] = useState("Không rõ");
 
-  // Load bác sĩ kỹ thuật
   useEffect(() => {
     const fetch = async () => {
       if (userInfo?.userId) {
@@ -78,7 +69,6 @@ const ClinicalPage = () => {
     fetch();
   }, [userInfo?.userId]);
 
-  //  Load danh sách hồ sơ theo filter
   useEffect(() => {
     fetchMedicalRecords({
       patientId: filters.patientId,
@@ -91,50 +81,6 @@ const ClinicalPage = () => {
     });
   }, [page, pageSize, filters]);
 
-  //  Load chi tiết hồ sơ
-  useEffect(() => {
-    if (selectedRecordId) {
-      fetchMedicalRecordDetail(selectedRecordId);
-      console.log("🩺 Hồ sơ được chọn:", selectedRecordId);
-    }
-  }, [selectedRecordId]);
-
-  //  Khi đã có recordDetail → fetch bệnh nhân → lấy patientCode → tìm QueuePatient
-  useEffect(() => {
-    const load = async () => {
-      if (!recordDetail?.patientId) return;
-      const patient = await fetchPatientById(recordDetail.patientId);
-      console.log("👤 Thông tin bệnh nhân:", patient);
-      if (!patient?.patientCode) {
-        toast.error("Không tìm thấy mã bệnh nhân");
-        return;
-      }
-      setPatientCode(patient.patientCode);
-      console.log("✅ Set patientCode:", patient.patientCode);
-    };
-    load();
-  }, [recordDetail?.patientId]);
-
-  //  Khi có patientCode → gọi queue search
-  useEffect(() => {
-    if (patientCode) {
-      console.log("📨 Gửi filter patientCode:", patientCode);
-      updateFilters({ patientCode });
-    }
-  }, [patientCode]);
-
-  // 👉 Khi có kết quả queue
-  useEffect(() => {
-    console.log("📦 Danh sách queuePatients:", queuePatients);
-    if (queuePatients.length > 0) {
-      console.log("📥 Kết quả QueuePatients:", queuePatients);
-      setSelectedQueuePatient(queuePatients[0]);
-    } else {
-      console.log("⚠️ Không có queuePatient nào tìm thấy");
-    }
-  }, [queuePatients]);
-
-  // 👉 Filter fields cho bên trái
   const filterFields: FilterField[] = [
     {
       key: "patientId",
@@ -181,6 +127,7 @@ const ClinicalPage = () => {
       label: "Mã hồ sơ",
       type: "text",
       wrapper: FloatingLabelWrapper,
+      placeholder: "Nhập mã hồ sơ",
     },
     {
       key: "fromDate",
@@ -233,6 +180,18 @@ const ClinicalPage = () => {
     setIsResultMode(false);
   };
 
+  useEffect(() => {
+    if (selectedRecordId && recordDetail?.id === selectedRecordId) {
+      const mapped = mapDetailToQueuePatient(recordDetail);
+      setSelectedQueuePatient(mapped);
+    }
+  }, [recordDetail, selectedRecordId]);
+
+  const handleSelectRecordAndPatient = async (record: MedicalRecord) => {
+    setSelectedRecordId(record.id);
+    await fetchMedicalRecordDetail(record.id);
+  };
+
   const displayedRecords = records;
 
   const filteredOrders = useMemo(
@@ -249,10 +208,15 @@ const ClinicalPage = () => {
   );
 
   const doneOrders =
-    recordDetail?.orders.filter((o) => o.status === "COMPLETED") ?? [];
-
-  // 👉 Render
-
+    recordDetail?.orders.filter(
+      (o) => o.status === "COMPLETED" && filteredOrders.has(o.id)
+    ) ?? [];
+  const mapResultToInitialResult = (result: any) => ({
+    id: result?.id,
+    completedBy: result?.completedBy ?? "",
+    imageUrls: result?.imageUrls ?? [],
+    note: result?.note ?? "",
+  });
   return (
     <Grid>
       <Grid.Col span={12} style={{ paddingTop: 0, paddingBottom: 0 }}>
@@ -272,9 +236,9 @@ const ClinicalPage = () => {
       {/* FILTER SECTION */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
         <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
-          <Title order={5} mb="sm">
+          {/* <Title order={5} mb="sm">
             Bộ lọc hồ sơ
-          </Title>
+          </Title> */}
           <FilterPanel
             key={filterKey}
             fields={filterFields}
@@ -291,6 +255,7 @@ const ClinicalPage = () => {
             loading={loading}
             selectedRecordId={selectedRecordId}
             setSelectedRecordId={setSelectedRecordId}
+            onSelectRecordAndPatient={handleSelectRecordAndPatient}
             page={page}
             setPage={setPage}
             pageSize={pageSize}
@@ -303,9 +268,9 @@ const ClinicalPage = () => {
       {/* DETAIL VIEW SECTION */}
       <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
         <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
-          <Title order={5} mb="xs">
+          {/* <Title order={5} mb="xs">
             Thông tin khám & thực hiện dịch vụ
-          </Title>
+          </Title> */}
           <HeaderBar
             selectedOrder={selectedOrder}
             isResultMode={isResultMode}
@@ -314,29 +279,36 @@ const ClinicalPage = () => {
             onCloseOrder={handleCloseOrder}
           />
 
-          {selectedOrder && isResultMode ? (
-            <ServiceResultPanel
-              medicalOrderId={selectedOrder.id}
-              serviceName={selectedOrder.serviceName}
-              technicalId={userInfo?.userId || ""}
-              technicalName={technicalName}
-              onSubmit={async () => {
-                await fetchMedicalRecordDetail(selectedRecordId!);
-                handleCloseOrder();
-              }}
-              onCancel={handleCloseOrder}
+          <div style={{ display: isResultMode ? "none" : "block" }}>
+            <PatientInfoPanel patient={selectedQueuePatient} />
+            <ServiceExecutionPanel
+              pendingServices={pendingOrders}
+              doneServices={doneOrders}
+              onAction={handleSelectOrder}
+              recordStatus={recordDetail?.status as MedicalRecordStatus}
             />
-          ) : (
-            <>
-              <PatientInfoPanel patient={selectedQueuePatient} />
-              <ServiceExecutionPanel
-                pendingServices={pendingOrders}
-                doneServices={doneOrders}
-                onAction={handleSelectOrder}
-                recordStatus={recordDetail?.status as MedicalRecordStatus}
+          </div>
+
+          <div style={{ display: isResultMode ? "block" : "none" }}>
+            {selectedOrder && (
+              <ServiceResultPanel
+                medicalOrderId={selectedOrder.id}
+                serviceName={selectedOrder.serviceName}
+                technicalId={userInfo?.userId || ""}
+                technicalName={technicalName}
+                initialResult={
+                  selectedOrder.results && selectedOrder.results.length > 0
+                    ? mapResultToInitialResult(selectedOrder.results[0])
+                    : undefined
+                }
+                onSubmit={async () => {
+                  await fetchMedicalRecordDetail(selectedRecordId!);
+                  handleCloseOrder();
+                }}
+                onCancel={handleCloseOrder}
               />
-            </>
-          )}
+            )}
+          </div>
         </Paper>
       </Grid.Col>
     </Grid>

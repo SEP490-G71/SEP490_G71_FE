@@ -132,12 +132,6 @@ const MedicalExaminationPage = () => {
     fetchAllMedicalServicesNoPagination();
   }, []);
 
-  // useEffect(() => {
-  //   if (department?.roomNumber) {
-  //     updateFilters({ roomNumber: department.roomNumber });
-  //   }
-  // }, [department]);
-
   useEffect(() => {
     const fetchDoctorName = async () => {
       if (userInfo?.userId) {
@@ -214,7 +208,8 @@ const MedicalExaminationPage = () => {
           c="red"
           style={{ borderRadius: 4 }}
         >
-          {department.name} : Phòng {department.roomNumber} Chuyên khoa{" "}
+          {department.roomNumber}
+          {" - "}
           {department.specialization?.name ?? "Không có"}
         </Text>
       )}

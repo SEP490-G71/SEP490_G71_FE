@@ -1,4 +1,3 @@
-
 import { MedicalRecordStatusMap } from "../../enums/MedicalRecord/MedicalRecordStatus";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
@@ -9,6 +8,7 @@ interface ClinicListProps {
   loading: boolean;
   selectedRecordId: string | null;
   setSelectedRecordId: (id: string) => void;
+  onSelectRecordAndPatient?: (record: MedicalRecord) => void;
   page: number;
   setPage: (page: number) => void;
   pageSize: number;
@@ -24,6 +24,7 @@ const ClinicList = ({
   loading,
   selectedRecordId,
   setSelectedRecordId,
+  onSelectRecordAndPatient,
   page,
   setPage,
   pageSize,
@@ -62,7 +63,10 @@ const ClinicList = ({
         showActions={false}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
-        onRowClick={(row) => setSelectedRecordId(row.id)}
+        onRowClick={(row) => {
+          setSelectedRecordId(row.id);
+          onSelectRecordAndPatient?.(row);
+        }}
         getRowStyle={(row) =>
           row.id === selectedRecordId ? { backgroundColor: "#cce5ff" } : {}
         }

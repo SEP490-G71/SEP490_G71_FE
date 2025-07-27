@@ -1,13 +1,14 @@
+// ✅ Refactored InvoiceDetailSection.tsx
 import {
   Button,
   Divider,
-  Group,
   Grid,
   Loader,
   Select,
   Text,
   TextInput,
   Title,
+  Group,
 } from "@mantine/core";
 import dayjs from "dayjs";
 
@@ -15,9 +16,10 @@ import ServiceTable from "../medical-examination/MedicalServiceTable";
 import { InvoiceStatus } from "../../enums/InvoiceStatus/InvoiceStatus";
 import { PaymentType } from "../../enums/Payment/PaymentType";
 import { ServiceRow } from "../../types/serviceRow";
+import { InvoiceDetail } from "../../types/Invoice/invoice";
 
-type Props = {
-  invoiceDetail: any;
+interface Props {
+  invoiceDetail?: InvoiceDetail;
   loadingDetail: boolean;
   editableInvoiceDetail: {
     paymentType?: keyof typeof PaymentType;
@@ -32,7 +34,7 @@ type Props = {
   handleDownload: (invoiceId: string) => Promise<void>;
   handleOpenModal: () => void;
   setEditableInvoiceDetail: (val: any) => void;
-};
+}
 
 const InvoiceDetailSection = ({
   invoiceDetail,
@@ -48,6 +50,8 @@ const InvoiceDetailSection = ({
   handleOpenModal,
   setEditableInvoiceDetail,
 }: Props) => {
+  const isPaid = selectedInvoiceInfo?.status === InvoiceStatus.PAID;
+
   return (
     <>
       <Title order={3}>Chi tiết hóa đơn</Title>
@@ -82,10 +86,8 @@ const InvoiceDetailSection = ({
               </Text>
               <TextInput
                 value={
-                  invoiceDetail.confirmedBy
-                    ? staffOptions.find(
-                        (s) => s.value === invoiceDetail.confirmedBy
-                      )?.label
+                  isPaid
+                    ? invoiceDetail.confirmedBy || ""
                     : staffOptions.find(
                         (s) => s.value === editableInvoiceDetail.confirmedBy
                       )?.label || ""
@@ -132,7 +134,6 @@ const InvoiceDetailSection = ({
             <Title order={5} c="blue.7">
               Dịch vụ đã chọn
             </Title>
-
             <Group gap="xs" justify="end">
               <Button
                 color="cyan"
@@ -154,12 +155,9 @@ const InvoiceDetailSection = ({
                 color="cyan"
                 size="xs"
                 onClick={handleOpenModal}
-                disabled={
-                  selectedInvoiceInfo?.status === "PAID" ||
-                  !editableInvoiceDetail.confirmedBy
-                }
+                disabled={isPaid || !editableInvoiceDetail.confirmedBy}
                 title={
-                  selectedInvoiceInfo?.status === "PAID"
+                  isPaid
                     ? "Hóa đơn đã thanh toán"
                     : !editableInvoiceDetail.confirmedBy
                     ? "Vui lòng chọn người thu trước"
@@ -171,7 +169,7 @@ const InvoiceDetailSection = ({
             </Group>
           </Group>
 
-          {invoiceDetail.items.length ? (
+          {invoiceDetail.items?.length ? (
             <ServiceTable
               serviceRows={rowsFromInvoice}
               setServiceRows={() => {}}
@@ -179,6 +177,7 @@ const InvoiceDetailSection = ({
               serviceOptions={[]}
               editable={false}
               showDepartment={false}
+              invoiceDetail={invoiceDetail}
             />
           ) : (
             <Text c="dimmed">Không có dịch vụ nào được ghi nhận.</Text>
