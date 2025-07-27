@@ -3,4 +3,5 @@ export interface Hospital {
   email: string;
   code: string;
   phone: string;
+  servicePackageId?: string;
 }
