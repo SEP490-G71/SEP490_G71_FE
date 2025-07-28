@@ -127,7 +127,15 @@ const MedicalExaminationPage = () => {
     value: item.id,
     label: item.name,
   }));
-
+  useEffect(() => {
+    if (department?.roomNumber) {
+      updateFilters({
+        roomNumber: department.roomNumber,
+        registeredTimeFrom: new Date().toISOString().split("T")[0],
+        registeredTimeTo: new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [department?.roomNumber]);
   useEffect(() => {
     fetchAllMedicalServicesNoPagination();
   }, []);
@@ -320,7 +328,7 @@ const MedicalExaminationPage = () => {
                     Lịch sử khám bệnh
                   </Title>
 
-                  <MedicalHistoryPanel patientId={selectedPatient.id} />
+                  <MedicalHistoryPanel patientId={selectedPatient.patientId} />
                 </>
               )}
 
