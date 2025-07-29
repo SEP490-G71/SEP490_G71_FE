@@ -16,7 +16,15 @@ export const LandingPageAdminPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const showModal = () => setIsModalVisible(true);
+  const [selectedPackageId, setSelectedPackageId] = useState<
+    string | undefined
+  >();
+
+  const showModal = (packageId?: string) => {
+    setSelectedPackageId(packageId);
+    setIsModalVisible(true);
+  };
+
   const handleCancel = () => setIsModalVisible(false);
 
   const handleOk = async (values: Hospital, resetForm: () => void) => {
@@ -31,6 +39,7 @@ export const LandingPageAdminPage = () => {
           code: values.code,
           email: values.email,
           phone: values.phone,
+          servicePackageId: values.servicePackageId,
         }
       );
 
@@ -54,12 +63,13 @@ export const LandingPageAdminPage = () => {
       <Navbar />
       <div className="bg-[#f0f4f8]" id="intro-section">
         <div className="max-w-7xl mx-auto px-6 pt-1">
-          <IntroSection onRegisterClick={showModal} />
+          <IntroSection onRegisterClick={() => showModal()} />
           <RegisterModal
             visible={isModalVisible}
             onOk={handleOk}
             onCancel={handleCancel}
             loading={loading}
+            servicePackageId={selectedPackageId}
           />
         </div>
       </div>
@@ -84,7 +94,7 @@ export const LandingPageAdminPage = () => {
 
       <div className="bg-white" id="pricing-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
-          <Pricing />
+          <Pricing onRegisterClick={showModal} />
         </div>
       </div>
 

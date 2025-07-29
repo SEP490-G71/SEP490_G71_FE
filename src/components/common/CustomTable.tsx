@@ -143,7 +143,13 @@ function CustomTable<T>({
                   {columns.map((col) => (
                     <td
                       key={String(col.key)}
-                      className="px-5 py-4 whitespace-nowrap"
+                      className={`px-5 py-4 whitespace-nowrap ${
+                        col.align === "right"
+                          ? "text-right"
+                          : col.align === "center"
+                          ? "text-center"
+                          : "text-left"
+                      }`}
                     >
                       {col.render
                         ? col.render(row)

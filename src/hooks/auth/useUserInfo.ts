@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { RoleType } from "../../enums/Role/RoleType";
 
 export interface UserInfo {
+  accountId: string | null;
   userId: string | null;
   username: string;
   roles: RoleType[];
@@ -28,6 +29,7 @@ export const useUserInfo = () => {
           ) as RoleType[];
 
           setUserInfo({
+            accountId: data.accountId,
             userId: data.userId,
             username: data.username,
             roles,

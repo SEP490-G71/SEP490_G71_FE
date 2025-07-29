@@ -3,4 +3,5 @@ export interface Column<T> {
   label: string;
   sortable?: boolean;
   render?: (row: T) => React.ReactNode;
+  align?: "left" | "right" | "center";
 }

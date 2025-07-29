@@ -7,11 +7,13 @@ const RegisterModal = ({
   onOk,
   onCancel,
   loading,
+  servicePackageId,
 }: {
   visible: boolean;
   onOk: (values: Hospital, resetForm: () => void) => void;
   onCancel: () => void;
   loading: boolean;
+  servicePackageId?: string;
 }) => {
   const form = useForm<Hospital>({
     initialValues: {
@@ -33,7 +35,13 @@ const RegisterModal = ({
   });
 
   const handleSubmit = (values: Hospital) => {
-    onOk(values, form.reset);
+    onOk(
+      {
+        ...values,
+        servicePackageId,
+      },
+      form.reset
+    );
   };
 
   return (
@@ -43,7 +51,6 @@ const RegisterModal = ({
       title="" // Fix lỗi h5 trong h2 → để title="" và custom bên trong
       centered
     >
-      {/* Custom title tự render ở đây */}
       <div
         style={{
           fontWeight: 700,

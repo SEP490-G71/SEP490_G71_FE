@@ -154,11 +154,44 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
+  // ✅✅✅ [ĐÃ THÊM] Lấy danh sách bệnh nhân đăng ký khám online
+  const fetchOnlineRegisteredPatients = async (
+    filters: {
+      registeredAt: string;
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+    },
+    page = 0,
+    size = 10
+  ): Promise<FetchPatientsResponse> => {
+    try {
+      const response = await axiosInstance.get("/registered-online", {
+        params: {
+          ...filters,
+          page,
+          size,
+        },
+      });
+
+      const result = response.data?.result;
+      return {
+        content: result?.content || [],
+        totalElements: result?.totalElements || 0,
+      };
+    } catch (error) {
+      console.error("❌ Lỗi khi fetch registered-online:", error);
+      toast.error("Không thể tải danh sách đăng ký khám online");
+      return { content: [], totalElements: 0 };
+    }
+  };
+
   return {
     createPatient,
     fetchAllPatients,
     queuePatient,
     fetchTodayRegisteredPatients,
     fetchDepartmentsBySpecialization,
+    fetchOnlineRegisteredPatients,
   };
 };

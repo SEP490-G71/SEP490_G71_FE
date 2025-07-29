@@ -19,6 +19,7 @@ export interface Patient {
   roomNumber?: string;
   registeredTime?: string;
   isPriority?: boolean;
+  registeredAt?: string;
 }
 
 export interface PatientRequest {

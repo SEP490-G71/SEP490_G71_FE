@@ -94,7 +94,17 @@ export default function SearchPatientModal({
           ? "-"
           : new Date(patient.dob).toLocaleDateString("vi-VN"),
     },
-    { key: "gender", label: "Giới tính" },
+    {
+      key: "gender",
+      label: "Giới tính",
+      render: (patient) =>
+        patient.gender === "MALE"
+          ? "Nam"
+          : patient.gender === "FEMALE"
+          ? "Nữ"
+          : "Khác",
+    },
+
     {
       key: "email",
       label: "Email",

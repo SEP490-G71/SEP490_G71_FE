@@ -55,6 +55,12 @@ export default function RegisterMedicalExaminationPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
 
+  const [onlinePatients, setOnlinePatients] = useState<Patient[]>([]);
+  const [totalOnlinePatients, setTotalOnlinePatients] = useState(0);
+  const [onlinePage, setOnlinePage] = useState(1);
+  const [onlinePageSize, setOnlinePageSize] = useState(10);
+  const [onlineDate, setOnlineDate] = useState<Date | null>(new Date());
+
   const today = dayjs().startOf("day").toDate();
   const [searchFilters, setSearchFilters] = useState({
     fullName: "",
@@ -67,7 +73,16 @@ export default function RegisterMedicalExaminationPage() {
     status: "",
   });
 
+  const [onlineSearchFilters, setOnlineSearchFilters] = useState({
+    registeredAt: dayjs().format("YYYY-MM-DD"),
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+  });
+
   const [submittedFilters, setSubmittedFilters] = useState(searchFilters);
+  const [submittedOnlineFilters, setSubmittedOnlineFilters] =
+    useState(onlineSearchFilters);
 
   const {
     specializations,
@@ -95,41 +110,81 @@ export default function RegisterMedicalExaminationPage() {
     setSubmittedFilters(defaultFilters);
   }, []);
 
+  // Định nghĩa ở ngoài useEffect
+  const loadOnlinePatients = async () => {
+    if (!onlineDate) return;
+
+    const formattedDate = dayjs(onlineDate).format("YYYY-MM-DD");
+    const res = await fetchOnlineRegisteredPatients(
+      {
+        registeredAt: formattedDate,
+        fullName: submittedOnlineFilters.fullName,
+        email: submittedOnlineFilters.email,
+        phoneNumber: submittedOnlineFilters.phoneNumber,
+      },
+      onlinePage - 1,
+      onlinePageSize
+    );
+
+    const mapped = res.content.map((p) => ({
+      ...p,
+      registeredTime: (p as any).registeredAt,
+    }));
+
+    setOnlinePatients(mapped);
+    setTotalOnlinePatients(res.totalElements);
+  };
+
+  // Gọi tự động khi các dependency thay đổi
+  useEffect(() => {
+    loadOnlinePatients();
+  }, [submittedOnlineFilters, onlinePage, onlinePageSize]);
+
   const {
     fetchAllPatients,
     fetchTodayRegisteredPatients,
     queuePatient,
     createPatient,
     fetchDepartmentsBySpecialization,
+    fetchOnlineRegisteredPatients,
   } = useRegisterMedicalExamination();
 
-  const columns: Column<Patient>[] = [
-    { key: "patientCode", label: "Mã BN", sortable: false },
-    { key: "fullName", label: "Họ tên", sortable: false },
+  const onlineColumns: Column<Patient>[] = [
+    { key: "fullName", label: "Họ tên", align: "left" },
     {
       key: "gender",
       label: "Giới tính",
+      align: "left",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
-    { key: "phone", label: "Số điện thoại" },
-    { key: "roomNumber", label: "Phòng khám" },
     {
-      key: "specialization",
-      label: "Chuyên khoa",
-      render: (row) => row.specialization || "-",
-    },
-    {
-      key: "registeredTime",
+      key: "registeredAt",
       label: "Ngày đăng ký",
+      align: "left",
       render: (row) =>
-        row.registeredTime
-          ? dayjs(row.registeredTime).format("DD/MM/YYYY")
+        row.registeredAt
+          ? dayjs(row.registeredAt).format("DD/MM/YYYY HH:mm")
           : "-",
     },
+    { key: "email", label: "Email", align: "left" },
+    { key: "phoneNumber", label: "Số điện thoại", align: "left" },
+    { key: "message", label: "Ghi chú", align: "left" },
+  ];
 
+  const columns: Column<Patient>[] = [
+    { key: "patientCode", label: "Mã BN", sortable: false, align: "left" },
+    { key: "fullName", label: "Họ tên", sortable: false, align: "left" },
+    {
+      key: "gender",
+      label: "Giới tính",
+      align: "left",
+      render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
+    },
+    { key: "roomNumber", label: "Phòng khám", align: "center" },
     {
       key: "status",
       label: "Trạng thái",
+      align: "left",
       render: (row) => {
         switch (row.status) {
           case "WAITING":
@@ -152,6 +207,22 @@ export default function RegisterMedicalExaminationPage() {
             return row.status || "";
         }
       },
+    },
+    {
+      key: "specialization",
+      label: "Chuyên khoa",
+      align: "left",
+      render: (row) => row.specialization || "-",
+    },
+    { key: "phone", label: "Số điện thoại", align: "right" },
+    {
+      key: "registeredTime",
+      label: "Ngày đăng ký",
+      align: "right",
+      render: (row) =>
+        row.registeredTime
+          ? dayjs(row.registeredTime).format("DD/MM/YYYY")
+          : "-",
     },
   ];
 
@@ -254,16 +325,6 @@ export default function RegisterMedicalExaminationPage() {
           phone: submittedFilters.phone,
           patientCode: submittedFilters.patientCode,
           specialization: submittedFilters.specialization,
-          // registeredTimeFrom: submittedFilters.registeredTimeFrom
-          //   ? dayjs(submittedFilters.registeredTimeFrom)
-          //       .startOf("day")
-          //       .format("YYYY-MM-DDTHH:mm:ss")
-          //   : undefined,
-          // registeredTimeTo: submittedFilters.registeredTimeTo
-          //   ? dayjs(submittedFilters.registeredTimeTo)
-          //       .endOf("day")
-          //       .format("YYYY-MM-DDTHH:mm:ss")
-          //   : undefined,
           registeredTimeFrom: submittedFilters.registeredTimeFrom
             ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
             : undefined,
@@ -573,7 +634,12 @@ export default function RegisterMedicalExaminationPage() {
           <Paper p="md" shadow="sm" radius="md" withBorder>
             <Tabs defaultValue="register-info">
               <div className="w-full flex justify-between items-center mb-4">
-                <Tabs.Tab value="register-info">Thông tin đăng ký</Tabs.Tab>
+                <Tabs.List className="flex gap-4">
+                  <Tabs.Tab value="register-info">Thông tin đăng ký</Tabs.Tab>
+                  <Tabs.Tab value="register-info-2">
+                    Thông tin đăng ký online
+                  </Tabs.Tab>
+                </Tabs.List>
 
                 <div className="flex gap-2">
                   <Button variant="default" onClick={handleReset}>
@@ -766,6 +832,124 @@ export default function RegisterMedicalExaminationPage() {
                     </div>
                   </div>
                 )}
+              </Tabs.Panel>
+
+              <Tabs.Panel value="register-info-2" pt="xs">
+                <Divider
+                  label="Danh sách bệnh nhân đăng ký khám online"
+                  mb="sm"
+                />
+
+                <div className="grid grid-cols-12 gap-4 my-4">
+                  <div className="col-span-12 md:col-span-3">
+                    <FloatingLabelWrapper label="Họ tên">
+                      <TextInput
+                        placeholder="Nhập họ tên"
+                        value={onlineSearchFilters.fullName}
+                        onChange={(e) =>
+                          setOnlineSearchFilters((prev) => ({
+                            ...prev,
+                            fullName: e.target.value,
+                          }))
+                        }
+                      />
+                    </FloatingLabelWrapper>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-2">
+                    <FloatingLabelWrapper label="Email">
+                      <TextInput
+                        placeholder="Nhập email"
+                        value={onlineSearchFilters.email}
+                        onChange={(e) =>
+                          setOnlineSearchFilters((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                      />
+                    </FloatingLabelWrapper>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-2">
+                    <FloatingLabelWrapper label="Số điện thoại">
+                      <TextInput
+                        placeholder="Nhập số điện thoại"
+                        value={onlineSearchFilters.phoneNumber}
+                        onChange={(e) =>
+                          setOnlineSearchFilters((prev) => ({
+                            ...prev,
+                            phoneNumber: e.target.value,
+                          }))
+                        }
+                      />
+                    </FloatingLabelWrapper>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <FloatingLabelWrapper label="Chọn Ngày đăng ký">
+                      <DatePickerInput
+                        placeholder="Chọn ngày"
+                        value={onlineDate}
+                        onChange={
+                          (value) =>
+                            setOnlineDate(value ? new Date(value) : new Date()) // hoặc today
+                        }
+                        valueFormat="DD/MM/YYYY"
+                      />
+                    </FloatingLabelWrapper>
+                  </div>
+
+                  <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+                    <Button
+                      variant="light"
+                      color="gray"
+                      onClick={() => {
+                        const reset = {
+                          registeredAt: dayjs().format("YYYY-MM-DD"),
+                          fullName: "",
+                          email: "",
+                          phoneNumber: "",
+                        };
+
+                        setOnlineSearchFilters(reset);
+                        setSubmittedOnlineFilters(reset);
+                        setOnlineDate(new Date());
+                        setOnlinePage(1);
+                      }}
+                    >
+                      Tải lại
+                    </Button>
+
+                    <Button
+                      variant="filled"
+                      onClick={() => {
+                        const updatedFilters = {
+                          ...onlineSearchFilters,
+                          registeredAt: dayjs(onlineDate).format("YYYY-MM-DD"),
+                        };
+                        setSubmittedOnlineFilters(updatedFilters);
+                        setOnlinePage(1);
+                      }}
+                    >
+                      Tìm kiếm
+                    </Button>
+                  </div>
+                </div>
+
+                <CustomTable
+                  data={onlinePatients}
+                  columns={onlineColumns}
+                  page={onlinePage}
+                  pageSize={onlinePageSize}
+                  totalItems={totalOnlinePatients}
+                  onPageChange={setOnlinePage}
+                  onPageSizeChange={setOnlinePageSize}
+                  showActions={false}
+                  pageSizeOptions={setting?.paginationSizeList
+                    ?.slice()
+                    .sort((a, b) => a - b)}
+                />
               </Tabs.Panel>
             </Tabs>
           </Paper>

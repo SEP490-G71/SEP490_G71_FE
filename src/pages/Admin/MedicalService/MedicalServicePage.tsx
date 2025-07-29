@@ -192,10 +192,13 @@ const MedicalServicePage = () => {
       key: "name",
       label: "Tên Dịch Vụ",
       sortable: false,
+      align: "left",
     }),
     createColumn<MedicalService>({
       key: "description",
       label: "Mô tả",
+//       sortable: false,
+//       align: "left",
       render: (row) => {
         const desc = row.description || "";
         const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
@@ -208,6 +211,7 @@ const MedicalServicePage = () => {
       label: "Tên phòng",
       sortable: false,
       render: (row) => row.department.name,
+      align: "left",
     }),
     createColumn<MedicalService>({
       key: "price",
@@ -215,6 +219,7 @@ const MedicalServicePage = () => {
       sortable: false,
       render: (row) => `${row.price.toLocaleString()} VND`,
     }),
+
     createColumn<MedicalService>({
       key: "vat",
       label: "VAT (%)",
