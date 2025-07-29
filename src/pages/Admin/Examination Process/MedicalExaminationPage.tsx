@@ -127,16 +127,18 @@ const MedicalExaminationPage = () => {
     value: item.id,
     label: item.name,
   }));
-
+  useEffect(() => {
+    if (department?.roomNumber) {
+      updateFilters({
+        roomNumber: department.roomNumber,
+        registeredTimeFrom: new Date().toISOString().split("T")[0],
+        registeredTimeTo: new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [department?.roomNumber]);
   useEffect(() => {
     fetchAllMedicalServicesNoPagination();
   }, []);
-
-  // useEffect(() => {
-  //   if (department?.roomNumber) {
-  //     updateFilters({ roomNumber: department.roomNumber });
-  //   }
-  // }, [department]);
 
   useEffect(() => {
     const fetchDoctorName = async () => {
@@ -214,7 +216,8 @@ const MedicalExaminationPage = () => {
           c="red"
           style={{ borderRadius: 4 }}
         >
-          {department.name} : Phòng {department.roomNumber} Chuyên khoa{" "}
+          {department.roomNumber}
+          {" - "}
           {department.specialization?.name ?? "Không có"}
         </Text>
       )}
@@ -325,7 +328,7 @@ const MedicalExaminationPage = () => {
                     Lịch sử khám bệnh
                   </Title>
 
-                  <MedicalHistoryPanel patientId={selectedPatient.id} />
+                  <MedicalHistoryPanel patientId={selectedPatient.patientId} />
                 </>
               )}
 

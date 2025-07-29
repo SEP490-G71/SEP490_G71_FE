@@ -54,6 +54,7 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
     return () => clearTimeout(timeout);
   }, [queryParams]);
 
+
   const updateFilters = (newFilters: Partial<SearchQueueParams>) => {
     setQueryParams((prev) => ({
       ...prev,

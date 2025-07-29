@@ -1,15 +1,14 @@
 import { useState } from "react";
 import axiosInstance from "../../../services/axiosInstance";
 import { toast } from "react-toastify";
-import { Shift } from "../../../enums/Admin/Shift";
 import { LeaveRequestResponse } from "../../../types/Admin/Leave/LeaveRequestResponse";
 
 export interface CreateLeaveRequestDto {
   staffId: string;
   reason: string;
   details: {
-    date: string; 
-    shift: Shift;
+    date: string;
+    shiftId: string;
   }[];
 }
 

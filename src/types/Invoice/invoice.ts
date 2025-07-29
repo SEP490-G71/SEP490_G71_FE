@@ -14,8 +14,8 @@ export interface InvoiceSummary {
 
 
 export interface InvoiceItem {
-  serviceCode: string;
   name: string;
+  serviceCode: string;
   quantity: number;
   price: number;
   discount: number;
@@ -27,18 +27,30 @@ export interface InvoiceDetail {
   invoiceId: string;
   invoiceCode: string;
   patientName: string;
-  amount: number;
+  patientCode: string;
+  dateOfBirth: string;
+  phone: string;
+  gender: "MALE" | "FEMALE" | "UNKNOWN";
+  createdAt: string | null;
   paymentType: string | null;
   confirmedAt: string | null;
   confirmedBy: string | null;
   items: InvoiceItem[];
+  description: string | null;
+
+  total: number;
+  discountTotal: number;
+  originalTotal: number;
+  vatTotal: number;
 }
+
 
 
 export interface InvoiceResponse {
   invoiceId: string;
   invoiceCode: string;
   patientName: string;
+  patientCode: string;
   amount: number; // = total
   total: number;
   discountTotal: number | null;

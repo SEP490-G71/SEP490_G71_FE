@@ -6,9 +6,14 @@ export type FilterField<T = any> = {
   key: keyof T | string;
   label: string;
   placeholder?: string;
-  type: "text" | "select" | "date";
+  type?: "text" | "select" | "date";
   options?: { value: string; label: string }[];
   wrapper?: React.ComponentType<{ label: string; children: React.ReactNode }>;
+  customRender?: (props: {
+    value: any;
+    onChange: (val: any) => void;
+    loading: boolean;
+  }) => React.ReactNode;
 };
 
 interface Props<T = any> {
@@ -49,12 +54,20 @@ const FilterPanel = <T extends Record<string, any>>({
       setLoading(false);
     }
   };
-
   const renderField = (field: FilterField<T>) => {
     const Wrapper = field.wrapper ?? (({ children }) => <>{children}</>);
     const key = field.key as keyof T;
     const value = filters[key];
 
+    if (field.customRender) {
+      return field.customRender({
+        value,
+        onChange: (val) => handleChange(key, val),
+        loading,
+      });
+    }
+
+    // Default render theo type
     if (field.type === "text") {
       return (
         <Wrapper label={field.label}>

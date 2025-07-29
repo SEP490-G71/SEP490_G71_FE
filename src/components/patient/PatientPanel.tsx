@@ -72,6 +72,14 @@ const PatientPanel = ({
       { key: "patientCode", label: "Mã BN" },
       { key: "fullName", label: "Họ tên" },
       {
+        key: "createdAt",
+        label: "Ngày đăng kí",
+        render: (row) =>
+          row.registeredTime
+            ? new Date(row.registeredTime).toLocaleDateString("vi-VN")
+            : "Không rõ",
+      },
+      {
         key: "gender",
         label: "Giới tính",
         render: (row) =>
@@ -86,6 +94,7 @@ const PatientPanel = ({
     {
       key: "status",
       label: "Trạng thái",
+      placeholder: "Chọn trạng thái",
       type: "select",
       options: Object.entries(StatusLabel).map(([value, label]) => ({
         value,
@@ -137,10 +146,20 @@ const PatientPanel = ({
     registeredTimeTo: today,
   };
 
+  const todayStr = toDateString(today);
+  const toDateStringSafe = (value: any) => {
+    if (typeof value === "string") return value;
+    if (value instanceof Date) return value.toISOString().split("T")[0];
+    return undefined;
+  };
+
   const handleSearch = (filters: any) => {
     updateFilters({
       ...filters,
       roomNumber: department?.roomNumber,
+      registeredTimeFrom:
+        toDateStringSafe(filters.registeredTimeFrom) ?? todayStr,
+      registeredTimeTo: toDateStringSafe(filters.registeredTimeTo) ?? todayStr,
     });
   };
 
@@ -182,9 +201,7 @@ const PatientPanel = ({
           showActions={false}
           getRowStyle={(row) => ({
             backgroundColor:
-              selectedPatient?.patientCode === row.patientCode
-                ? "#cce5ff"
-                : undefined,
+              selectedPatient?.id === row.id ? "#cce5ff" : undefined,
             cursor: "pointer",
           })}
           onRowClick={(row) => onSelectPatient(row)}

@@ -17,8 +17,8 @@ interface Props {
     total: number;
   }[];
   availableServices: MedicalService[];
-  onChange?: (rows: ServiceRow[]) => void; // optional
-  editable?: boolean; // mặc định false
+  onChange?: (rows: ServiceRow[]) => void;
+  editable?: boolean;
 }
 
 const ViewEditInvoiceServicesModal = ({
@@ -122,7 +122,7 @@ const ViewEditInvoiceServicesModal = ({
         {editable && onChange && (
           <Button
             onClick={() => {
-              const cleanedRows = serviceRows.filter((r) => r.serviceId); // bỏ dòng rỗng
+              const cleanedRows = serviceRows.filter((r) => r.serviceId);
               onChange(cleanedRows);
               onClose();
             }}

@@ -5,11 +5,13 @@ import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 
 
 export interface MedicalRecordFilter {
-  fromDate?: string; // yyyy-MM-dd
+  fromDate?: string;
   toDate?: string;
   page?: number;
   size?: number;
-   status?: string;
+  status?: string;
+  patientId?: string;
+  medicalRecordCode?: string;
 }
 
 const useMedicalRecordList = () => {
@@ -33,6 +35,9 @@ const useMedicalRecordList = () => {
         fromDate: filters.fromDate,
         toDate: filters.toDate,
         status:filters.status,
+        patientId: filters.patientId,
+        medicalRecordCode: filters.medicalRecordCode,
+
       };
 
       const res = await axiosInstance.get("/medical-records", { params });

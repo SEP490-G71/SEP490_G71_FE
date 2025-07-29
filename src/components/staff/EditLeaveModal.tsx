@@ -1,9 +1,8 @@
-import { Modal, Textarea, Button, Select } from "@mantine/core";
+import { Modal, Textarea, Button } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 import dayjs from "dayjs";
-import { Shift, ShiftLabels } from "../../enums/Admin/Shift";
 import { LeaveRequestResponse } from "../../types/Admin/Leave/LeaveRequestResponse";
 import {
   validateMinDaysFromToday,
@@ -14,7 +13,6 @@ export interface CreateEditLeaveFormValues {
   reason: string;
   fromDate: Date | null;
   toDate: Date | null;
-  shift: Shift;
 }
 
 interface CreateEditLeaveModalProps {
@@ -23,6 +21,7 @@ interface CreateEditLeaveModalProps {
   initialData?: LeaveRequestResponse | null;
   onSubmit: (data: CreateEditLeaveFormValues) => Promise<boolean>;
   canEdit?: boolean;
+  shifts: { id: string; name: string }[];
 }
 
 const CreateEditLeaveModal: React.FC<CreateEditLeaveModalProps> = ({
@@ -37,7 +36,6 @@ const CreateEditLeaveModal: React.FC<CreateEditLeaveModalProps> = ({
       reason: "",
       fromDate: null,
       toDate: null,
-      shift: Shift.MORNING,
     },
     validate: {
       reason: (val) =>
@@ -50,15 +48,17 @@ const CreateEditLeaveModal: React.FC<CreateEditLeaveModalProps> = ({
   useEffect(() => {
     if (initialData) {
       const details = initialData.details ?? [];
-      const from = details[0]?.date;
-      const to =
-        details.length > 0 ? details[details.length - 1].date : undefined;
+
+      const sorted = [...details].sort(
+        (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix()
+      );
+      const from = sorted[0]?.date;
+      const to = sorted[sorted.length - 1]?.date;
 
       form.setValues({
         reason: initialData.reason,
         fromDate: from ? dayjs(from).toDate() : null,
         toDate: to ? dayjs(to).toDate() : null,
-        shift: details[0]?.shift ?? Shift.MORNING,
       });
     } else {
       form.reset();
@@ -132,19 +132,6 @@ const CreateEditLeaveModal: React.FC<CreateEditLeaveModalProps> = ({
           mt="sm"
           disabled={!canEdit}
         />
-
-        <Select
-          label="Ca làm việc"
-          data={Object.entries(ShiftLabels).map(([value, label]) => ({
-            value,
-            label,
-          }))}
-          {...form.getInputProps("shift")}
-          required
-          mt="sm"
-          disabled={!canEdit}
-        />
-
         <div className="flex justify-end gap-3 mt-4">
           <Button variant="outline" onClick={onClose}>
             {canEdit ? "Huỷ" : "Đóng"}

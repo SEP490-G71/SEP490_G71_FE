@@ -1,8 +1,8 @@
-// ✅ Refactored ServiceTable.tsx with sticky delete column and complete total row
 import { Button, NumberInput, Select, Table, ScrollArea } from "@mantine/core";
 import { FaTrash } from "react-icons/fa6";
 import { MedicalService } from "../../types/Admin/MedicalService/MedicalService";
 import { ServiceRow } from "../../types/serviceRow";
+import { InvoiceDetail } from "../../types/Invoice/invoice";
 
 interface Props {
   serviceRows: ServiceRow[];
@@ -11,6 +11,7 @@ interface Props {
   serviceOptions: { value: string; label: string }[];
   editable?: boolean;
   showDepartment?: boolean;
+  invoiceDetail?: InvoiceDetail;
 }
 
 const cellStyle = {
@@ -26,17 +27,16 @@ const align = {
   right: { textAlign: "right" as const, paddingRight: "10px" },
 };
 
-const calculateTotal = ({
-  price = 0,
-  vat = 0,
-  quantity = 1,
-}: {
-  price?: number;
-  vat?: number;
-  quantity: number;
-}) => {
-  return price * (1 + vat / 100) * quantity;
+const calculateTotal = (row: ServiceRow) => {
+  const base = row.price ?? 0;
+  const quantity = row.quantity ?? 1;
+  const discount = row.discount ?? 0;
+  const vat = row.vat ?? 0;
+  const discounted = base * quantity * ((100 - discount) / 100);
+  const taxed = discounted * ((100 + vat) / 100);
+  return Math.round(taxed);
 };
+
 const ServiceTable = ({
   serviceRows,
   setServiceRows,
@@ -44,6 +44,7 @@ const ServiceTable = ({
   serviceOptions,
   editable = true,
   showDepartment = false,
+  invoiceDetail,
 }: Props) => {
   const getServiceDetail = (id: string | null) =>
     medicalServices.find((s) => s.id === id);
@@ -53,28 +54,32 @@ const ServiceTable = ({
 
   const handleSelectService = (index: number, serviceId: string | null) => {
     const selectedService = getServiceDetail(serviceId);
-    const updated = serviceRows.map((r, i) =>
-      i === index && selectedService
-        ? {
-            ...r,
-            id: typeof r.id === "string" ? getNextId() : r.id,
-            serviceId,
-            serviceCode: selectedService.serviceCode,
-            name: selectedService.name,
-            price: selectedService.price,
-            discount: selectedService.discount,
-            vat: selectedService.vat,
-            departmentName: selectedService.department?.name || "",
-            total: calculateTotal({
-              ...r,
-              ...selectedService,
-              quantity: r.quantity,
-            }),
-          }
-        : r
-    );
+    const updated = serviceRows.map((r, i) => {
+      if (i !== index || !selectedService) return r;
+
+      return {
+        id: typeof r.id === "string" ? getNextId() : r.id,
+        serviceId,
+        serviceCode: selectedService.serviceCode,
+        name: selectedService.name,
+        price: selectedService.price,
+        discount: selectedService.discount,
+        vat: selectedService.vat,
+        departmentName: selectedService.department?.name || "",
+        quantity: r.quantity ?? 1,
+        total: calculateTotal({
+          ...r,
+          price: selectedService.price,
+          discount: selectedService.discount,
+          vat: selectedService.vat,
+          quantity: r.quantity ?? 1,
+        }),
+      };
+    });
+
     const isLastRow = index === serviceRows.length - 1;
     const shouldAddNew = isLastRow && serviceId;
+
     setServiceRows(
       shouldAddNew
         ? [...updated, { id: getNextId(), serviceId: null, quantity: 1 }]
@@ -99,8 +104,6 @@ const ServiceTable = ({
         : updated
     );
   };
-
-  const totalCost = serviceRows.reduce((sum, row) => sum + (row.total || 0), 0);
 
   const renderRow = (row: ServiceRow, index: number) => (
     <tr
@@ -184,7 +187,6 @@ const ServiceTable = ({
             paddingLeft: 0,
           }}
         >
-          {/* Ẩn nút nếu là dòng cuối và chưa chọn dịch vụ */}
           {!(index === serviceRows.length - 1 && !row.serviceId) && (
             <Button
               variant="subtle"
@@ -250,47 +252,68 @@ const ServiceTable = ({
             </tr>
           </thead>
           <tbody>{serviceRows.map(renderRow)}</tbody>
-          <tfoot>
-            <tr>
-              <td
-                colSpan={showDepartment ? 8 : 7}
-                style={{
-                  ...cellStyle,
-                  ...align.right,
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  backgroundColor: "#f1f1f1",
-                }}
-              >
-                Tổng cộng:
-              </td>
-              <td
-                style={{
-                  ...cellStyle,
-                  ...align.right,
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  color: "red",
-                  backgroundColor: "#f1f1f1",
-                }}
-              >
-                {totalCost.toLocaleString("vi-VN")}
-              </td>
-              {editable && (
+          {invoiceDetail && (
+            <tfoot>
+              <tr>
+                <td
+                  colSpan={showDepartment ? 8 : 7}
+                  style={{ ...cellStyle, ...align.right }}
+                >
+                  Tổng tiền gốc:
+                </td>
+                <td style={{ ...cellStyle, ...align.right }}>
+                  {invoiceDetail.originalTotal.toLocaleString("vi-VN")}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  colSpan={showDepartment ? 8 : 7}
+                  style={{ ...cellStyle, ...align.right }}
+                >
+                  Giảm giá:
+                </td>
+                <td style={{ ...cellStyle, ...align.right, color: "orange" }}>
+                  {invoiceDetail.discountTotal.toLocaleString("vi-VN")}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  colSpan={showDepartment ? 8 : 7}
+                  style={{ ...cellStyle, ...align.right }}
+                >
+                  VAT:
+                </td>
+                <td style={{ ...cellStyle, ...align.right }}>
+                  {invoiceDetail.vatTotal.toLocaleString("vi-VN")}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  colSpan={showDepartment ? 8 : 7}
+                  style={{
+                    ...cellStyle,
+                    ...align.right,
+                    fontWeight: "bold",
+                    backgroundColor: "#f1f1f1",
+                  }}
+                >
+                  <span style={{ fontSize: "16px" }}>Tổng cộng:</span>
+                </td>
                 <td
                   style={{
                     ...cellStyle,
-                    width: 60,
+                    ...align.right,
+                    fontWeight: "bold",
+                    fontSize: "16px",
+                    color: "red",
                     backgroundColor: "#f1f1f1",
-                    position: "sticky",
-                    right: 0,
-                    zIndex: 14,
-                    boxShadow: "0 0 0 1px #ccc",
                   }}
-                />
-              )}
-            </tr>
-          </tfoot>
+                >
+                  {invoiceDetail.total.toLocaleString("vi-VN")}
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </Table>
       </div>
     </ScrollArea>

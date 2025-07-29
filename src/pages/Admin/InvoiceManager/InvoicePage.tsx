@@ -58,8 +58,7 @@ const InvoicePage = () => {
           toDate: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
         },
         pageIndex,
-        size,
-        "createdAt"
+        size
       );
     },
     [fetchInvoices]

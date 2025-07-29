@@ -1,28 +1,32 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, Group, Popover, Select, Textarea } from "@mantine/core";
-import CustomTable from "../../../components/common/CustomTable";
-import { createColumn } from "../../../components/utils/tableUtils";
-import axiosInstance from "../../../services/axiosInstance";
+import { DatePickerInput } from "@mantine/dates";
 import { toast } from "react-toastify";
-import { LeaveRequestResponse } from "../../../types/Admin/Leave/LeaveRequestResponse";
-import {
-  LeaveRequestStatus,
-  LeaveRequestStatusLabels,
-} from "../../../enums/Admin/LeaveRequestStatus";
-import { ShiftLabels } from "../../../enums/Admin/Shift";
-import PageMeta from "../../../components/common/PageMeta";
 import dayjs from "dayjs";
 import { ThumbsUp, X } from "lucide-react";
-import { useUpdateLeaveRequestStatus } from "../../../hooks/leave/useUpdateLeaveRequestStatus";
+
+import PageMeta from "../../../components/common/PageMeta";
+import CustomTable from "../../../components/common/CustomTable";
+import { createColumn } from "../../../components/utils/tableUtils";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
-import { DatePickerInput } from "@mantine/dates";
+
+import axiosInstance from "../../../services/axiosInstance";
+import { useUpdateLeaveRequestStatus } from "../../../hooks/leave/useUpdateLeaveRequestStatus";
+import { useSearchStaffs } from "../../../hooks/staffs-service/useSearchStaffs";
+import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import {
   useDateFilterValidation,
   validateDateNotFuture,
   validateFromDateToDate,
 } from "../../../hooks/useDateFilterValidation";
-import { useSearchStaffs } from "../../../hooks/staffs-service/useSearchStaffs";
-import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import { isFullDayLeave } from "../../../hooks/leave/isFullDayLeave";
+import useDivideShift from "../../../hooks/DivideShift/useDivideShift";
+
+import { LeaveRequestResponse } from "../../../types/Admin/Leave/LeaveRequestResponse";
+import {
+  LeaveRequestStatus,
+  LeaveRequestStatusLabels,
+} from "../../../enums/Admin/LeaveRequestStatus";
 
 const LeaveAdminPage = () => {
   const [data, setData] = useState<LeaveRequestResponse[]>([]);
@@ -32,6 +36,10 @@ const LeaveAdminPage = () => {
   const [pageSize, setPageSize] = useState(5);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterStaffId, setFilterStaffId] = useState("");
+  const [selectedStaffOption, setSelectedStaffOption] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [filterFromDate, setFilterFromDate] = useState<Date | null>(null);
   const [filterToDate, setFilterToDate] = useState<Date | null>(null);
   const [fromDateError, setFromDateError] = useState<string | null>(null);
@@ -39,32 +47,37 @@ const LeaveAdminPage = () => {
   const { validate } = useDateFilterValidation();
   const [staffSearch, setStaffSearch] = useState("");
   const { setting } = useSettingAdminService();
-  const { options: staffOptions, loading: loadingStaffSearch } =
+  const { shifts, fetchAllShifts } = useDivideShift();
+  const { options: rawStaffOptions, loading: loadingStaffSearch } =
     useSearchStaffs(staffSearch);
+  const { updateStatus } = useUpdateLeaveRequestStatus();
+  const [rejectNote, setRejectNote] = useState("");
+  const [openedPopoverId, setOpenedPopoverId] = useState<string | null>(null);
 
-  // State for controlling search
-  const [isSearchClicked, setIsSearchClicked] = useState(false);
-
-  useEffect(() => {
-    if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]);
-    }
-  }, [setting]);
+  const staffOptions = selectedStaffOption
+    ? [
+        selectedStaffOption,
+        ...rawStaffOptions.filter(
+          (opt) => opt.value !== selectedStaffOption.value
+        ),
+      ]
+    : rawStaffOptions;
 
   const fetchData = async () => {
     const isValid = validate(filterFromDate, filterToDate);
 
     if (!isValid) {
-      const error1 = validateDateNotFuture(filterFromDate);
-      const error2 = validateDateNotFuture(filterToDate);
-      const error3 = validateFromDateToDate(filterFromDate, filterToDate);
-
-      setFromDateError(error1 || error3);
-      setToDateError(error2 || error3);
+      setFromDateError(
+        validateDateNotFuture(filterFromDate) ||
+          validateFromDateToDate(filterFromDate, filterToDate)
+      );
+      setToDateError(
+        validateDateNotFuture(filterToDate) ||
+          validateFromDateToDate(filterFromDate, filterToDate)
+      );
       return;
     }
 
-    // Nếu hợp lệ, clear lỗi và gọi API
     setFromDateError(null);
     setToDateError(null);
     setLoading(true);
@@ -73,7 +86,6 @@ const LeaveAdminPage = () => {
       const params = {
         page: page - 1,
         size: pageSize,
-
         status: filterStatus || undefined,
         staffId: filterStaffId || undefined,
         createdAtFrom: filterFromDate
@@ -90,33 +102,53 @@ const LeaveAdminPage = () => {
       setData(result?.content || []);
       setTotalItems(result?.totalElements || 0);
 
-      if (!result?.content?.length) {
-        toast.info("Không có dữ liệu nghỉ phép");
-      }
-    } catch (err) {
+      if (!result?.content?.length) toast.info("Không có dữ liệu nghỉ phép");
+    } catch {
       toast.error("Không thể tải danh sách nghỉ phép.");
     } finally {
       setLoading(false);
     }
   };
 
-  const { updateStatus } = useUpdateLeaveRequestStatus();
+  useEffect(() => {
+    if (setting?.paginationSizeList?.length) {
+      setPageSize(setting.paginationSizeList[0]);
+    }
+    fetchAllShifts();
+    fetchData();
+  }, [setting]);
 
+  useEffect(() => {
+    fetchData();
+  }, [page, pageSize]);
+
+  const handleSearch = () => {
+    setPage(1);
+    fetchData();
+  };
+  const handleResetFilters = () => {
+    setFilterStatus("");
+    setFilterStaffId("");
+    setSelectedStaffOption(null);
+    setFilterFromDate(null);
+    setFilterToDate(null);
+    setStaffSearch("");
+    setPage(1);
+    setTimeout(() => {
+      fetchData();
+    }, 0);
+  };
   const handleStatusChange = async (
     leaveRequestId: string,
     newStatus: LeaveRequestStatus,
     note?: string
   ) => {
     try {
-      const payload: any = {
+      const payload = {
         leaveRequestId,
         status: newStatus,
+        ...(note && { note }),
       };
-
-      if (note !== undefined && note !== null) {
-        payload.note = note;
-      }
-
       await updateStatus(payload);
       fetchData();
     } catch {
@@ -124,38 +156,6 @@ const LeaveAdminPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (isSearchClicked) {
-      fetchData();
-    }
-  }, [
-    page,
-    pageSize,
-
-    filterStatus,
-    filterStaffId,
-    filterFromDate,
-    filterToDate,
-    isSearchClicked,
-  ]);
-
-  const handleSearch = () => {
-    setIsSearchClicked(true);
-    setPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setFilterStatus("");
-    setFilterStaffId("");
-    setFilterFromDate(null);
-    setFilterToDate(null);
-    setStaffSearch("");
-    setPage(1);
-    fetchData();
-  };
-
-  const [rejectNote, setRejectNote] = useState("");
-  const [openedPopoverId, setOpenedPopoverId] = useState<string | null>(null);
   const handleDelete = async (row: LeaveRequestResponse) => {
     try {
       await axiosInstance.delete(`/leave-request/${row.id}`);
@@ -171,24 +171,29 @@ const LeaveAdminPage = () => {
       key: "staffName",
       label: "Tên nhân viên",
     }),
-    createColumn<LeaveRequestResponse>({
-      key: "reason",
-      label: "Lý do nghỉ",
-    }),
+    createColumn<LeaveRequestResponse>({ key: "reason", label: "Lý do nghỉ" }),
     createColumn<LeaveRequestResponse>({
       key: "details",
       label: "Ngày nghỉ + Ca",
-      render: (row) =>
-        row.details.length > 0
-          ? row.details
-              .map(
-                (d) =>
-                  `${dayjs(d.date).format("DD/MM/YYYY")} (${
-                    ShiftLabels[d.shift]
-                  })`
-              )
-              .join(", ")
-          : "—",
+      render: (row) => {
+        const details = row.details ?? [];
+        if (details.length === 0) return "—";
+
+        if (isFullDayLeave(details)) {
+          const sortedDates = [...new Set(details.map((d) => d.date))].sort();
+          return `Từ ${dayjs(sortedDates[0]).format("DD/MM/YYYY")} đến ${dayjs(
+            sortedDates[sortedDates.length - 1]
+          ).format("DD/MM/YYYY")} (Cả ngày)`;
+        }
+
+        return details
+          .map((d) => {
+            const shiftName =
+              shifts.find((s) => s.id === d.shiftId)?.name || "Ca?";
+            return `${dayjs(d.date).format("DD/MM/YYYY")} (${shiftName})`;
+          })
+          .join(", ");
+      },
     }),
     createColumn<LeaveRequestResponse>({
       key: "status",
@@ -209,7 +214,6 @@ const LeaveAdminPage = () => {
               >
                 Duyệt
               </Button>
-
               <Popover
                 opened={openedPopoverId === row.id}
                 onClose={() => setOpenedPopoverId(null)}
@@ -265,7 +269,6 @@ const LeaveAdminPage = () => {
               </Popover>
             </>
           )}
-
           {row.status === "APPROVED" && <Badge color="blue">Đã Duyệt</Badge>}
           {row.status === "REJECTED" && <Badge color="red">Từ chối</Badge>}
         </Group>
@@ -283,8 +286,8 @@ const LeaveAdminPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h1 className="text-xl font-bold">Yêu cầu nghỉ phép</h1>
       </div>
+
       <div className="grid grid-cols-12 gap-4 my-4">
-        {/* Trạng thái */}
         <div className="col-span-12 md:col-span-3">
           <FloatingLabelWrapper label="Trạng thái">
             <Select
@@ -297,17 +300,13 @@ const LeaveAdminPage = () => {
               data={[
                 { value: "", label: "Tất cả" },
                 ...Object.entries(LeaveRequestStatusLabels).map(
-                  ([key, label]) => ({
-                    value: key,
-                    label,
-                  })
+                  ([key, label]) => ({ value: key, label })
                 ),
               ]}
             />
           </FloatingLabelWrapper>
         </div>
 
-        {/* Nhân viên */}
         <div className="col-span-12 md:col-span-3">
           <FloatingLabelWrapper label="Nhân viên">
             <Select
@@ -317,8 +316,10 @@ const LeaveAdminPage = () => {
               value={filterStaffId}
               onSearchChange={setStaffSearch}
               onChange={(val) => {
-                setPage(1);
+                const selected = staffOptions.find((opt) => opt.value === val);
+                setSelectedStaffOption(selected || null);
                 setFilterStaffId(val || "");
+                setPage(1);
               }}
               data={staffOptions}
               className="w-full"
@@ -337,7 +338,6 @@ const LeaveAdminPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Ngày tạo từ */}
         <div className="col-span-12 md:col-span-2">
           <FloatingLabelWrapper label="Ngày tạo từ">
             <DatePickerInput
@@ -347,9 +347,10 @@ const LeaveAdminPage = () => {
                 const date = val as Date | null;
                 setFilterFromDate(date);
                 setPage(1);
-                const error1 = validateDateNotFuture(date);
-                const error2 = validateFromDateToDate(date, filterToDate);
-                setFromDateError(error1 || error2);
+                setFromDateError(
+                  validateDateNotFuture(date) ||
+                    validateFromDateToDate(date, filterToDate)
+                );
               }}
               error={fromDateError}
               className="w-full"
@@ -367,7 +368,6 @@ const LeaveAdminPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Ngày tạo đến */}
         <div className="col-span-12 md:col-span-2">
           <FloatingLabelWrapper label="Ngày tạo đến">
             <DatePickerInput
@@ -377,9 +377,10 @@ const LeaveAdminPage = () => {
                 const date = val as Date | null;
                 setFilterToDate(date);
                 setPage(1);
-                const error1 = validateDateNotFuture(date);
-                const error2 = validateFromDateToDate(filterFromDate, date);
-                setToDateError(error1 || error2);
+                setToDateError(
+                  validateDateNotFuture(date) ||
+                    validateFromDateToDate(filterFromDate, date)
+                );
               }}
               error={toDateError}
               className="w-full"
@@ -397,7 +398,6 @@ const LeaveAdminPage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Nút */}
         <div className="col-span-12 md:col-span-2 flex items-end gap-2 justify-end">
           <Button variant="light" color="gray" onClick={handleResetFilters}>
             Tải lại

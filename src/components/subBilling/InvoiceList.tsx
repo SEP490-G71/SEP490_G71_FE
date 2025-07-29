@@ -1,3 +1,4 @@
+//import dayjs from "dayjs";
 import { InvoiceStatusMap } from "../../enums/InvoiceStatus/InvoiceStatus";
 import CustomTable from "../common/CustomTable";
 
@@ -40,8 +41,13 @@ const InvoiceList = ({
     {
       key: "patientName",
       label: "Tên bệnh nhân",
-      sortable: false,
     },
+    // {
+    //   key: "createdAt",
+    //   label: "Ngày tạo",
+    //   render: (row: any) =>
+    //     row.createdAt ? dayjs(row.createdAt).format("DD/MM/YYYY") : "",
+    // },
   ];
 
   return (

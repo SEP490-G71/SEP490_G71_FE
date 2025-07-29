@@ -37,8 +37,6 @@ export const useFilteredInvoices = () => {
     filters: InvoiceFilters = {},
     page = 0,
     size = 10,
-    sortBy = "createdAt",
-    sortDir = "desc"
   ) => {
     try {
       setLoadingList(true);
@@ -47,8 +45,7 @@ export const useFilteredInvoices = () => {
         ...filters,
         page,
         size,
-        sortBy,
-        sortDir,
+       
       };
 
       const res = await axiosInstance.get("/invoices", { params });

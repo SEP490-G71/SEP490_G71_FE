@@ -1,34 +1,46 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, Group, Select, Title } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Group,
+  Title,
+  Loader,
+  Text,
+  Modal,
+} from "@mantine/core";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { LeaveRequestStatusLabels } from "../../enums/Admin/LeaveRequestStatus";
 import CustomTable from "../../components/common/CustomTable";
 import { createColumn } from "../../components/utils/tableUtils";
 import { LeaveRequestResponse } from "../../types/Admin/Leave/LeaveRequestResponse";
-import axiosInstance from "../../services/axiosInstance";
+
 import { useLeaveRequestsByStaff } from "../../hooks/leave/staff/useLeaveRequestsByStaff";
 import useStaffs from "../../hooks/staffs-service/useStaffs";
 import CreateEditLeaveModal, {
   CreateEditLeaveFormValues,
 } from "../../components/staff/EditLeaveModal";
-import { useCreateLeaveRequest } from "../../hooks/leave/staff/useCreateLeaveRequest";
 import { useSettingAdminService } from "../../hooks/setting/useSettingAdminService";
+import { useUserInfo } from "../../hooks/auth/useUserInfo";
+import useDivideShift from "../../hooks/DivideShift/useDivideShift";
+import { useCreateLeaveRequestByTime } from "../../hooks/leave/staff/useCreateLeaveRequestByTime";
+import { useDeleteLeaveRequest } from "../../hooks/leave/useDeleteLeaveRequest";
 
 const LeaveStaffPage = () => {
+  const { userInfo, loading: loadingUser } = useUserInfo();
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [editingLeave, setEditingLeave] = useState<LeaveRequestResponse | null>(
     null
   );
   const { setting } = useSettingAdminService();
-
+  const { staffs, fetchStaffs } = useStaffs();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] =
-    useState<keyof LeaveRequestResponse>("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const { createLeaveRequest } = useCreateLeaveRequest();
+  const { createLeaveRequestByTime } = useCreateLeaveRequestByTime();
+  const { deleteLeaveRequest } = useDeleteLeaveRequest();
+  const { shifts, fetchAllShifts } = useDivideShift();
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const {
     leaves: data,
     loadingList: loading,
@@ -36,22 +48,24 @@ const LeaveStaffPage = () => {
     fetchLeaves,
   } = useLeaveRequestsByStaff(selectedStaffId || "");
 
-  const { staffs, fetchStaffs } = useStaffs();
+  // Gán selectedStaffId khi userInfo đã có
+  useEffect(() => {
+    if (userInfo?.userId) {
+      setSelectedStaffId(userInfo.userId);
+    }
+  }, [userInfo]);
 
   useEffect(() => {
     fetchStaffs();
   }, []);
-
+  useEffect(() => {
+    fetchAllShifts();
+  }, []);
   useEffect(() => {
     if (selectedStaffId) {
-      fetchLeaves({}, page - 1, pageSize, sortKey, sortDirection);
+      fetchLeaves({}, page - 1, pageSize);
     }
-  }, [selectedStaffId, page, pageSize, sortKey, sortDirection]);
-
-  const staffOptions = staffs.map((s) => ({
-    value: s.id,
-    label: `${s.fullName}`,
-  }));
+  }, [selectedStaffId, page, pageSize]);
 
   const handleSubmit = async (
     form: CreateEditLeaveFormValues
@@ -61,47 +75,34 @@ const LeaveStaffPage = () => {
       return false;
     }
 
-    const dates: Date[] = [];
-    let current = new Date(form.fromDate!);
-    const end = new Date(form.toDate!);
-
-    while (current <= end) {
-      dates.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+    if (editingLeave) {
+      toast.warning(
+        "Không thể sửa đơn nghỉ theo thời gian trong phiên bản này"
+      );
+      return false;
     }
 
-    const details = dates.map((d) => ({
-      date: dayjs(d).format("YYYY-MM-DD"),
-      shift: form.shift,
-    }));
-
     try {
-      if (editingLeave) {
-        await axiosInstance.put(`/leave-request/${editingLeave.id}`, {
-          staffId: selectedStaffId,
-          reason: form.reason,
-          details,
-        });
-        toast.success("Cập nhật đơn nghỉ phép thành công");
-      } else {
-        const created = await createLeaveRequest({
-          staffId: selectedStaffId,
-          reason: form.reason,
-          details,
-        });
+      const fromDateTime = dayjs(form.fromDate)
+        .startOf("day")
+        .format("YYYY-MM-DDTHH:mm:ss");
+      const toDateTime = dayjs(form.toDate)
+        .endOf("day")
+        .format("YYYY-MM-DDTHH:mm:ss");
 
-        if (!created) return false;
-      }
+      const success = await createLeaveRequestByTime({
+        staffId: selectedStaffId,
+        reason: form.reason,
+        fromDateTime,
+        toDateTime,
+      });
 
-      setEditingLeave(null);
-      fetchLeaves({}, page - 1, pageSize, sortKey, sortDirection);
+      if (!success) return false;
+
+      fetchLeaves({}, page - 1, pageSize);
       return true;
     } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          (editingLeave ? "Cập nhật thất bại" : "Tạo đơn nghỉ phép thất bại")
-      );
-      console.error("Lỗi gửi đơn nghỉ:", err);
+      toast.error("Tạo đơn nghỉ phép thất bại");
       return false;
     }
   };
@@ -109,6 +110,19 @@ const LeaveStaffPage = () => {
   const handleEdit = (leave: LeaveRequestResponse) => {
     setEditingLeave(leave);
     setModalOpened(true);
+  };
+  const handleDelete = (leaveId: string) => {
+    setDeleteTargetId(leaveId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+
+    const success = await deleteLeaveRequest(deleteTargetId);
+    if (success) {
+      fetchLeaves({}, page - 1, pageSize);
+    }
+    setDeleteTargetId(null);
   };
 
   const columns = [
@@ -128,9 +142,38 @@ const LeaveStaffPage = () => {
       key: "details",
       label: "Ngày nghỉ + Ca",
       render: (row) => {
-        const text = row.details
-          .map((d) => `${dayjs(d.date).format("DD/MM/YYYY")} (${d.shift})`)
-          .join(", ");
+        const dates = row.details.map((d) => d.date);
+        const shiftIds = row.details.map((d) => d.shiftId);
+
+        // Loại bỏ trùng lặp
+        const uniqueDates = Array.from(new Set(dates)).sort();
+        const uniqueShiftIds = Array.from(new Set(shiftIds));
+
+        // Nếu là nghỉ liên tiếp và có đủ ca: hiển thị gọn
+        const isContinuous =
+          uniqueDates.length > 1 &&
+          dayjs(uniqueDates[uniqueDates.length - 1]).diff(
+            dayjs(uniqueDates[0]),
+            "day"
+          ) ===
+            uniqueDates.length - 1 &&
+          uniqueShiftIds.length >= 3;
+
+        let text = "";
+
+        if (isContinuous) {
+          text = `Từ ${dayjs(uniqueDates[0]).format("DD/MM/YYYY")} đến ${dayjs(
+            uniqueDates[uniqueDates.length - 1]
+          ).format("DD/MM/YYYY")} (Cả ngày)`;
+        } else {
+          text = row.details
+            .map((d) => {
+              const shiftName =
+                shifts.find((s) => s.id === d.shiftId)?.name || "Không rõ";
+              return `${dayjs(d.date).format("DD/MM/YYYY")} (${shiftName})`;
+            })
+            .join(", ");
+        }
         return row.status === "REJECTED" ? (
           <span style={{ textDecoration: "line-through", color: "#aaa" }}>
             {text}
@@ -140,6 +183,7 @@ const LeaveStaffPage = () => {
         );
       },
     }),
+
     createColumn<LeaveRequestResponse>({
       key: "status",
       label: "Trạng thái",
@@ -162,14 +206,28 @@ const LeaveStaffPage = () => {
       label: "Hành động",
       render: (row) =>
         row.status === "PENDING" ? (
-          <Button size="xs" variant="light" onClick={() => handleEdit(row)}>
-            Sửa
-          </Button>
+          <Group gap="xs">
+            <Button size="xs" variant="light" onClick={() => handleEdit(row)}>
+              Sửa
+            </Button>
+            <Button
+              size="xs"
+              color="red"
+              variant="outline"
+              onClick={() => handleDelete(row.id)}
+            >
+              Xoá
+            </Button>
+          </Group>
         ) : (
-          <span style={{ color: "#aaa" }}>Không thể sửa</span>
+          <span style={{ color: "#aaa" }}>Không thể sửa / xoá</span>
         ),
     }),
   ];
+
+  if (loadingUser || !selectedStaffId) {
+    return <Loader size="lg" mt="xl" />;
+  }
 
   return (
     <>
@@ -178,20 +236,12 @@ const LeaveStaffPage = () => {
       </Title>
 
       <Group mb="sm" justify="space-between" align="end">
-        <Select
-          label="Chọn nhân viên"
-          placeholder="Chọn một người..."
-          data={staffOptions}
-          value={selectedStaffId}
-          onChange={(val) => {
-            setSelectedStaffId(val);
-            setPage(1);
-          }}
-          searchable
-          clearable
-          nothingFoundMessage="Không có nhân viên nào"
-          w={350}
-        />
+        {/* Hiển thị tên nhân viên hiện tại (không cho chọn) */}
+        <Text fw={500}>
+          Nhân viên:{" "}
+          {staffs.find((s) => s.id === selectedStaffId)?.fullName ||
+            "Đang tải..."}
+        </Text>
 
         <Button
           onClick={() => {
@@ -215,12 +265,6 @@ const LeaveStaffPage = () => {
           setPageSize(size);
           setPage(1);
         }}
-        onSortChange={(key, dir) => {
-          setSortKey(key);
-          setSortDirection(dir);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         showActions={false}
         pageSizeOptions={setting?.paginationSizeList || [5, 10, 20, 50]}
@@ -235,7 +279,24 @@ const LeaveStaffPage = () => {
         initialData={editingLeave}
         onSubmit={handleSubmit}
         canEdit={!editingLeave || editingLeave.status === "PENDING"}
+        shifts={[]}
       />
+      <Modal
+        opened={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        title="Xác nhận xoá đơn nghỉ phép"
+        centered
+      >
+        <Text>Bạn có chắc chắn muốn xoá đơn nghỉ phép này không?</Text>
+        <Group mt="md" justify="flex-end">
+          <Button variant="default" onClick={() => setDeleteTargetId(null)}>
+            Huỷ
+          </Button>
+          <Button color="red" onClick={confirmDelete}>
+            Xác nhận xoá
+          </Button>
+        </Group>
+      </Modal>
     </>
   );
 };
