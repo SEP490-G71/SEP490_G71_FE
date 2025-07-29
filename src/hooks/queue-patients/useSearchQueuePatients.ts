@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
@@ -6,30 +7,26 @@ import {
   SearchQueueParams,
 } from "../../types/Queue-patient/QueuePatient";
 
-const useQueuePatientService = (initialParams: Partial<SearchQueueParams> = {}) => {
+const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {}) => {
   const [patients, setPatients] = useState<QueuePatient[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [queryParams, setQueryParams] = useState({
+    filters: initialFilters,
+    page: 0,
+    size: 10,
+  });
 
-  const [filters, setFilters] = useState<Partial<SearchQueueParams>>(initialParams);
-
-  const fetchQueuePatients = async (
-    customParams: Partial<SearchQueueParams> = {}
-  ) => {
+  const fetchQueuePatients = async (params = queryParams) => {
     setLoading(true);
     try {
-      const finalParams: SearchQueueParams = {
-        ...filters,
-        ...customParams,
-        page: customParams.page ?? currentPage,
-        size: customParams.size ?? pageSize,
-      };
-
       const res = await axiosInstance.get("/queue-patients/search", {
-        params: finalParams,
+        params: {
+          ...params.filters,
+          page: params.page,
+          size: params.size,
+        },
       });
 
       const data = res.data.result;
@@ -48,22 +45,40 @@ const useQueuePatientService = (initialParams: Partial<SearchQueueParams> = {}) 
   };
 
   useEffect(() => {
+    if (!queryParams.filters?.roomNumber) return;
+
     const timeout = setTimeout(() => {
       fetchQueuePatients();
-    }, 300); // debounce tránh call liên tục
+    }, 300);
+
     return () => clearTimeout(timeout);
-  }, [currentPage, pageSize, filters]); // thêm filters để theo dõi thay đổi
+  }, [queryParams]);
+
+  const updateFilters = (newFilters: Partial<SearchQueueParams>) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      filters: newFilters,
+      page: 0,
+    }));
+  };
+
+  const setCurrentPage = (page: number) => {
+    setQueryParams((prev) => ({ ...prev, page }));
+  };
+
+  const setPageSize = (size: number) => {
+    setQueryParams((prev) => ({ ...prev, size }));
+  };
 
   return {
     patients,
     totalItems,
     loading,
-    currentPage,
-    pageSize,
+    currentPage: queryParams.page,
+    pageSize: queryParams.size,
     setCurrentPage,
     setPageSize,
-    fetchQueuePatients,
-    setFilters,
+    updateFilters,
   };
 };
 

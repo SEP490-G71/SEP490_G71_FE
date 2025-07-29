@@ -53,10 +53,10 @@ const StaffsPage = () => {
 
   const { setting } = useSettingAdminService();
 
-  const { roles, fetchAllRoles } = useRoleService();
+  const { roles, fetchRolesExceptPatient } = useRoleService();
 
   useEffect(() => {
-    fetchAllRoles(0, 100);
+    fetchRolesExceptPatient(0, 100);
   }, []);
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
@@ -205,10 +205,15 @@ const StaffsPage = () => {
     createColumn<StaffsResponse>({
       key: "departmentInfo",
       label: "Phòng ban",
-      render: (row) =>
-        row.department
-          ? `${row.department.roomNumber} - ${row.department.name}`
-          : "Chưa được gán",
+      render: (row) => {
+        if (!row.department) return "Chưa được gán";
+
+        const fullText = `${row.department.roomNumber} - ${row.department.name}`;
+        const shortText =
+          fullText.length > 15 ? fullText.slice(0, 15) + "..." : fullText;
+
+        return <span title={fullText}>{shortText}</span>;
+      },
     }),
   ];
 

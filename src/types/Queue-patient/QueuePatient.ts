@@ -3,6 +3,7 @@ import { Gender } from "../../enums/Gender";
 
 export interface QueuePatient {
   id: string;
+  patientId:string;
   firstName: string;
   middleName: string;
   lastName: string;

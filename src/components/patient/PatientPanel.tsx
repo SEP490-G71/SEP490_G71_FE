@@ -1,12 +1,13 @@
 import { useMemo } from "react";
-import { Title } from "@mantine/core";
+import { Divider, Paper, Title } from "@mantine/core";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import CustomTable from "../common/CustomTable";
-import FilterPanel from "../common/FilterSection";
+import FilterPanel, { FilterField } from "../common/FilterSection";
 import { Column } from "../../types/table";
 import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
 import { GenderLabel } from "../../enums/Gender";
 import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
+import { FloatingLabelWrapper } from "../common/FloatingLabelWrapper";
 
 interface PatientPanelProps {
   selectedPatient: QueuePatient | null;
@@ -19,8 +20,8 @@ interface PatientPanelProps {
   loading: boolean;
   setPageSize: (size: number) => void;
   setCurrentPage: (page: number) => void;
-  setFilters: (filters: any) => void;
   department?: DepartmentResponse | null;
+  updateFilters: (filters: any) => void;
 }
 
 const PatientPanel = ({
@@ -33,9 +34,14 @@ const PatientPanel = ({
   loading,
   setPageSize,
   setCurrentPage,
-  setFilters,
   department,
+  updateFilters,
 }: PatientPanelProps) => {
+  const today = new Date();
+
+  const toDateString = (date: Date) =>
+    date ? date.toISOString().split("T")[0] : undefined;
+
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
       {
@@ -52,10 +58,8 @@ const PatientPanel = ({
             [Status.PENDING]: "yellow",
             [Status.FAILED]: "red",
           };
-
           const status = row.status as Status;
           const color = colorMap[status];
-
           return (
             <span
               className={`text-sm font-medium px-2 py-1 rounded-full bg-${color}-100 text-${color}-700`}
@@ -65,74 +69,128 @@ const PatientPanel = ({
           );
         },
       },
-      {
-        key: "patientCode",
-        label: "Mã BN",
-      },
-      {
-        key: "fullName",
-        label: "Họ tên",
-      },
+      { key: "patientCode", label: "Mã BN" },
+      { key: "fullName", label: "Họ tên" },
       {
         key: "gender",
         label: "Giới tính",
         render: (row) =>
           GenderLabel[row.gender as keyof typeof GenderLabel] ?? "Không rõ",
       },
-      {
-        key: "phone",
-        label: "Điện thoại",
-      },
+      { key: "phone", label: "Điện thoại" },
     ],
     [currentPage, pageSize]
   );
 
+  const filterFields: FilterField[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      type: "select",
+      options: Object.entries(StatusLabel).map(([value, label]) => ({
+        value,
+        label,
+      })),
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "name",
+      label: "Tên bệnh nhân",
+      type: "text",
+      placeholder: "Nhập tên...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "phone",
+      label: "SĐT",
+      type: "text",
+      placeholder: "Nhập số điện thoại...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "patientCode",
+      label: "Mã BN",
+      type: "text",
+      placeholder: "Nhập mã bệnh nhân...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "registeredTimeFrom",
+      label: "Từ ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "registeredTimeTo",
+      label: "Đến ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+  ];
+
+  const initialFilters = {
+    name: "",
+    phone: "",
+    patientCode: "",
+    status: "",
+    registeredTimeFrom: today,
+    registeredTimeTo: today,
+  };
+
   const handleSearch = (filters: any) => {
-    const enrichedFilters = {
+    updateFilters({
       ...filters,
       roomNumber: department?.roomNumber,
-      type: department?.type,
-    };
-    setFilters(enrichedFilters);
-    setCurrentPage(0);
+    });
   };
 
   const handleReset = () => {
-    const resetFilters = {
+    updateFilters({
+      name: "",
+      phone: "",
+      patientCode: "",
+      status: "",
+      registeredTimeFrom: toDateString(today),
+      registeredTimeTo: toDateString(today),
       roomNumber: department?.roomNumber,
       type: department?.type,
-    };
-    setFilters(resetFilters);
-    setCurrentPage(0);
+    });
   };
 
   return (
-    <div className="flex flex-col">
-      <FilterPanel onSearch={handleSearch} onReset={handleReset} />
-      <Title order={5} mb="md">
-        Danh sách đăng ký
-      </Title>
-
-      <CustomTable<QueuePatient>
-        data={patients}
-        columns={columns}
-        page={currentPage + 1}
-        pageSize={pageSize}
-        totalItems={totalElements}
-        onPageChange={(p) => setCurrentPage(p - 1)}
-        onPageSizeChange={setPageSize}
-        loading={loading}
-        showActions={false}
-        getRowStyle={(row) => ({
-          backgroundColor:
-            selectedPatient?.patientCode === row.patientCode
-              ? "#cce5ff"
-              : undefined,
-          cursor: "pointer",
-        })}
-        onView={onSelectPatient}
-      />
-    </div>
+    <Paper p="md" shadow="xs" withBorder radius={0}>
+      <div className="flex flex-col">
+        <FilterPanel
+          fields={filterFields}
+          initialValues={initialFilters}
+          onSearch={handleSearch}
+          onReset={handleReset}
+        />
+        <Divider mt="md" mb={15} />
+        <Title order={5} mb="md">
+          Danh sách đăng ký
+        </Title>
+        <CustomTable<QueuePatient>
+          data={patients}
+          columns={columns}
+          page={currentPage + 1}
+          pageSize={pageSize}
+          totalItems={totalElements}
+          onPageChange={(p) => setCurrentPage(p - 1)}
+          onPageSizeChange={setPageSize}
+          loading={loading}
+          showActions={false}
+          getRowStyle={(row) => ({
+            backgroundColor:
+              selectedPatient?.patientCode === row.patientCode
+                ? "#cce5ff"
+                : undefined,
+            cursor: "pointer",
+          })}
+          onRowClick={(row) => onSelectPatient(row)}
+        />
+      </div>
+    </Paper>
   );
 };
 

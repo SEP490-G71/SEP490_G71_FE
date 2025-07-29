@@ -10,5 +10,5 @@ export interface ServiceRow {
   quantity: number;
   total?: number;
 
-  departmentName?: string; // optional, chỉ hiển thị nếu cần phòng khám
+  departmentName?: string; 
 }
