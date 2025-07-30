@@ -6,21 +6,28 @@ import {
   Text,
   Paper,
   Grid,
-  Select,
   Title,
   Image,
-  Loader,
 } from "@mantine/core";
-import { DateTimePicker } from "@mantine/dates";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import uploadMedicalResult from "../../hooks/medicalRecord/uploadMedicalResult";
 import { toast } from "react-toastify";
-import useStaffs from "../../hooks/staffs-service/useStaffs";
+import dayjs from "dayjs";
+import updateMedicalResult from "../../hooks/medicalRecord/updateMedicalResult";
+
+interface MedicalRecordResult {
+  id: string;
+  completedBy: string;
+  imageUrls: string[];
+  note: string;
+}
 
 interface Props {
   medicalOrderId: string;
   serviceName: string;
+  technicalName: string;
+  technicalId: string;
   onSubmit: (result: {
     resultText: string;
     selectedStaffId: string | null;
@@ -30,42 +37,63 @@ interface Props {
     images: string[];
   }) => void;
   onCancel: () => void;
+  initialResult?: MedicalRecordResult;
 }
 
 const ServiceResultPanel = ({
   medicalOrderId,
   serviceName,
+  technicalName,
+  technicalId,
   onSubmit,
   onCancel,
+  initialResult,
 }: Props) => {
-  const [doctor, setDoctor] = useState<string | null>(null);
-  const [date, setDate] = useState<Date | null>(new Date());
+  const [date] = useState<Date | null>(new Date());
   const [description, setDescription] = useState("");
   const [conclusion, setConclusion] = useState("Bình thường");
   const [suggestion, setSuggestion] = useState("");
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { staffs, loading: loadingStaffs, fetchStaffs } = useStaffs();
-
   useEffect(() => {
-    fetchStaffs();
-  }, []);
-
-  const uniqueStaffList = staffs.filter(
-    (staff, index, self) => index === self.findIndex((s) => s.id === staff.id)
-  );
+    if (initialResult) {
+      setDescription(initialResult.note || "");
+      setConclusion("Bình thường");
+      setSuggestion("");
+      setImagePreviews(initialResult.imageUrls || []);
+      setActiveImage(initialResult.imageUrls?.[0] || null);
+    }
+  }, [initialResult]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagePreviews((prev) => {
+      const newList = prev.filter((_, i) => i !== index);
+      if (prev[index] === activeImage) {
+        setActiveImage(newList.length > 0 ? newList[newList.length - 1] : null);
+      }
+      return newList;
+    });
+
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const urls = files.map((file) => URL.createObjectURL(file));
 
-    setImagePreviews((prev) => [...prev, ...urls]);
+    setImagePreviews((prev) => {
+      const newList = [...prev, ...urls];
+      setActiveImage(newList[newList.length - 1]);
+      return newList;
+    });
+
     setUploadedFiles((prev) => [...prev, ...files]);
 
     if (fileInputRef.current) {
@@ -73,70 +101,61 @@ const ServiceResultPanel = ({
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const handleSave = async () => {
     if (!description.trim()) {
-      alert("Vui lòng nhập mô tả kết quả.");
+      toast.warning("Vui lòng nhập mô tả kết quả.");
       return;
     }
 
     if (!date) {
-      alert("Ngày thực hiện không hợp lệ.");
+      toast.warning("Ngày thực hiện không hợp lệ.");
       return;
     }
-
-    if (!doctor) {
-      alert("Vui lòng chọn bác sĩ.");
-      return;
-    }
-
-    console.log("🧾 Đang chuẩn bị upload:");
-    console.log("🩺 Bác sĩ:", doctor);
-    console.log("📝 Mô tả:", description.trim());
-    console.log("📅 Ngày:", date.toISOString());
-    console.log("✅ Kết luận:", conclusion);
-    console.log("📁 Số file:", uploadedFiles.length);
-    uploadedFiles.forEach((file, index) => {
-      console.log(`📂 File ${index + 1}:`, {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        isFile: file instanceof File,
-      });
-    });
 
     try {
-      console.log("🆔 MedicalOrderId:", medicalOrderId);
-
-      await uploadMedicalResult(
-        medicalOrderId,
-        uploadedFiles,
-        doctor,
-        conclusion
-      );
-      toast.success("Đã lưu kết quả và upload file thành công.");
+      if (initialResult) {
+        await updateMedicalResult(
+          initialResult?.id ?? "",
+          uploadedFiles,
+          imagePreviews.filter((url) => !url.startsWith("blob:")),
+          technicalId,
+          conclusion
+        );
+        toast.success("Đã sửa kết quả và upload file thành công.");
+      } else {
+        await uploadMedicalResult(
+          medicalOrderId,
+          uploadedFiles,
+          technicalId,
+          conclusion
+        );
+        toast.success("Đã lưu kết quả và upload file thành công.");
+      }
 
       onSubmit({
         resultText: description.trim(),
-        selectedStaffId: doctor,
+        selectedStaffId: technicalId,
         performedAt: date,
         conclusion: conclusion.trim(),
         suggestion: suggestion.trim(),
         images: imagePreviews,
       });
-    } catch (error) {
-      console.error("❌ Upload lỗi:", error);
-      toast.error("Không thể lưu kết quả khám hoặc upload file.");
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      const message = error?.response?.data?.message;
+
+      if (code === 2001) {
+        toast.warning("Kết quả đã được hoàn thành. Không thể lưu lại.");
+      } else {
+        console.error("❌ Upload lỗi:", error);
+        toast.error(message || "Không thể lưu/sửa kết quả hoặc upload file.");
+      }
     }
   };
 
   return (
     <Paper withBorder shadow="xs" p="md" mt="md">
-      <Grid mb="xs" align="center">
+      <Grid mb="xs" align="start">
         <Grid.Col span={9}>
           <Title order={5}>
             Dịch vụ:{" "}
@@ -147,44 +166,27 @@ const ServiceResultPanel = ({
         </Grid.Col>
         <Grid.Col span={3}>
           <Group justify="flex-end" gap="xs">
-            <Button variant="light" size="xs">
-              In
-            </Button>
-            <Button size="xs" color="blue" onClick={handleSave}>
-              Lưu
+            <Button size="md" color="blue" onClick={handleSave}>
+              {initialResult ? "Sửa kết quả" : "Lưu kết quả"}
             </Button>
           </Group>
         </Grid.Col>
       </Grid>
 
       <Grid>
-        {/* Cột trái */}
         <Grid.Col span={7}>
           <Grid>
             <Grid.Col span={6}>
-              <Select
-                label="* Bác sĩ thực hiện"
-                placeholder="Chọn bác sĩ"
-                data={
-                  uniqueStaffList.map((staff) => ({
-                    label: staff.fullName,
-                    value: staff.id,
-                  })) ?? []
-                }
-                value={doctor}
-                onChange={setDoctor}
-                searchable
-                disabled={loadingStaffs}
-                rightSection={loadingStaffs ? <Loader size="xs" /> : null}
+              <TextInput
+                label="* Chuyên viên thực hiện"
+                value={technicalName}
+                readOnly
               />
             </Grid.Col>
             <Grid.Col span={6}>
-              <DateTimePicker
+              <TextInput
                 label="Ngày thực hiện"
-                value={date}
-                onChange={(value) => {
-                  setDate(value ? new Date(value) : null);
-                }}
+                value={dayjs(date).format("DD/MM/YYYY HH:mm")}
                 readOnly
               />
             </Grid.Col>
@@ -207,39 +209,53 @@ const ServiceResultPanel = ({
             onChange={(e) => setConclusion(e.currentTarget.value)}
             mt="sm"
           />
-
-          <TextInput
-            label="Đề nghị"
-            value={suggestion}
-            onChange={(e) => setSuggestion(e.currentTarget.value)}
-            mt="sm"
-          />
         </Grid.Col>
 
-        {/* Cột phải: ảnh */}
         <Grid.Col span={5}>
-          <Text fw={500} mb="xs">
+          <Text fw={500} mb={0} size="md">
             Hình ảnh
           </Text>
 
-          <Group gap="sm" mb="sm" wrap="wrap">
-            {imagePreviews.length === 0 && (
-              <Text c="dimmed" size="xs">
-                Chưa có ảnh nào được tải lên
-              </Text>
-            )}
+          {activeImage ? (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "4 / 3",
+                overflow: "hidden",
+                border: "1px solid #ddd",
+                marginBottom: 16,
+              }}
+            >
+              <Image
+                src={activeImage}
+                alt="Ảnh chính"
+                width="100%"
+                height="100%"
+                fit="cover"
+              />
+            </div>
+          ) : (
+            <Text c="red" size="md" mb="sm">
+              Chưa có ảnh nào được tải lên
+            </Text>
+          )}
 
+          <Group gap="sm" mb="sm" wrap="wrap">
             {imagePreviews.map((src, index) => (
               <div
                 key={index}
                 style={{
                   position: "relative",
-                  width: 200,
-                  height: 150,
-                  borderRadius: 8,
+                  width: 65,
+                  height: 50,
+                  borderRadius: 6,
                   overflow: "hidden",
-                  border: "1px solid #ddd",
+                  border:
+                    src === activeImage ? "2px solid blue" : "1px solid #ccc",
+                  cursor: "pointer",
                 }}
+                onClick={() => setActiveImage(src)}
               >
                 <Image
                   src={src}
@@ -252,17 +268,21 @@ const ServiceResultPanel = ({
                   size="xs"
                   color="red"
                   variant="subtle"
-                  onClick={() => handleRemoveImage(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage(index);
+                  }}
                   style={{
                     position: "absolute",
-                    top: 4,
-                    right: 4,
-                    padding: 4,
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
-                    borderRadius: 4,
+                    top: 2,
+                    right: 2,
+                    border: "none",
+                    backgroundColor: "transparent",
+                    padding: 0,
+                    transform: "translate(-5%, -30%)",
                   }}
                 >
-                  <FaTrash size={12} />
+                  <FaTrash size={10} />
                 </Button>
               </div>
             ))}
@@ -276,7 +296,12 @@ const ServiceResultPanel = ({
             multiple
             onChange={handleFileChange}
           />
-          <Button variant="light" size="xs" onClick={handleUploadClick}>
+          <Button
+            variant="light"
+            size="md"
+            onClick={handleUploadClick}
+            fullWidth
+          >
             ⬆️ Tải ảnh lên
           </Button>
         </Grid.Col>

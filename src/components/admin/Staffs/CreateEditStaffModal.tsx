@@ -178,7 +178,7 @@ const CreateEditStaffModal: React.FC<CreateEditStaffModalProps> = ({
           placeholder="Chọn vai trò"
           data={roles.map((r) => ({
             value: r.name,
-            label: r.description || r.name,
+            label: r.name,
           }))}
           {...form.getInputProps("roleNames")}
           required

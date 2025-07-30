@@ -22,6 +22,7 @@ const StaffListTable = ({ staffs, onRemove }: StaffListTableProps) => {
       <thead style={{ backgroundColor: "#f1f1f1" }}>
         <tr>
           <th style={{ textAlign: "left", padding: "8px 16px" }}>Họ tên</th>
+          <th style={{ textAlign: "left", padding: "8px 16px" }}>Vai trò</th>
           <th style={{ textAlign: "left", padding: "8px 16px" }}>
             Mã nhân viên
           </th>
@@ -33,6 +34,9 @@ const StaffListTable = ({ staffs, onRemove }: StaffListTableProps) => {
           <tr key={staff.id}>
             <td style={{ textAlign: "left", padding: "8px 16px" }}>
               {staff.fullName}
+            </td>
+            <td style={{ textAlign: "left", padding: "8px 16px" }}>
+              {staff.roles}
             </td>
             <td style={{ textAlign: "left", padding: "8px 16px" }}>
               {staff.staffCode}

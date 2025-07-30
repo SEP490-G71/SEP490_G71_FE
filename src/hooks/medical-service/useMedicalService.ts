@@ -39,6 +39,19 @@ const useMedicalService = () => {
     }
   };
 
+    const fetchAllMedicalServicesNoPagination = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get("/medical-services/all");
+      setMedicalServices(res.data.result ?? []);
+    } catch (error) {
+      console.error("Failed to fetch all medical services (no pagination):", error);
+      toast.error("Không thể tải danh sách dịch vụ (tất cả).");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchMedicalServiceById = async (id: string) => {
     try {
       const res = await axiosInstance.get(`/medical-services/${id}`);
@@ -69,6 +82,7 @@ const useMedicalService = () => {
     loading,
     setLoading,
     fetchAllMedicalServices,
+    fetchAllMedicalServicesNoPagination,
     fetchMedicalServiceById,
     handleDeleteMedicalServiceById,
   };

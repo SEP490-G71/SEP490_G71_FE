@@ -197,8 +197,14 @@ const MedicalServicePage = () => {
     createColumn<MedicalService>({
       key: "description",
       label: "Mô tả",
-      sortable: false,
-      align: "left",
+//       sortable: false,
+//       align: "left",
+      render: (row) => {
+        const desc = row.description || "";
+        const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
+
+        return <span title={desc}>{short}</span>;
+      },
     }),
     createColumn<MedicalService>({
       key: "department",

@@ -40,7 +40,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     setSearch("");
     setIsResetting(true);
     try {
-      await fetchUnassignedStaffs(""); // Reload with an empty search term
+      await fetchUnassignedStaffs("");
     } finally {
       setIsResetting(false);
     }
@@ -67,9 +67,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     });
   };
 
-  // Khi người dùng nhấn nút Tìm kiếm, gọi API tìm kiếm
   const handleSearch = () => {
-    fetchUnassignedStaffs(search); // Lấy dữ liệu mới từ API khi nhấn tìm kiếm
+    fetchUnassignedStaffs(search);
   };
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
@@ -79,7 +78,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
       setIsInitialLoading(true);
       fetchUnassignedStaffs("").finally(() => {
         setIsInitialLoading(false);
-      }); // Lấy tất cả nhân viên khi modal mở
+      });
     }
   }, [opened]);
 
@@ -120,7 +119,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
               placeholder="Tìm kiếm nhân viên theo tên"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()} // Cho phép Enter để search
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               style={{
                 flex: 1,
                 height: 36,
@@ -132,8 +131,8 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
             <Button
               variant="filled"
               color="blue"
-              onClick={handleSearch} // Gọi tìm kiếm khi nhấn nút Tìm kiếm
-              loading={loading && !isResetting} // Chỉ show loading khi search, không phải reset
+              onClick={handleSearch}
+              loading={loading && !isResetting}
               size="sm"
               style={{
                 width: "auto",
@@ -148,7 +147,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
               variant="light"
               color="gray"
               onClick={handleReset}
-              loading={isResetting} // Show loading state on reset button
+              loading={isResetting}
               size="sm"
               style={{
                 width: "auto",
@@ -211,6 +210,9 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
                     </th>
                     <th style={{ textAlign: "left", padding: "8px" }}>Email</th>
                     <th style={{ textAlign: "left", padding: "8px" }}>
+                      Vai trò
+                    </th>
+                    <th style={{ textAlign: "left", padding: "8px" }}>
                       Mã nhân viên
                     </th>
                   </tr>
@@ -240,12 +242,19 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
                           />
                         </td>
                         <td style={{ textAlign: "left", padding: "8px" }}>
-                          {[staff.firstName, staff.middleName, staff.lastName]
-                            .filter(Boolean)
-                            .join(" ")}
+                          {[staff.fullName].filter(Boolean).join(" ")}
                         </td>
                         <td style={{ textAlign: "left", padding: "8px" }}>
                           {staff.email}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "left",
+                            padding: "8px",
+                            width: 120,
+                          }}
+                        >
+                          {staff.roles}
                         </td>
                         <td
                           style={{

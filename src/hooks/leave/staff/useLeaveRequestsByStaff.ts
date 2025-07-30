@@ -7,7 +7,7 @@ import axiosInstance from "../../../services/axiosInstance";
 export interface StaffLeaveFilters {
   status?: LeaveRequestStatus | string;
   shift?: Shift | string;
-  fromDate?: string; // ISO string: yyyy-MM-dd
+  fromDate?: string; 
   toDate?: string;
 }
 
