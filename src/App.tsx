@@ -52,6 +52,7 @@ import MedicalServiceStatisticsPage from "./pages/Admin/Statistics/MedicalServic
 import PatientStatisticsPage from "./pages/Admin/Statistics/PatientStatisticsPage";
 import { SpecializationsPages } from "./pages/Admin/Specializations/SpecializationsPages";
 import EditProfilePage from "./pages/Admin/Profile/EditProfilePage";
+import { ChangePasswordForm } from "./components/header/ChangePasswordForm";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -140,6 +141,7 @@ export default function App() {
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
+            <Route path="/account-settings" element={<ChangePasswordForm />} />
 
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />

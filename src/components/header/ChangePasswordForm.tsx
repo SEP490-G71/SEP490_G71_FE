@@ -1,4 +1,3 @@
-// components/ChangePasswordForm.tsx
 import {
   Button,
   Paper,

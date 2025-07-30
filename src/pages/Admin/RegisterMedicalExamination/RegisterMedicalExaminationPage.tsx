@@ -151,11 +151,22 @@ export default function RegisterMedicalExaminationPage() {
 
   const onlineColumns: Column<Patient>[] = [
     { key: "fullName", label: "Họ tên", align: "left" },
+    // {
+    //   key: "gender",
+    //   label: "Giới tính",
+    //   align: "left",
+    //   render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
+    // },
     {
-      key: "gender",
-      label: "Giới tính",
+      key: "status",
+      label: "Trạng trái",
       align: "left",
-      render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
+      render: (row) =>
+        row.status === "ACTIVE"
+          ? "Chưa đến"
+          : row.status === "INACTIVE"
+          ? "Đã đến"
+          : row.status ?? "-",
     },
     {
       key: "registeredAt",
@@ -166,7 +177,7 @@ export default function RegisterMedicalExaminationPage() {
           ? dayjs(row.registeredAt).format("DD/MM/YYYY HH:mm")
           : "-",
     },
-    { key: "email", label: "Email", align: "left" },
+    // { key: "email", label: "Email", align: "left" },
     { key: "phoneNumber", label: "Số điện thoại", align: "left" },
     { key: "message", label: "Ghi chú", align: "left" },
   ];

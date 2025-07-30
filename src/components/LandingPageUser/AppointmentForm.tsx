@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { useAppointmentForm } from "../../hooks/LandingPagesUser/useAppointmentForm";
+import {
+  Button,
+  TextInput,
+  Textarea,
+  Select,
+  Grid,
+  Title,
+  Text,
+} from "@mantine/core";
+import { DateInput, DateTimePicker } from "@mantine/dates";
+import dayjs from "dayjs";
 
 export const AppointmentForm = () => {
   const { loading, submitAppointment } = useAppointmentForm();
 
-  // 1️⃣ Sửa: tách fullName thành các trường riêng
   const [form, setForm] = useState({
     firstName: "",
     middleName: "",
@@ -17,15 +27,10 @@ export const AppointmentForm = () => {
     message: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (name: string, value: string) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 3️⃣ Sửa: dùng trực tiếp firstName, middleName, lastName
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -43,7 +48,6 @@ export const AppointmentForm = () => {
 
     const success = await submitAppointment(formattedData);
     if (success) {
-      // 4️⃣ Reset form
       setForm({
         firstName: "",
         middleName: "",
@@ -59,115 +63,140 @@ export const AppointmentForm = () => {
   };
 
   return (
-    <section className="py-16 px-4 max-w-7xl mx-auto text-center">
-      <h2 className="text-4xl font-bold text-blue-900 mb-2">
+    <section className="py-16 px-4 max-w-5xl mx-auto text-center">
+      <Title order={2} className="text-blue-900 mb-2">
         Đặt lịch khám bệnh
-      </h2>
+      </Title>
       <div className="h-1 w-24 bg-blue-500 mx-auto mb-4" />
-      <p className="text-gray-600 mb-12">
+      <Text className="text-gray-600 mb-12">
         Vui lòng điền thông tin bên dưới để đặt lịch hẹn với bác sĩ của chúng
         tôi. Chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.
-      </p>
+      </Text>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        {/* 2️⃣ Sửa: tách Họ - Tên đệm - Tên */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            name="firstName"
-            type="text"
-            placeholder="Họ"
-            value={form.firstName}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-          <input
-            name="middleName"
-            type="text"
-            placeholder="Tên đệm"
-            value={form.middleName}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-          <input
-            name="lastName"
-            type="text"
-            placeholder="Tên"
-            value={form.lastName}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-        </div>
+      <form className="space-y-6 text-left" onSubmit={handleSubmit}>
+        <Grid gutter="md">
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <TextInput
+              label="Họ"
+              placeholder="Nhập họ"
+              value={form.firstName}
+              onChange={(e) => handleChange("firstName", e.currentTarget.value)}
+              required
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <TextInput
+              label="Tên đệm"
+              placeholder="Nhập tên đệm"
+              value={form.middleName}
+              onChange={(e) =>
+                handleChange("middleName", e.currentTarget.value)
+              }
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <TextInput
+              label="Tên"
+              placeholder="Nhập tên"
+              value={form.lastName}
+              onChange={(e) => handleChange("lastName", e.currentTarget.value)}
+              required
+            />
+          </Grid.Col>
 
-        {/* Email, SĐT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="email"
-            type="email"
-            placeholder="Email của bạn"
-            value={form.email}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-          <input
-            name="phoneNumber"
-            type="tel"
-            placeholder="Số điện thoại"
-            value={form.phoneNumber}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-        </div>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Email"
+              placeholder="Email của bạn"
+              value={form.email}
+              type="email"
+              onChange={(e) => handleChange("email", e.currentTarget.value)}
+              required
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <TextInput
+              label="Số điện thoại"
+              placeholder="Nhập số điện thoại"
+              value={form.phoneNumber}
+              onChange={(e) =>
+                handleChange("phoneNumber", e.currentTarget.value)
+              }
+              required
+            />
+          </Grid.Col>
 
-        {/* Ngày sinh & Giới tính */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="dob"
-            type="date"
-            value={form.dob}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm"
-          />
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            className="border px-4 py-3 w-full rounded-sm text-sm text-gray-700"
-          >
-            <option value="">Chọn giới tính</option>
-            <option value="MALE">Nam</option>
-            <option value="FEMALE">Nữ</option>
-            <option value="OTHER">Khác</option>
-          </select>
-        </div>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <DateInput
+              label="Ngày sinh"
+              placeholder="Chọn ngày sinh"
+              value={form.dob ? new Date(form.dob) : null}
+              onChange={(date) =>
+                handleChange(
+                  "dob",
+                  date ? dayjs(date).format("YYYY-MM-DD") : ""
+                )
+              }
+              valueFormat="DD/MM/YYYY"
+              required
+              className="w-full"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Select
+              label="Giới tính"
+              placeholder="Chọn giới tính"
+              value={form.gender}
+              onChange={(value) => handleChange("gender", value || "")}
+              data={[
+                { value: "MALE", label: "Nam" },
+                { value: "FEMALE", label: "Nữ" },
+                { value: "OTHER", label: "Khác" },
+              ]}
+              required
+            />
+          </Grid.Col>
 
-        {/* Ngày hẹn */}
-        <input
-          name="registeredAt"
-          type="datetime-local"
-          value={form.registeredAt}
-          onChange={handleChange}
-          className="border px-4 py-3 w-full rounded-sm text-sm"
-        />
+          <Grid.Col span={12}>
+            <DateTimePicker
+              label="Thời gian đặt lịch"
+              placeholder="Chọn thời gian"
+              value={form.registeredAt ? new Date(form.registeredAt) : null}
+              onChange={(date) =>
+                handleChange(
+                  "registeredAt",
+                  date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : ""
+                )
+              }
+              valueFormat="DD/MM/YYYY HH:mm"
+              dropdownType="modal"
+              required
+              className="w-full"
+            />
+          </Grid.Col>
 
-        {/* Ghi chú */}
-        <textarea
-          name="message"
-          rows={4}
-          placeholder="Lời nhắn (tuỳ chọn)"
-          value={form.message}
-          onChange={handleChange}
-          className="border px-4 py-3 w-full rounded-sm text-sm"
-        />
+          <Grid.Col span={12}>
+            <Textarea
+              label="Ghi chú (tuỳ chọn)"
+              placeholder="Bạn muốn gửi lời nhắn gì?"
+              value={form.message}
+              onChange={(e) => handleChange("message", e.currentTarget.value)}
+              autosize
+              minRows={3}
+            />
+          </Grid.Col>
+        </Grid>
 
-        {/* Submit */}
-        <div className="text-center">
-          <button
+        <div className="text-center pt-4">
+          <Button
             type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-3 !rounded-full hover:bg-blue-700 transition-all text-sm font-medium"
+            loading={loading}
+            size="md"
+            radius="xl"
+            color="blue"
           >
-            {loading ? "Đang xử lý..." : "Đặt lịch hẹn"}
-          </button>
+            Đặt lịch hẹn
+          </Button>
         </div>
       </form>
     </section>
