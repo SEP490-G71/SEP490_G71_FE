@@ -29,6 +29,8 @@ import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminSe
 import { useSpecializations } from "../../../hooks/Specializations/useSpecializations";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
+import axiosInstance from "../../../services/axiosInstance";
+import { Switch } from "@mantine/core";
 
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
@@ -151,12 +153,12 @@ export default function RegisterMedicalExaminationPage() {
 
   const onlineColumns: Column<Patient>[] = [
     { key: "fullName", label: "Họ tên", align: "left" },
-    // {
-    //   key: "gender",
-    //   label: "Giới tính",
-    //   align: "left",
-    //   render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
-    // },
+    {
+      key: "gender",
+      label: "Giới tính",
+      align: "left",
+      render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
+    },
     {
       key: "status",
       label: "Trạng trái",
@@ -169,6 +171,20 @@ export default function RegisterMedicalExaminationPage() {
           : row.status ?? "-",
     },
     {
+      key: "updateStatus",
+      label: "Trạng thái",
+      align: "center",
+      render: (row) => (
+        <Switch
+          size="sm"
+          color="teal"
+          checked={row.status === "INACTIVE"}
+          onChange={() => handleUpdateStatus(row)}
+        />
+      ),
+    },
+
+    {
       key: "registeredAt",
       label: "Ngày đăng ký",
       align: "left",
@@ -177,7 +193,7 @@ export default function RegisterMedicalExaminationPage() {
           ? dayjs(row.registeredAt).format("DD/MM/YYYY HH:mm")
           : "-",
     },
-    // { key: "email", label: "Email", align: "left" },
+    { key: "email", label: "Email", align: "left" },
     { key: "phoneNumber", label: "Số điện thoại", align: "left" },
     { key: "message", label: "Ghi chú", align: "left" },
   ];
@@ -236,6 +252,22 @@ export default function RegisterMedicalExaminationPage() {
           : "-",
     },
   ];
+
+  const handleUpdateStatus = async (patient: Patient) => {
+    const newStatus = patient.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    try {
+      await axiosInstance.put(`/registered-online/status/${patient.id}`, {
+        status: newStatus,
+      });
+
+      toast.success("Cập nhật trạng thái thành công!");
+      loadOnlinePatients(); // ✅ reload lại bảng
+    } catch (error) {
+      console.error("❌ Lỗi cập nhật trạng thái:", error);
+      toast.error("Cập nhật thất bại!");
+    }
+  };
 
   const handleReset = () => {
     setConfirmedPatient(null);
