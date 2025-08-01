@@ -10,6 +10,7 @@ import {
   Tabs,
   Paper,
   Checkbox,
+  Text,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
@@ -62,6 +63,9 @@ export default function RegisterMedicalExaminationPage() {
   const [onlinePage, setOnlinePage] = useState(1);
   const [onlinePageSize, setOnlinePageSize] = useState(10);
   const [onlineDate, setOnlineDate] = useState<Date | null>(new Date());
+  const [activeTab, setActiveTab] = useState<
+    "register-info" | "register-info-2"
+  >("register-info");
 
   const today = dayjs().startOf("day").toDate();
   const [searchFilters, setSearchFilters] = useState({
@@ -95,7 +99,6 @@ export default function RegisterMedicalExaminationPage() {
   useEffect(() => {
     fetchAllSpecializations();
 
-    // Gán filter mặc định là ngày hôm nay ngay khi load
     const today = dayjs().startOf("day").toDate();
     const defaultFilters = {
       fullName: "",
@@ -112,7 +115,6 @@ export default function RegisterMedicalExaminationPage() {
     setSubmittedFilters(defaultFilters);
   }, []);
 
-  // Định nghĩa ở ngoài useEffect
   const loadOnlinePatients = async () => {
     if (!onlineDate) return;
 
@@ -159,17 +161,17 @@ export default function RegisterMedicalExaminationPage() {
       align: "left",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
-    {
-      key: "status",
-      label: "Trạng trái",
-      align: "left",
-      render: (row) =>
-        row.status === "ACTIVE"
-          ? "Chưa đến"
-          : row.status === "INACTIVE"
-          ? "Đã đến"
-          : row.status ?? "-",
-    },
+    // {
+    //   key: "status",
+    //   label: "Trạng trái",
+    //   align: "left",
+    //   render: (row) =>
+    //     row.status === "ACTIVE"
+    //       ? "Chưa đến"
+    //       : row.status === "INACTIVE"
+    //       ? "Đã đến"
+    //       : row.status ?? "-",
+    // },
     {
       key: "updateStatus",
       label: "Trạng thái",
@@ -179,6 +181,7 @@ export default function RegisterMedicalExaminationPage() {
           size="sm"
           color="teal"
           checked={row.status === "INACTIVE"}
+          label={row.status === "INACTIVE" ? "Đã đến" : "Chưa đến"}
           onChange={() => handleUpdateStatus(row)}
         />
       ),
@@ -213,28 +216,27 @@ export default function RegisterMedicalExaminationPage() {
       label: "Trạng thái",
       align: "left",
       render: (row) => {
-        switch (row.status) {
-          case "WAITING":
-            return "Chờ khám";
-          case "IN_PROGRESS":
-            return "Đang khám";
-          case "DONE":
-            return "Hoàn thành";
-          case "CANCELED":
-            return "Đã hủy";
-          case "ACTIVE":
-            return "Hoạt động";
-          case "INACTIVE":
-            return "Không hoạt động";
-          case "PENDING":
-            return "Đang xử lý";
-          case "FAILED":
-            return "Thất bại";
-          default:
-            return row.status || "";
-        }
+        const statusMap: Record<string, { label: string; color: string }> = {
+          WAITING: { label: "Chờ khám", color: "gray" },
+          IN_PROGRESS: { label: "Đang khám", color: "blue" },
+          DONE: { label: "Hoàn thành", color: "green" },
+          CANCELED: { label: "Đã hủy", color: "red" },
+          ACTIVE: { label: "Hoạt động", color: "green" },
+          INACTIVE: { label: "Không hoạt động", color: "gray" },
+          PENDING: { label: "Đang xử lý", color: "orange" },
+          FAILED: { label: "Thất bại", color: "red" },
+        };
+
+        const status = row.status ?? "";
+        const mapped = statusMap[status] || {
+          label: status || "",
+          color: "black",
+        };
+
+        return <Text c={mapped.color}>{mapped.label}</Text>;
       },
     },
+
     {
       key: "specialization",
       label: "Chuyên khoa",
@@ -262,7 +264,7 @@ export default function RegisterMedicalExaminationPage() {
       });
 
       toast.success("Cập nhật trạng thái thành công!");
-      loadOnlinePatients(); // ✅ reload lại bảng
+      loadOnlinePatients();
     } catch (error) {
       console.error("❌ Lỗi cập nhật trạng thái:", error);
       toast.error("Cập nhật thất bại!");
@@ -430,7 +432,6 @@ export default function RegisterMedicalExaminationPage() {
       phongKham: "",
     };
 
-    // setPatientsToday((prev) => [...prev, newPatient]);
     setConfirmedPatient(newPatient);
     setSelectedDate(new Date(newPatient.ngayDangKy));
     setCreateModalOpened(false);
@@ -675,14 +676,34 @@ export default function RegisterMedicalExaminationPage() {
         {/* Bên phải: Tabs thông tin chi tiết */}
         <div className="w-full lg:flex-[2] min-w-[500px]">
           <Paper p="md" shadow="sm" radius="md" withBorder>
-            <Tabs defaultValue="register-info">
+            <Tabs
+              value={activeTab}
+              onChange={(value) =>
+                setActiveTab(value as "register-info" | "register-info-2")
+              }
+            >
               <div className="w-full flex justify-between items-center mb-4">
-                <Tabs.List className="flex gap-4">
-                  <Tabs.Tab value="register-info">Thông tin đăng ký</Tabs.Tab>
-                  <Tabs.Tab value="register-info-2">
+                <Group gap="sm" mb="md">
+                  <Button
+                    color="blue"
+                    variant={
+                      activeTab === "register-info" ? "filled" : "outline"
+                    }
+                    onClick={() => setActiveTab("register-info")}
+                  >
+                    Thông tin đăng ký
+                  </Button>
+
+                  <Button
+                    color="blue"
+                    variant={
+                      activeTab === "register-info-2" ? "filled" : "outline"
+                    }
+                    onClick={() => setActiveTab("register-info-2")}
+                  >
                     Thông tin đăng ký online
-                  </Tabs.Tab>
-                </Tabs.List>
+                  </Button>
+                </Group>
 
                 <div className="flex gap-2">
                   <Button variant="default" onClick={handleReset}>
@@ -773,23 +794,11 @@ export default function RegisterMedicalExaminationPage() {
                       disabled
                     />
                   </Grid.Col>
-
-                  {/* Mã lịch hẹn */}
-                  <Grid.Col span={6}>
-                    <TextInput
-                      label="Mã lịch hẹn"
-                      placeholder="Mã lịch hẹn"
-                      value={confirmedPatient?.maLichHen || ""}
-                      disabled
-                    />
-                  </Grid.Col>
                 </Grid>
 
-                {/* Thông tin đăng ký */}
                 <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
                 {confirmedPatient && (
                   <div className="grid grid-cols-12 gap-2">
-                    {/* Chuyên khoa */}
                     <div className="col-span-12 md:col-span-3">
                       <Select
                         label="Chuyên khoa"
@@ -808,7 +817,7 @@ export default function RegisterMedicalExaminationPage() {
                                   specialization:
                                     specializations.find((s) => s.id === value)
                                       ?.name || "",
-                                  phongKham: "", // 👉 reset lại phòng khám khi đổi chuyên khoa
+                                  phongKham: "",
                                 }
                               : prev
                           )
@@ -818,7 +827,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Phòng khám */}
                     <div className="col-span-12 md:col-span-3">
                       <Select
                         label="Phòng khám"
@@ -843,7 +851,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Ngày đăng ký */}
                     <div className="col-span-12 md:col-span-3">
                       <DatePickerInput
                         label="Ngày đăng ký"
@@ -858,7 +865,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Ưu tiên */}
                     <div className="col-span-12 md:col-span-3 flex items-end">
                       <Checkbox
                         label="Ưu tiên"

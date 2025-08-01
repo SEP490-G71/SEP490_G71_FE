@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Footer } from "../../components/LandingPageAdmin/Footer";
 import { Navbar } from "../../components/LandingPageAdmin/Navbar";
-import { Pricing } from "../../components/LandingPageAdmin/Pricing";
+// import { Pricing } from "../../components/LandingPageAdmin/Pricing";
 import RegisterModal from "../../components/LandingPageAdmin/RegisterModal";
 import HoverMenuProblems from "../../components/LandingPageAdmin/HoverMenuProblems";
 import HoverMenuSolutions from "../../components/LandingPageAdmin/HoverMenuSolutions";
@@ -92,11 +92,11 @@ export const LandingPageAdminPage = () => {
         </div>
       </div>
 
-      <div className="bg-white" id="pricing-section">
+      {/* <div className="bg-white" id="pricing-section">
         <div className="max-w-7xl mx-auto px-6 py-14">
           <Pricing onRegisterClick={showModal} />
         </div>
-      </div>
+      </div> */}
 
       <div className="bg-[#f0f4f8]" id="feedback-section">
         <div className="max-w-7xl mx-auto px-6 py-5">
