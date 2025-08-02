@@ -154,7 +154,6 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
-  // ✅✅✅ [ĐÃ THÊM] Lấy danh sách bệnh nhân đăng ký khám online
   const fetchOnlineRegisteredPatients = async (
     filters: {
       registeredAt: string;

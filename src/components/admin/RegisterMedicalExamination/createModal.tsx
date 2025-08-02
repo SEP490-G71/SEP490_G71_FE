@@ -33,9 +33,13 @@ export default function CreateModal({
       dob: form.values.dob?.toISOString().split("T")[0] || "",
     };
 
-    onSubmit(payload, () => form.reset());
-    form.reset();
-    onClose();
+    try {
+      await onSubmit(payload, () => form.reset());
+      form.reset();
+      onClose();
+    } catch (error) {
+      console.error("Lỗi tạo bệnh nhân:", error);
+    }
   };
 
   return (

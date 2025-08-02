@@ -47,7 +47,7 @@ const statusLabel = (status: string): string => {
     case "DONE":
       return "✔️ Đã khám";
     case "CANCELED":
-      return "🚫 Đã huỷ";
+      return "🚫 Đã qua lượt";
     default:
       return status;
   }
@@ -68,10 +68,6 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
   {
     key: "queueOrder",
     label: "Thứ tự khám",
-    render: (row) => (
-      <div style={{ textAlign: "center" }}>{row.queueOrder ?? "-"}</div>
-    ),
-    align: "center",
   },
   {
     key: "status",
