@@ -7,8 +7,6 @@ import { DatePickerInput } from "@mantine/dates";
 import { Button, Select, TextInput } from "@mantine/core";
 import dayjs from "dayjs";
 import useStaffSearch from "../../../hooks/StatisticSchedule/useStaffSearch";
-import { LuDownload } from "react-icons/lu";
-
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 
@@ -141,10 +139,21 @@ export const StatisticSchedulePage = () => {
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Hiệu suất làm việc</h1>
         <Button
-          leftSection={<LuDownload size={16} />}
+          leftSection={
+            <img
+              src="/images/icons8-excel-48.png"
+              alt="Excel"
+              className="w-6 h-6 object-contain"
+            />
+          }
           onClick={handleExport}
-          variant="filled"
-          color="blue"
+          variant="default"
+          style={{
+            backgroundColor: "#bbf7d0",
+            color: "#15803d",
+            border: "1px solid #15803d",
+            fontWeight: 600,
+          }}
         >
           Xuất Excel
         </Button>

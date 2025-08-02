@@ -99,9 +99,21 @@ const ViewEditInvoiceServicesModal = ({
                 serviceRows={serviceRows}
                 setServiceRows={setServiceRows}
                 medicalServices={availableServices}
-                serviceOptions={availableServices.map((s) => ({
-                  value: s.id,
-                  label: s.name,
+                serviceOptions={Object.entries(
+                  availableServices.reduce<
+                    Record<string, { value: string; label: string }[]>
+                  >((acc, s) => {
+                    const group = s.department?.specialization?.name || "Khác";
+                    if (!acc[group]) acc[group] = [];
+                    acc[group].push({
+                      value: s.id,
+                      label: `${s.serviceCode} - ${s.name}`,
+                    });
+                    return acc;
+                  }, {})
+                ).map(([group, items]) => ({
+                  group,
+                  items,
                 }))}
                 editable={true}
                 showDepartment={true}

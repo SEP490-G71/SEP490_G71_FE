@@ -11,4 +11,5 @@ export interface ServiceRow {
   total?: number;
 
   departmentName?: string; 
+   isDefault?: boolean;
 }

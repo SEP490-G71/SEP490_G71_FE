@@ -83,7 +83,13 @@ function CustomTable<T>({
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-5 py-3 cursor-pointer select-none whitespace-nowrap"
+                  className={`px-5 py-3 cursor-pointer select-none whitespace-nowrap ${
+                    col.align === "right"
+                      ? "text-right"
+                      : col.align === "center"
+                      ? "text-center"
+                      : "text-left"
+                  }`}
                   onClick={() => col.sortable && handleSort(col.key as keyof T)}
                 >
                   <div className="flex items-center gap-1">

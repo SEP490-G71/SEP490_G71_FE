@@ -5,8 +5,16 @@ export interface MedicalService {
   price: number;
   vat: number;
   discount: number;
-  serviceCode: string; // <- thêm mới
+  serviceCode: string; 
   department: Department;
+  defaultService:boolean;
+
+}
+
+export interface Specialization {
+  id: string;
+  name: string;
+  description: string;
 }
 
 export interface Department {
@@ -15,6 +23,7 @@ export interface Department {
   description: string;
   roomNumber: string;
   type: string;
+  specialization?: Specialization; // thêm dòng này
 }
 
 export interface CreateMedicalServiceRequest {

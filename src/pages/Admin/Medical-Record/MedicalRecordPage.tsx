@@ -14,7 +14,6 @@ import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWr
 export const MedicalRecordPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const { setting } = useSettingAdminService();
 
   const [filterInput, setFilterInput] = useState<{
@@ -72,7 +71,7 @@ export const MedicalRecordPage = () => {
 
   useEffect(() => {
     fetchAllMedicalRecords(page - 1, pageSize, filters);
-  }, [page, pageSize, sortDir, filters]);
+  }, [page, pageSize, filters]);
 
   const handleSearch = () => {
     setFilters({
@@ -293,8 +292,6 @@ export const MedicalRecordPage = () => {
           setPageSize(size);
           setPage(1);
         }}
-        sortDirection={sortDir}
-        onSortChange={(_, dir) => setSortDir(dir)}
         loading={loading}
         showActions={false}
       />

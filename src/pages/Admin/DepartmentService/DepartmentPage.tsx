@@ -64,6 +64,7 @@ const DepartmentPage = () => {
 
   const handleAdd = () => {
     setSelectedDepartment(null);
+    setIsViewMode(false);
     setEditingId(null);
     setModalOpened(true);
   };
@@ -82,6 +83,7 @@ const DepartmentPage = () => {
     if (res) {
       setSelectedDepartment(res);
       setEditingId(row.id);
+      setIsViewMode(false);
       setModalOpened(true);
     } else {
       toast.error("Lỗi khi lấy thông tin phòng ban");
@@ -251,6 +253,7 @@ const DepartmentPage = () => {
           setModalOpened(false);
           setSelectedDepartment(null);
           setEditingId(null);
+          setIsViewMode(false);
         }}
         initialData={selectedDepartment}
         onSubmit={() =>

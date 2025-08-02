@@ -12,4 +12,5 @@ export interface DepartmentRequest {
     roomNumber : string;
     type: DepartmentType;
     specializationId?: string;
+    defaultServicePrice: number;
 }

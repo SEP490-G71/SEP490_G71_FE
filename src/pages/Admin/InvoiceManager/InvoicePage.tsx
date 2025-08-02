@@ -232,13 +232,24 @@ const InvoicePage = () => {
         description="Trang quản lý hóa đơn"
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 my-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="text-xl font-bold">Hóa đơn</h1>
         <Button
-          leftSection={<LuDownload size={16} />}
+          leftSection={
+            <img
+              src="/images/icons8-excel-48.png"
+              alt="Excel"
+              className="w-6 h-6 object-contain"
+            />
+          }
           onClick={handleExport}
-          variant="filled"
-          color="blue"
+          variant="default"
+          style={{
+            backgroundColor: "#bbf7d0",
+            color: "#15803d",
+            border: "1px solid #15803d",
+            fontWeight: 600,
+          }}
         >
           Xuất Excel
         </Button>

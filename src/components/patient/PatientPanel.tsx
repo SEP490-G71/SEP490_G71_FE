@@ -1,10 +1,14 @@
-import { useMemo } from "react";
-import { Divider, Paper, Title } from "@mantine/core";
+import { useMemo, useState } from "react";
+import { Divider, Group, Paper, Text } from "@mantine/core";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import CustomTable from "../common/CustomTable";
 import FilterPanel, { FilterField } from "../common/FilterSection";
 import { Column } from "../../types/table";
-import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
+import {
+  Status,
+  StatusColor,
+  StatusLabel,
+} from "../../enums/Queue-Patient/Status";
 import { GenderLabel } from "../../enums/Gender";
 import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
 import { FloatingLabelWrapper } from "../common/FloatingLabelWrapper";
@@ -37,6 +41,9 @@ const PatientPanel = ({
   department,
   updateFilters,
 }: PatientPanelProps) => {
+  const [activeTab, setActiveTab] = useState<"waiting" | "inprogress">(
+    "waiting"
+  );
   const today = new Date();
 
   const toDateString = (date: Date) =>
@@ -48,23 +55,13 @@ const PatientPanel = ({
         key: "status",
         label: "Trạng thái",
         render: (row) => {
-          const colorMap: Record<Status, string> = {
-            [Status.ACTIVE]: "green",
-            [Status.INACTIVE]: "gray",
-            [Status.WAITING]: "orange",
-            [Status.DONE]: "blue",
-            [Status.CANCELED]: "red",
-            [Status.IN_PROGRESS]: "indigo",
-            [Status.PENDING]: "yellow",
-            [Status.FAILED]: "red",
-          };
           const status = row.status as Status;
-          const color = colorMap[status];
+          const color = StatusColor[status] ?? "gray";
           return (
             <span
               className={`text-sm font-medium px-2 py-1 rounded-full bg-${color}-100 text-${color}-700`}
             >
-              {StatusLabel[status]}
+              {StatusLabel[status] ?? status}
             </span>
           );
         },
@@ -90,15 +87,23 @@ const PatientPanel = ({
     [currentPage, pageSize]
   );
 
+  const allowedStatuses: Status[] = [
+    Status.WAITING,
+    Status.DONE,
+    Status.CANCELED,
+    Status.IN_PROGRESS,
+    Status.CALLING,
+  ];
+
   const filterFields: FilterField[] = [
     {
       key: "status",
       label: "Trạng thái",
       placeholder: "Chọn trạng thái",
       type: "select",
-      options: Object.entries(StatusLabel).map(([value, label]) => ({
-        value,
-        label,
+      options: allowedStatuses.map((status) => ({
+        value: status,
+        label: StatusLabel[status],
       })),
       wrapper: FloatingLabelWrapper,
     },
@@ -175,22 +180,55 @@ const PatientPanel = ({
       type: department?.type,
     });
   };
-
+  const filteredPatients = useMemo(() => {
+    if (activeTab === "waiting") {
+      return patients.filter(
+        (p) => p.status !== Status.IN_PROGRESS && p.status !== Status.DONE
+      );
+    } else {
+      return patients.filter(
+        (p) => p.status === Status.IN_PROGRESS || p.status === Status.DONE
+      );
+    }
+  }, [patients, activeTab]);
   return (
     <Paper p="md" shadow="xs" withBorder radius={0}>
       <div className="flex flex-col">
+        {/* Filter giữ nguyên */}
         <FilterPanel
           fields={filterFields}
           initialValues={initialFilters}
           onSearch={handleSearch}
           onReset={handleReset}
         />
+
         <Divider mt="md" mb={15} />
-        <Title order={5} mb="md">
-          Danh sách đăng ký
-        </Title>
+
+        {/* Tabs navigation */}
+        <Group justify="center" mb="md">
+          <Text
+            fw={activeTab === "waiting" ? 700 : 400}
+            td={activeTab === "waiting" ? "underline" : "none"}
+            c={activeTab === "waiting" ? "blue" : "gray"}
+            style={{ cursor: "pointer" }}
+            onClick={() => setActiveTab("waiting")}
+          >
+            Danh sách chờ khám
+          </Text>
+          <Divider orientation="vertical" mx="sm" />
+          <Text
+            fw={activeTab === "inprogress" ? 700 : 400}
+            td={activeTab === "inprogress" ? "underline" : "none"}
+            c={activeTab === "inprogress" ? "blue" : "gray"}
+            style={{ cursor: "pointer" }}
+            onClick={() => setActiveTab("inprogress")}
+          >
+            Danh sách đang khám
+          </Text>
+        </Group>
+        {/* Table */}
         <CustomTable<QueuePatient>
-          data={patients}
+          data={filteredPatients}
           columns={columns}
           page={currentPage + 1}
           pageSize={pageSize}

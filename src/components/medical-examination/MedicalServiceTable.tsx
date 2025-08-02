@@ -8,7 +8,15 @@ interface Props {
   serviceRows: ServiceRow[];
   setServiceRows: (rows: ServiceRow[]) => void;
   medicalServices: MedicalService[];
-  serviceOptions: { value: string; label: string }[];
+  nonDefaultServiceOptions?: {
+    group: string;
+    items: { value: string; label: string }[];
+  }[];
+  serviceOptions?: {
+    group: string;
+    items: { value: string; label: string }[];
+  }[];
+  defaultServiceIds?: string[];
   editable?: boolean;
   showDepartment?: boolean;
   invoiceDetail?: InvoiceDetail;
@@ -44,6 +52,7 @@ const ServiceTable = ({
   serviceOptions,
   editable = true,
   showDepartment = false,
+  nonDefaultServiceOptions,
   invoiceDetail,
 }: Props) => {
   const getServiceDetail = (id: string | null) =>
@@ -105,102 +114,112 @@ const ServiceTable = ({
     );
   };
 
-  const renderRow = (row: ServiceRow, index: number) => (
-    <tr
-      key={row.id}
-      style={{
-        backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
-        position: "relative",
-      }}
-    >
-      <td style={{ ...cellStyle, ...align.center, width: 60 }}>{index + 1}</td>
-      <td style={{ ...cellStyle, ...align.center, width: 120 }}>
-        {row.serviceCode || "---"}
-      </td>
-      <td
-        style={{ ...cellStyle, ...align.left, minWidth: 220 }}
-        title={row.name}
+  const renderRow = (row: ServiceRow, index: number) => {
+    const optionsToUse =
+      index === 0 ? serviceOptions : nonDefaultServiceOptions;
+
+    const filteredOptions = optionsToUse ?? [];
+
+    return (
+      <tr
+        key={row.id}
+        style={{
+          backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+          position: "relative",
+        }}
       >
-        {editable ? (
-          <Select
-            data={serviceOptions}
-            searchable
-            value={row.serviceId}
-            onChange={(value) => handleSelectService(index, value ?? null)}
-            placeholder="Chọn dịch vụ"
-            size="xs"
-            variant="unstyled"
-            styles={{
-              input: { paddingLeft: 0, fontSize: "14px", fontWeight: 500 },
-            }}
-          />
-        ) : (
-          row.name || "---"
-        )}
-      </td>
-      <td style={{ ...cellStyle, ...align.center, width: 80 }}>
-        {editable ? (
-          <NumberInput
-            value={row.quantity}
-            min={1}
-            size="xs"
-            w={60}
-            variant="unstyled"
-            styles={{ input: { textAlign: "center" } }}
-            onChange={(value) =>
-              handleQuantityChange(index, Number(value) || 1)
-            }
-          />
-        ) : (
-          row.quantity
-        )}
-      </td>
-      {showDepartment && (
-        <td style={{ ...cellStyle, ...align.left, minWidth: 200 }}>
-          {row.departmentName || "---"}
+        <td style={{ ...cellStyle, ...align.center, width: 60 }}>
+          {index + 1}
         </td>
-      )}
-      <td style={{ ...cellStyle, ...align.right, width: 100 }}>
-        {row.price?.toLocaleString("vi-VN") || 0}
-      </td>
-      <td style={{ ...cellStyle, ...align.center, width: 80 }}>
-        {row.discount ?? 0}%
-      </td>
-      <td style={{ ...cellStyle, ...align.center, width: 80 }}>
-        {row.vat ?? 0}%
-      </td>
-      <td style={{ ...cellStyle, ...align.right, width: 120 }}>
-        {row.total?.toLocaleString("vi-VN") || 0}
-      </td>
-      {editable && (
+        <td style={{ ...cellStyle, ...align.center, width: 120 }}>
+          {row.serviceCode || "---"}
+        </td>
         <td
-          style={{
-            position: "sticky",
-            right: 0,
-            backgroundColor: "#fff",
-            zIndex: 15,
-            boxShadow: "0 0 0 1px #ccc",
-            ...cellStyle,
-            ...align.center,
-            width: 60,
-            paddingRight: 0,
-            paddingLeft: 0,
-          }}
+          style={{ ...cellStyle, ...align.left, minWidth: 220 }}
+          title={row.name}
         >
-          {!(index === serviceRows.length - 1 && !row.serviceId) && (
-            <Button
-              variant="subtle"
+          {editable ? (
+            <Select
+              data={filteredOptions}
+              searchable
+              value={row.serviceId}
+              onChange={(value) => handleSelectService(index, value ?? null)}
+              placeholder="Chọn dịch vụ"
               size="xs"
-              color="red"
-              onClick={() => handleRemoveRow(index)}
-            >
-              <FaTrash />
-            </Button>
+              variant="unstyled"
+              styles={{
+                input: { paddingLeft: 0, fontSize: "14px", fontWeight: 500 },
+              }}
+            />
+          ) : (
+            row.name || "---"
           )}
         </td>
-      )}
-    </tr>
-  );
+        <td style={{ ...cellStyle, ...align.center, width: 80 }}>
+          {editable ? (
+            <NumberInput
+              value={row.quantity}
+              min={1}
+              size="xs"
+              w={60}
+              variant="unstyled"
+              styles={{ input: { textAlign: "center" } }}
+              onChange={(value) =>
+                handleQuantityChange(index, Number(value) || 1)
+              }
+            />
+          ) : (
+            row.quantity
+          )}
+        </td>
+        {showDepartment && (
+          <td style={{ ...cellStyle, ...align.left, minWidth: 200 }}>
+            {row.departmentName || "---"}
+          </td>
+        )}
+        <td style={{ ...cellStyle, ...align.right, width: 100 }}>
+          {row.price?.toLocaleString("vi-VN") || 0}
+        </td>
+        <td style={{ ...cellStyle, ...align.center, width: 80 }}>
+          {row.discount ?? 0}%
+        </td>
+        <td style={{ ...cellStyle, ...align.center, width: 80 }}>
+          {row.vat ?? 0}%
+        </td>
+        <td style={{ ...cellStyle, ...align.right, width: 120 }}>
+          {row.total?.toLocaleString("vi-VN") || 0}
+        </td>
+        {editable && (
+          <td
+            style={{
+              position: "sticky",
+              right: 0,
+              backgroundColor: "#fff",
+              zIndex: 15,
+              boxShadow: "0 0 0 1px #ccc",
+              ...cellStyle,
+              ...align.center,
+              width: 60,
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
+          >
+            {!(index === serviceRows.length - 1 && !row.serviceId) &&
+              !row.isDefault && (
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  color="red"
+                  onClick={() => handleRemoveRow(index)}
+                >
+                  <FaTrash />
+                </Button>
+              )}
+          </td>
+        )}
+      </tr>
+    );
+  };
 
   return (
     <ScrollArea offsetScrollbars scrollbarSize={8}>

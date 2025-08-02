@@ -5,33 +5,28 @@ const updateMedicalResult = async (
   files: File[],
   existingImageUrls: string[],
   staffId: string,
+  description: string,
   note: string
 ) => {
   const formData = new FormData();
 
-  if (files.length > 0) {
-    files.forEach((file) => {
-      formData.append("file", file);
-    });
-  }
+  files.forEach((file) => {
+    formData.append("file", file);
+  });
 
   existingImageUrls.forEach((url) => {
-  formData.append("imageUrls", url); // bỏ []
-});
+    formData.append("imageUrls", url);
+  });
 
   formData.append("staffId", staffId);
+  formData.append("description", description);
   formData.append("note", note);
 
-  return axiosInstance.put(
-    `/medical-results/${resultId}/update`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  return axiosInstance.put(`/medical-results/${resultId}/update`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
-
 
 export default updateMedicalResult;

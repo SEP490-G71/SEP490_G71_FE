@@ -10,7 +10,7 @@ export const useSignIn = () => {
 
   const roleRedirectMap: Record<RoleType | string, string> = {
     ADMIN: "/admin/dashboard",
-    DOCTOR: "/admin/medical-examination/clinical",
+    DOCTOR: "/admin/medical-examination",
     CASHIER: "/admin/medical-examination/billing",
     RECEPTIONIST: "/admin/register-medical-examination",
     TECHNICIAN: "/admin/medical-examination/clinical",
