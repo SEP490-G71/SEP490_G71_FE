@@ -13,10 +13,10 @@ import {
   Text,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { IconSearch } from "@tabler/icons-react";
+// import { IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
-import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
+// import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
@@ -33,17 +33,27 @@ import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
 import axiosInstance from "../../../services/axiosInstance";
 import { Switch } from "@mantine/core";
 
+interface PatientOption {
+  value: string;
+  label: string;
+  patient?: Patient;
+}
+
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
-  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  // const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [confirmedPatient, setConfirmedPatient] = useState<Patient | null>(
     null
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [tempSelectedPatient, setTempSelectedPatient] =
-    useState<Patient | null>(null);
-  const [modalOpened, setModalOpened] = useState(false);
+  // const [tempSelectedPatient, setTempSelectedPatient] =
+  //   useState<Patient | null>(null);
+  // const [modalOpened, setModalOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<PatientOption | null>(
+    null
+  );
+  const [isTyping, setIsTyping] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -57,6 +67,7 @@ export default function RegisterMedicalExaminationPage() {
   const { options: patientOptions, searchPatients } = usePatientSearch();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
 
   const [onlinePatients, setOnlinePatients] = useState<Patient[]>([]);
   const [totalOnlinePatients, setTotalOnlinePatients] = useState(0);
@@ -145,7 +156,6 @@ export default function RegisterMedicalExaminationPage() {
   }, [submittedOnlineFilters, onlinePage, onlinePageSize]);
 
   const {
-    fetchAllPatients,
     fetchTodayRegisteredPatients,
     queuePatient,
     createPatient,
@@ -274,6 +284,9 @@ export default function RegisterMedicalExaminationPage() {
   const handleReset = () => {
     setConfirmedPatient(null);
     setSelectedDate(null);
+    setSelectedOption(null);
+    setSearchInput("");
+    setIsTyping(false);
   };
 
   useEffect(() => {
@@ -396,6 +409,9 @@ export default function RegisterMedicalExaminationPage() {
         setTotalTodayPatients(totalElements);
         setConfirmedPatient(null);
         setSelectedDate(null);
+        setSelectedOption(null);
+        setSearchInput("");
+        setIsTyping(false);
       },
       updatedPatient.phongKham || undefined,
       updatedPatient.specializationId,
@@ -403,12 +419,12 @@ export default function RegisterMedicalExaminationPage() {
     );
   };
 
-  const openModal = async () => {
-    const { content } = await fetchAllPatients(0, 100);
-    setSearchResults(content);
-    setTempSelectedPatient(confirmedPatient);
-    setModalOpened(true);
-  };
+  // const openModal = async () => {
+  //   const { content } = await fetchAllPatients(0, 100);
+  //   setSearchResults(content);
+  //   setTempSelectedPatient(confirmedPatient);
+  //   setModalOpened(true);
+  // };
 
   const handleCreatePatient = async (
     data: Partial<Patient>,
@@ -416,13 +432,11 @@ export default function RegisterMedicalExaminationPage() {
   ): Promise<void> => {
     if (!data.firstName || !data.lastName || !data.dob || !data.gender) {
       toast.error("Vui lòng nhập đầy đủ thông tin bệnh nhân");
-      return;
     }
 
     const created = await createPatient(data as Patient);
     if (!created) {
-      toast.error("Tạo bệnh nhân thất bại");
-      return;
+      throw new Error("Creation failed");
     }
 
     const newPatient = {
@@ -460,7 +474,7 @@ export default function RegisterMedicalExaminationPage() {
         Đăng ký khám bệnh
       </Title>
 
-      <SearchPatientModal
+      {/* <SearchPatientModal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         patients={searchResults}
@@ -470,7 +484,7 @@ export default function RegisterMedicalExaminationPage() {
           setConfirmedPatient(tempSelectedPatient);
           setModalOpened(false);
         }}
-      />
+      /> */}
 
       <CreateModal
         opened={createModalOpened}
@@ -727,27 +741,56 @@ export default function RegisterMedicalExaminationPage() {
                 <Divider label="1. Thông tin người đăng ký" mb="sm" />
                 <Grid gutter="xs">
                   {/* Mã bệnh nhân + tìm kiếm */}
-                  <Grid.Col span={4}>
-                    <Group align="end">
-                      <TextInput
-                        label="Mã bệnh nhân"
-                        placeholder="Mã bệnh nhân"
-                        style={{ flex: 1 }}
-                        value={confirmedPatient?.patientCode || ""}
-                        disabled
-                      />
-                      <Button
-                        variant="filled"
-                        leftSection={<IconSearch size={16} />}
-                        onClick={openModal}
-                      >
-                        Tìm kiếm
-                      </Button>
-                    </Group>
+                  <Grid.Col span={6}>
+                    <Select
+                      label="Mã bệnh nhân"
+                      searchable
+                      placeholder="Nhập tên, mã BN hoặc số điện thoại"
+                      data={patientOptions}
+                      searchValue={
+                        isTyping ? searchInput : selectedOption?.label ?? ""
+                      }
+                      onSearchChange={(query) => {
+                        setIsTyping(true);
+                        setSearchInput(query);
+                        searchPatients(query);
+                      }}
+                      onBlur={() => {
+                        setIsTyping(false);
+                      }}
+                      value={
+                        confirmedPatient ? String(confirmedPatient.id) : ""
+                      }
+                      onChange={(value) => {
+                        const selected = patientOptions.find(
+                          (opt) => opt.value === value
+                        );
+                        if (!selected) return;
+
+                        setSelectedOption(selected);
+
+                        axiosInstance.get(`/patients/${value}`).then((res) => {
+                          const patient = res.data?.result;
+                          if (patient) {
+                            setConfirmedPatient({
+                              ...patient,
+                              ngayDangKy: new Date()
+                                .toISOString()
+                                .split("T")[0],
+                              stt: "",
+                              phongKham: "",
+                            });
+                            setSelectedDate(new Date());
+                            setSearchInput(""); // ✅ reset input sau khi chọn
+                            setIsTyping(false); // ✅ reset trạng thái gõ
+                          }
+                        });
+                      }}
+                    />
                   </Grid.Col>
 
                   {/* Họ và tên */}
-                  <Grid.Col span={4}>
+                  <Grid.Col span={6}>
                     <TextInput
                       label="Họ tên"
                       placeholder="Nhập họ và tên"
@@ -763,7 +806,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Ngày sinh */}
-                  <Grid.Col span={2}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Ngày sinh"
                       placeholder="Ngày sinh"
@@ -777,7 +820,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Giới tính */}
-                  <Grid.Col span={2}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Giới tính"
                       value={confirmedPatient?.gender === "MALE" ? "Nam" : "Nữ"}
@@ -786,7 +829,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Số điện thoại */}
-                  <Grid.Col span={6}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Điện thoại"
                       placeholder="Điện thoại"
