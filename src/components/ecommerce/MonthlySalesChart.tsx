@@ -1,140 +1,136 @@
+import { useEffect } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { MoreDotIcon } from "../../icons";
-import { useState } from "react";
+import { useDashboard } from "../../hooks/DashBoard/useDashboard";
 
 export default function MonthlySalesChart() {
-  const options: ApexOptions = {
-    colors: ["#465fff"],
+  const { stats, fetchDashboardStats } = useDashboard();
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  if (!stats) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        Đang tải biểu đồ doanh thu...
+      </div>
+    );
+  }
+
+  const revenueCategories = stats?.monthlyRevenueStats?.labels || [];
+  const revenueData = stats?.monthlyRevenueStats?.data || [];
+
+  const invoiceCategories = stats?.monthlyInvoiceStats?.labels || [];
+  const invoiceData = stats?.monthlyInvoiceStats?.data || [];
+
+  const revenueOptions: ApexOptions = {
+    colors: ["#3b82f6"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
       height: 180,
-      toolbar: {
-        show: false,
-      },
+      toolbar: { show: false },
     },
     plotOptions: {
       bar: {
-        horizontal: false,
         columnWidth: "39%",
         borderRadius: 5,
         borderRadiusApplication: "end",
       },
     },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      show: true,
-      width: 4,
-      colors: ["transparent"],
-    },
+    dataLabels: { enabled: false },
+    stroke: { show: true, width: 4, colors: ["transparent"] },
     xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
+      categories: revenueCategories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
-    legend: {
-      show: true,
-      position: "top",
-      horizontalAlign: "left",
-      fontFamily: "Outfit",
-    },
-    yaxis: {
-      title: {
-        text: undefined,
-      },
-    },
-    grid: {
-      yaxis: {
-        lines: {
-          show: true,
-        },
-      },
-    },
-    fill: {
-      opacity: 1,
-    },
-
+    yaxis: { title: { text: undefined } },
+    legend: { show: false },
+    fill: { opacity: 1 },
     tooltip: {
-      x: {
-        show: false,
-      },
       y: {
-        formatter: (val: number) => `${val}`,
+        formatter: (val: number) =>
+          val
+            .toLocaleString("vi-VN", { style: "currency", currency: "VND" })
+            .replace("₫", "VNĐ"),
       },
     },
   };
-  const series = [
-    {
-      name: "Sales",
-      data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+
+  const invoiceOptions: ApexOptions = {
+    colors: ["#10b981"],
+    chart: {
+      fontFamily: "Outfit, sans-serif",
+      type: "line",
+      height: 180,
+      toolbar: { show: false },
     },
-  ];
-  const [isOpen, setIsOpen] = useState(false);
+    dataLabels: { enabled: true },
+    stroke: { curve: "smooth", width: 3 },
+    xaxis: {
+      categories: invoiceCategories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: { title: { text: undefined } },
+    legend: { show: false },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toLocaleString()} hóa đơn`,
+      },
+    },
+  };
 
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
-  }
+  const revenueSeries = [{ name: "Doanh thu", data: revenueData }];
+  const invoiceSeries = [{ name: "Số hóa đơn", data: invoiceData }];
 
-  function closeDropdown() {
-    setIsOpen(false);
-  }
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Monthly Sales
+          Thống kê theo tháng
         </h3>
         <div className="relative inline-block">
-          <button className="dropdown-toggle" onClick={toggleDropdown}>
+          {/* <button className="dropdown-toggle" onClick={toggleDropdown}>
             <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
-          </button>
-          <Dropdown
+          </button> */}
+          {/* <Dropdown
             isOpen={isOpen}
             onClose={closeDropdown}
             className="w-40 p-2"
           >
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              View More
-            </DropdownItem>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              Delete
-            </DropdownItem>
-          </Dropdown>
+            <DropdownItem onItemClick={closeDropdown}>Xem thêm</DropdownItem>
+            <DropdownItem onItemClick={closeDropdown}>Xoá</DropdownItem>
+          </Dropdown> */}
         </div>
       </div>
 
-      <div className="max-w-full overflow-x-auto custom-scrollbar">
-        <div className="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-          <Chart options={options} series={series} type="bar" height={180} />
-        </div>
+      {/* Biểu đồ 1: Doanh thu */}
+      <div className="mb-6">
+        <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+          Doanh thu theo tháng (VNĐ)
+        </h4>
+        <Chart
+          options={revenueOptions}
+          series={revenueSeries}
+          type="bar"
+          height={180}
+        />
+      </div>
+
+      {/* Biểu đồ 2: Số lượng hóa đơn */}
+      <div>
+        <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+          Số hóa đơn theo tháng
+        </h4>
+        <Chart
+          options={invoiceOptions}
+          series={invoiceSeries}
+          type="line"
+          height={180}
+        />
       </div>
     </div>
   );
