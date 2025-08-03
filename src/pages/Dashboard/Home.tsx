@@ -1,47 +1,63 @@
+import { useEffect } from "react";
+import { useDashboard } from "../../hooks/DashBoard/useDashboard";
+import { useChatHistory } from "../../hooks/DashBoard/useChat";
+
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
 import PageMeta from "../../components/common/PageMeta";
-import { useInvoiceStatistics } from "../../hooks/invoice/useInvoiceStatistics";
-import { useEffect } from "react";
+import ChatbotWidget from "../../components/ecommerce/ChatbotWidget";
+import DemographicCard from "../../components/ecommerce/DemographicCard";
 
 export default function Home() {
-  const { stats, fetchInvoiceStats } = useInvoiceStatistics();
+  const { stats, fetchDashboardStats } = useDashboard();
+  const { messages, fetchChatHistory, setMessages } = useChatHistory();
+
   useEffect(() => {
-    fetchInvoiceStats();
+    fetchDashboardStats();
+    fetchChatHistory();
   }, []);
+
+  if (!stats) return null;
   return (
     <>
       <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="React.js Ecommerce Dashboard"
+        description="React.js Dashboard page"
       />
+
       <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 space-y-6 xl:col-span-7">
+        <div className="col-span-12 xl:col-span-12 space-y-6">
           <EcommerceMetrics stats={stats} />
-
-          <MonthlySalesChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
-
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
         </div>
 
         <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
+          <MonthlySalesChart />
+        </div>
+        <div className="col-span-12 xl:col-span-5">
+          {stats.monthlyTarget && (
+            <MonthlyTarget target={stats.monthlyTarget} />
+          )}
+        </div>
+
+        <div className="col-span-12 xl:col-span-7">
+          {stats.topServices && (
+            <RecentOrders topServices={stats.topServices} />
+          )}
+        </div>
+
+        <div className="col-span-12 xl:col-span-5">
+          <StatisticsChart />
+        </div>
+
+        <div className="col-span-12">
+          <DemographicCard />
         </div>
       </div>
+
+      <ChatbotWidget messages={messages} setMessages={setMessages} />
     </>
   );
 }
