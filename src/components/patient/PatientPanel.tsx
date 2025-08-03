@@ -1,21 +1,22 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Divider, Group, Paper, Text } from "@mantine/core";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
-import CustomTable from "../common/CustomTable";
 import FilterPanel, { FilterField } from "../common/FilterSection";
-import { Column } from "../../types/table";
-import {
-  Status,
-  StatusColor,
-  StatusLabel,
-} from "../../enums/Queue-Patient/Status";
-import { GenderLabel } from "../../enums/Gender";
+import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
 import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
 import { FloatingLabelWrapper } from "../common/FloatingLabelWrapper";
+import WaitingPatientList from "./WaitingPatientList";
+import InProgressPatientList from "./InProgressPatientList";
+import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
+import { MedicalRecordStatus } from "../../enums/MedicalRecord/MedicalRecordStatus";
+import useMedicalRecordByRoom from "../../hooks/medicalRecord/useMedicalRecordByRoom";
+import dayjs from "dayjs";
 
 interface PatientPanelProps {
-  selectedPatient: QueuePatient | null;
-  onSelectPatient: (p: QueuePatient) => void;
+  selectedQueuePatient: QueuePatient | null;
+  selectedMedicalRecord: MedicalRecord | null;
+  onSelectQueuePatient: (p: QueuePatient) => void;
+  onSelectMedicalRecord: (r: MedicalRecord) => void;
   patients: QueuePatient[];
   totalElements: number;
   pageSize: number;
@@ -26,11 +27,14 @@ interface PatientPanelProps {
   setCurrentPage: (page: number) => void;
   department?: DepartmentResponse | null;
   updateFilters: (filters: any) => void;
+  onSwitchListReset: () => void;
 }
 
 const PatientPanel = ({
-  selectedPatient,
-  onSelectPatient,
+  selectedQueuePatient,
+  selectedMedicalRecord,
+  onSelectQueuePatient,
+  onSelectMedicalRecord,
   patients,
   totalElements,
   pageSize,
@@ -40,52 +44,22 @@ const PatientPanel = ({
   setCurrentPage,
   department,
   updateFilters,
+  onSwitchListReset,
 }: PatientPanelProps) => {
   const [activeTab, setActiveTab] = useState<"waiting" | "inprogress">(
     "waiting"
   );
+  const [hasFetchedInprogress, setHasFetchedInprogress] = useState(false);
+
   const today = new Date();
+  const todayStr = dayjs().format("YYYY-MM-DD");
 
-  const toDateString = (date: Date) =>
-    date ? date.toISOString().split("T")[0] : undefined;
-
-  const columns: Column<QueuePatient>[] = useMemo(
-    () => [
-      {
-        key: "status",
-        label: "Trạng thái",
-        render: (row) => {
-          const status = row.status as Status;
-          const color = StatusColor[status] ?? "gray";
-          return (
-            <span
-              className={`text-sm font-medium px-2 py-1 rounded-full bg-${color}-100 text-${color}-700`}
-            >
-              {StatusLabel[status] ?? status}
-            </span>
-          );
-        },
-      },
-      { key: "patientCode", label: "Mã BN" },
-      { key: "fullName", label: "Họ tên" },
-      {
-        key: "createdAt",
-        label: "Ngày đăng kí",
-        render: (row) =>
-          row.registeredTime
-            ? new Date(row.registeredTime).toLocaleDateString("vi-VN")
-            : "Không rõ",
-      },
-      {
-        key: "gender",
-        label: "Giới tính",
-        render: (row) =>
-          GenderLabel[row.gender as keyof typeof GenderLabel] ?? "Không rõ",
-      },
-      { key: "phone", label: "Điện thoại" },
-    ],
-    [currentPage, pageSize]
-  );
+  const {
+    records,
+    loading: medicalLoading,
+    pagination,
+    fetchMedicalRecordsByRoom,
+  } = useMedicalRecordByRoom();
 
   const allowedStatuses: Status[] = [
     Status.WAITING,
@@ -95,7 +69,7 @@ const PatientPanel = ({
     Status.CALLING,
   ];
 
-  const filterFields: FilterField[] = [
+  const waitingFilterFields: FilterField[] = [
     {
       key: "status",
       label: "Trạng thái",
@@ -142,7 +116,54 @@ const PatientPanel = ({
     },
   ];
 
-  const initialFilters = {
+  const inprogressFilterFields: FilterField[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      placeholder: "Chọn trạng thái",
+      type: "select",
+      options: Object.values(MedicalRecordStatus).map((status) => ({
+        value: status,
+        label: status,
+      })),
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "patientName",
+      label: "Tên bệnh nhân",
+      type: "text",
+      placeholder: "Nhập tên...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "patientPhone",
+      label: "SĐT",
+      type: "text",
+      placeholder: "Nhập số điện thoại...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "medicalRecordCode",
+      label: "Mã hồ sơ",
+      type: "text",
+      placeholder: "Nhập mã hồ sơ...",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "fromDate",
+      label: "Từ ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "toDate",
+      label: "Đến ngày",
+      type: "date",
+      wrapper: FloatingLabelWrapper,
+    },
+  ];
+
+  const initialWaitingFilters = {
     name: "",
     phone: "",
     patientCode: "",
@@ -151,7 +172,14 @@ const PatientPanel = ({
     registeredTimeTo: today,
   };
 
-  const todayStr = toDateString(today);
+  const initialInprogressFilters = {
+    name: "",
+    medicalRecordCode: "",
+    status: "",
+    fromDate: today,
+    toDate: today,
+  };
+
   const toDateStringSafe = (value: any) => {
     if (typeof value === "string") return value;
     if (value instanceof Date) return value.toISOString().split("T")[0];
@@ -159,59 +187,96 @@ const PatientPanel = ({
   };
 
   const handleSearch = (filters: any) => {
-    updateFilters({
-      ...filters,
-      roomNumber: department?.roomNumber,
-      registeredTimeFrom:
-        toDateStringSafe(filters.registeredTimeFrom) ?? todayStr,
-      registeredTimeTo: toDateStringSafe(filters.registeredTimeTo) ?? todayStr,
-    });
+    if (activeTab === "waiting") {
+      updateFilters({
+        ...filters,
+        roomNumber: department?.roomNumber,
+        registeredTimeFrom:
+          toDateStringSafe(filters.registeredTimeFrom) ?? todayStr,
+        registeredTimeTo:
+          toDateStringSafe(filters.registeredTimeTo) ?? todayStr,
+      });
+    } else {
+      fetchMedicalRecordsByRoom({
+        ...filters,
+        roomNumber: department?.roomNumber ?? "",
+        fromDate: toDateStringSafe(filters.fromDate) ?? todayStr,
+        toDate: toDateStringSafe(filters.toDate) ?? todayStr,
+      });
+    }
   };
 
   const handleReset = () => {
-    updateFilters({
-      name: "",
-      phone: "",
-      patientCode: "",
-      status: "",
-      registeredTimeFrom: toDateString(today),
-      registeredTimeTo: toDateString(today),
-      roomNumber: department?.roomNumber,
-      type: department?.type,
-    });
-  };
-  const filteredPatients = useMemo(() => {
     if (activeTab === "waiting") {
-      return patients.filter(
-        (p) => p.status !== Status.IN_PROGRESS && p.status !== Status.DONE
-      );
+      updateFilters({
+        ...initialWaitingFilters,
+        registeredTimeFrom: todayStr,
+        registeredTimeTo: todayStr,
+        roomNumber: department?.roomNumber,
+        type: department?.type,
+      });
     } else {
-      return patients.filter(
-        (p) => p.status === Status.IN_PROGRESS || p.status === Status.DONE
-      );
+      fetchMedicalRecordsByRoom({
+        ...initialInprogressFilters,
+        roomNumber: department?.roomNumber ?? "",
+        fromDate: todayStr,
+        toDate: todayStr,
+      });
     }
-  }, [patients, activeTab]);
+  };
+
+  useEffect(() => {
+    if (
+      activeTab === "inprogress" &&
+      department?.roomNumber &&
+      !hasFetchedInprogress
+    ) {
+      fetchMedicalRecordsByRoom({
+        roomNumber: department.roomNumber,
+        fromDate: todayStr,
+        toDate: todayStr,
+        status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
+      });
+      setHasFetchedInprogress(true);
+    }
+  }, [activeTab, department?.roomNumber, hasFetchedInprogress]);
+
+  const filteredPatients = useMemo(() => {
+    return patients.filter(
+      (p) => p.status !== Status.IN_PROGRESS && p.status !== Status.DONE
+    );
+  }, [patients]);
+
   return (
     <Paper p="md" shadow="xs" withBorder radius={0}>
       <div className="flex flex-col">
-        {/* Filter giữ nguyên */}
         <FilterPanel
-          fields={filterFields}
-          initialValues={initialFilters}
+          fields={
+            activeTab === "waiting"
+              ? waitingFilterFields
+              : inprogressFilterFields
+          }
+          initialValues={
+            activeTab === "waiting"
+              ? initialWaitingFilters
+              : initialInprogressFilters
+          }
           onSearch={handleSearch}
           onReset={handleReset}
         />
 
         <Divider mt="md" mb={15} />
 
-        {/* Tabs navigation */}
         <Group justify="center" mb="md">
           <Text
             fw={activeTab === "waiting" ? 700 : 400}
             td={activeTab === "waiting" ? "underline" : "none"}
             c={activeTab === "waiting" ? "blue" : "gray"}
             style={{ cursor: "pointer" }}
-            onClick={() => setActiveTab("waiting")}
+            onClick={() => {
+              setActiveTab("waiting");
+              onSwitchListReset();
+            }}
           >
             Danh sách chờ khám
           </Text>
@@ -221,29 +286,47 @@ const PatientPanel = ({
             td={activeTab === "inprogress" ? "underline" : "none"}
             c={activeTab === "inprogress" ? "blue" : "gray"}
             style={{ cursor: "pointer" }}
-            onClick={() => setActiveTab("inprogress")}
+            onClick={() => {
+              setActiveTab("inprogress");
+              onSwitchListReset();
+            }}
           >
             Danh sách đang khám
           </Text>
         </Group>
-        {/* Table */}
-        <CustomTable<QueuePatient>
-          data={filteredPatients}
-          columns={columns}
-          page={currentPage + 1}
-          pageSize={pageSize}
-          totalItems={totalElements}
-          onPageChange={(p) => setCurrentPage(p - 1)}
-          onPageSizeChange={setPageSize}
-          loading={loading}
-          showActions={false}
-          getRowStyle={(row) => ({
-            backgroundColor:
-              selectedPatient?.id === row.id ? "#cce5ff" : undefined,
-            cursor: "pointer",
-          })}
-          onRowClick={(row) => onSelectPatient(row)}
-        />
+
+        {activeTab === "waiting" ? (
+          <WaitingPatientList
+            patients={filteredPatients}
+            selectedPatient={selectedQueuePatient}
+            onSelectPatient={onSelectQueuePatient}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            totalElements={totalElements}
+            loading={loading}
+            setPageSize={setPageSize}
+            setCurrentPage={setCurrentPage}
+          />
+        ) : (
+          <InProgressPatientList
+            records={records}
+            loading={medicalLoading}
+            pagination={pagination}
+            fetchMedicalRecords={() =>
+              fetchMedicalRecordsByRoom({
+                roomNumber: department?.roomNumber ?? "",
+                page: pagination.pageNumber,
+                size: pagination.pageSize,
+                status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
+              })
+            }
+            selectedId={selectedMedicalRecord?.id ?? null}
+            onSelect={onSelectMedicalRecord}
+            setCurrentPage={setCurrentPage}
+            setPageSize={setPageSize}
+            roomNumber={department?.roomNumber ?? ""}
+          />
+        )}
       </div>
     </Paper>
   );

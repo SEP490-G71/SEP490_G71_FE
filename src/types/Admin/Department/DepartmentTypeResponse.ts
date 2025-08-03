@@ -13,5 +13,6 @@ export interface DepartmentResponse {
   roomNumber: string;
   type: DepartmentType;
   specialization?: Specialization;       
-  specializationId?: string;             
+  specializationId?: string;    
+           
 }

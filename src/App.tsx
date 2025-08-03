@@ -18,7 +18,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import MecicalService from "./pages/Admin/MedicalService/MedicalService";
+// import MecicalService from "./pages/Admin/MedicalService/MedicalService";
 import { ToastContainer } from "react-toastify";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
@@ -52,6 +52,7 @@ import MedicalServiceStatisticsPage from "./pages/Admin/Statistics/MedicalServic
 import PatientStatisticsPage from "./pages/Admin/Statistics/PatientStatisticsPage";
 import { SpecializationsPages } from "./pages/Admin/Specializations/SpecializationsPages";
 import EditProfilePage from "./pages/Admin/Profile/EditProfilePage";
+import MedicalServicePage from "./pages/Admin/MedicalService/MedicalServicePage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -68,7 +69,10 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/admin/dashboard" element={<Home />} />
-            <Route path="/admin/medical-service" element={<MecicalService />} />
+            <Route
+              path="/admin/medical-service"
+              element={<MedicalServicePage />}
+            />
             <Route path="/admin/role" element={<RolePage />} />
             <Route path="/admin/permission" element={<PermissionPage />} />
             <Route path="/admin/staffs" element={<StaffsPage />} />

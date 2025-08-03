@@ -27,6 +27,10 @@ import updatePatientStatus from "../../../hooks/queue-patients/updatePatientStat
 import EndExaminationModal from "../../../components/medical-examination/EndExaminationModal";
 import { vitalSignValidators } from "../../../components/utils/vitalSignValidators";
 import useDefaultMedicalService from "../../../hooks/department-service/useDefaultMedicalService";
+import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
+import useMedicalRecordDetail from "../../../hooks/medicalRecord/useMedicalRecordDetail";
+import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
+import dayjs from "dayjs";
 const MedicalExaminationPage = () => {
   const { userInfo } = useUserInfo();
   const { department } = useMyDepartment();
@@ -40,9 +44,11 @@ const MedicalExaminationPage = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
+  const [selectedMedicalRecord, setSelectedMedicalRecord] =
+    useState<MedicalRecord | null>(null);
   const { patientDetail: selectedPatient, refetch: refetchPatientDetail } =
     useQueuePatientDetail(selectedPatientId);
-
+  const [isQueuePatientMode, setIsQueuePatientMode] = useState(true);
   const {
     patients,
     totalItems,
@@ -54,9 +60,43 @@ const MedicalExaminationPage = () => {
     updateFilters,
   } = useQueuePatientService({
     roomNumber: department?.roomNumber ?? "",
-    registeredTimeFrom: new Date().toISOString().split("T")[0],
-    registeredTimeTo: new Date().toISOString().split("T")[0],
+    registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+    registeredTimeTo: dayjs().format("YYYY-MM-DD"),
   });
+
+  const {
+    recordDetail,
+
+    fetchMedicalRecordDetail,
+  } = useMedicalRecordDetail();
+
+  useEffect(() => {
+    if (recordDetail && selectedMedicalRecord) {
+      form.setValues({
+        appointmentDate: new Date(),
+        doctor: userInfo?.userId ?? "",
+        department: department?.id ?? "",
+        symptoms: recordDetail.diagnosisText || "",
+        notes: recordDetail.notes || "",
+        temperature: recordDetail.temperature,
+        respiratoryRate: recordDetail.respiratoryRate,
+        bloodPressure: recordDetail.bloodPressure,
+        heartRate: recordDetail.heartRate,
+        heightCm: recordDetail.heightCm,
+        weightKg: recordDetail.weightKg,
+        bmi: recordDetail.bmi,
+        spo2: recordDetail.spo2,
+      });
+
+      setServiceRows(
+        recordDetail.orders?.map((order, index) => ({
+          id: index + 1,
+          serviceId: order.id, // hoặc dùng order.serviceId nếu có
+          quantity: 1,
+        })) ?? []
+      );
+    }
+  }, [recordDetail, selectedMedicalRecord]);
 
   const form = useForm({
     initialValues: {
@@ -172,8 +212,8 @@ const MedicalExaminationPage = () => {
     if (department?.roomNumber) {
       updateFilters({
         roomNumber: department.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
     }
   }, [department?.roomNumber]);
@@ -201,7 +241,24 @@ const MedicalExaminationPage = () => {
       setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
     }
   }, [selectedPatientId]);
+  const handleSelectQueuePatient = (p: QueuePatient | null) => {
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+    setSelectedMedicalRecord(null);
+    setSelectedPatientId(p?.id ?? null);
+    setIsQueuePatientMode(true);
+  };
 
+  const handleSelectMedicalRecord = async (record: MedicalRecord) => {
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+    setSelectedPatientId(null);
+    setSelectedMedicalRecord(record);
+    setIsQueuePatientMode(false);
+    await fetchMedicalRecordDetail(record.id);
+  };
   const handleSave = async () => {
     const validation = form.validate();
 
@@ -236,14 +293,14 @@ const MedicalExaminationPage = () => {
     await submitExamination(payload);
     // Cập nhật trạng thái sang WAITING_RESULT
     try {
-      await updatePatientStatus(selectedPatient.id, "WAITING_RESULT");
+      await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
       toast.success("✅ Đã lưu khám và chuyển trạng thái sang chờ kết quả");
       setSelectedPatientId(null);
 
       updateFilters({
         roomNumber: department?.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
     } catch {
       toast.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân sau khi lưu");
@@ -263,8 +320,8 @@ const MedicalExaminationPage = () => {
       await refetchPatientDetail();
       updateFilters({
         roomNumber: department?.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
       setSelectedPatientId(null);
     } catch {
@@ -286,8 +343,8 @@ const MedicalExaminationPage = () => {
       await refetchPatientDetail();
       updateFilters({
         roomNumber: department?.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
 
       setSelectedPatientId(null);
@@ -310,15 +367,21 @@ const MedicalExaminationPage = () => {
       await refetchPatientDetail();
       updateFilters({
         roomNumber: department?.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
       setSelectedPatientId(null);
     } catch {
       toast.error("❌ Gọi bệnh nhân thất bại");
     }
   };
-
+  const handleSwitchListReset = () => {
+    setSelectedMedicalRecord(null);
+    setSelectedPatientId(null);
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+  };
   return (
     <>
       {department && (
@@ -339,8 +402,11 @@ const MedicalExaminationPage = () => {
       <Grid p="md" gutter="md" align="stretch">
         <Grid.Col span={{ base: 12, md: 5 }} style={{ height: "100%" }}>
           <PatientPanel
-            selectedPatient={selectedPatient}
-            onSelectPatient={(p) => setSelectedPatientId(p?.id ?? null)}
+            selectedQueuePatient={selectedPatient}
+            selectedMedicalRecord={selectedMedicalRecord}
+            onSelectQueuePatient={handleSelectQueuePatient}
+            onSelectMedicalRecord={handleSelectMedicalRecord}
+            onSwitchListReset={handleSwitchListReset}
             patients={patients}
             totalElements={totalItems}
             pageSize={pageSize}
@@ -388,7 +454,7 @@ const MedicalExaminationPage = () => {
                 onClick={() => setEndExamModalOpened(true)}
                 disabled={
                   !selectedPatient ||
-                  selectedPatient.status !== "WAITING_RESULT"
+                  selectedPatient.status !== "AWAITING_RESULT"
                 }
               >
                 Kết thúc khám
@@ -399,7 +465,13 @@ const MedicalExaminationPage = () => {
               1. Thông tin người đăng ký
             </Title>
             <PatientInfoPanel
-              patient={selectedPatient}
+              key={
+                isQueuePatientMode
+                  ? `queue-${selectedPatient?.id ?? "empty"}`
+                  : `record-${selectedMedicalRecord?.id ?? "empty"}`
+              }
+              patient={isQueuePatientMode ? selectedPatient : null}
+              medicalRecord={recordDetail}
               onConfirm={handleConfirmExamination}
               onCancelQueue={handleCancelQueue}
               onCallPatient={handleCallPatient}
@@ -463,7 +535,7 @@ const MedicalExaminationPage = () => {
                       type="button"
                       leftSection={<IconDeviceFloppy size={16} />}
                       onClick={handleSave}
-                      disabled={selectedPatient?.status === "CANCELED"}
+                      disabled={selectedPatient?.status !== "IN_PROGRESS"}
                     >
                       Lưu
                     </Button>
@@ -490,8 +562,8 @@ const MedicalExaminationPage = () => {
             setSelectedPatientId(null);
             updateFilters({
               roomNumber: department?.roomNumber,
-              registeredTimeFrom: new Date().toISOString().split("T")[0],
-              registeredTimeTo: new Date().toISOString().split("T")[0],
+              registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+              registeredTimeTo: dayjs().format("YYYY-MM-DD"),
             });
           }}
         />

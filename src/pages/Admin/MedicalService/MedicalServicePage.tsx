@@ -13,14 +13,11 @@ import {
 } from "../../../types/Admin/MedicalService/MedicalService";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import PageMeta from "../../../components/common/PageMeta";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [sortKey, setSortKey] = useState<keyof MedicalService | undefined>(
-    "name"
-  );
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const {
     medicalServices,
@@ -42,42 +39,30 @@ const MedicalServicePage = () => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
     string | undefined
   >(undefined);
+
   const [departmentFilterInput, setDepartmentFilterInput] = useState<
     string | undefined
   >(undefined);
+
   const [departments, setDepartments] = useState<
     { label: string; value: string }[]
   >([]);
+
   const [, setServiceNameOptions] = useState<
     { label: string; value: string }[]
   >([]);
 
   const { setting } = useSettingAdminService();
+
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]); // Lấy phần tử đầu tiên
+      setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
 
   useEffect(() => {
-    fetchAllMedicalServices(
-      page - 1,
-      pageSize,
-      sortKey || "name",
-      sortDirection,
-      {
-        name: searchName,
-        departmentId: selectedDepartmentId,
-      }
-    );
-  }, [
-    page,
-    pageSize,
-    sortKey,
-    sortDirection,
-    searchName,
-    selectedDepartmentId,
-  ]);
+    fetchAllMedicalServices(page - 1, pageSize);
+  }, [page, pageSize, searchName, selectedDepartmentId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,16 +140,7 @@ const MedicalServicePage = () => {
         await axiosInstance.post(`/medical-services`, formData);
         toast.success("Created successfully");
       }
-      fetchAllMedicalServices(
-        page - 1,
-        pageSize,
-        sortKey || "name",
-        sortDirection,
-        {
-          name: searchName,
-          departmentId: selectedDepartmentId,
-        }
-      );
+      fetchAllMedicalServices(page - 1, pageSize);
     } catch (error) {
       console.error("Error saving medical service", error);
       toast.error("An error occurred");
@@ -189,46 +165,58 @@ const MedicalServicePage = () => {
 
   const columns = [
     createColumn<MedicalService>({
-      key: "name",
-      label: "Tên Dịch Vụ",
-      sortable: false,
+      key: "serviceCode",
+      label: "Mã Dịch Vụ",
       align: "left",
     }),
     createColumn<MedicalService>({
-      key: "description",
-      label: "Mô tả",
-//       sortable: false,
-//       align: "left",
-      render: (row) => {
-        const desc = row.description || "";
-        const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
-
-        return <span title={desc}>{short}</span>;
-      },
+      key: "name",
+      label: "Tên Dịch Vụ",
+      align: "left",
     }),
+    // createColumn<MedicalService>({
+    //   key: "description",
+    //   label: "Mô tả",
+    //   render: (row) => {
+    //     const desc = row.description || "";
+    //     const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
+    //     return <span title={desc}>{short}</span>;
+    //   },
+    // }),
     createColumn<MedicalService>({
       key: "department",
       label: "Tên phòng",
-      sortable: false,
       render: (row) => row.department.name,
       align: "left",
     }),
     createColumn<MedicalService>({
+      key: "defaultService",
+      label: "Mặc định",
+      sortable: false,
+      render: (row) =>
+        row.defaultService ? (
+          <span className="text-green-600 font-medium">Có</span>
+        ) : (
+          <span className="text-red-600 font-medium">Không</span>
+        ),
+      align: "center",
+    }),
+    createColumn<MedicalService>({
       key: "price",
       label: "Giá",
-      sortable: false,
       render: (row) => `${row.price.toLocaleString()} VND`,
     }),
 
     createColumn<MedicalService>({
       key: "vat",
       label: "VAT (%)",
-      sortable: false,
+      render: (row) => `${row.vat}%`,
     }),
   ];
 
   return (
     <>
+      <PageMeta title="Quản lý dịch vụ" description="Quản lý dịch vụ" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h1 className="text-xl font-bold">Dịch Vụ Khám</h1>
         <Button onClick={handleAdd} color="blue">
@@ -290,12 +278,6 @@ const MedicalServicePage = () => {
           setPageSize(newSize);
           setPage(1);
         }}
-        onSortChange={(key, direction) => {
-          setSortKey(key);
-          setSortDirection(direction);
-        }}
-        sortKey={sortKey}
-        sortDirection={sortDirection}
         loading={loading}
         onView={handleView}
         onEdit={handleEdit}

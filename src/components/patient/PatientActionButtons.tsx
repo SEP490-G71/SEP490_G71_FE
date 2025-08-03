@@ -1,4 +1,3 @@
-// components/patient/PatientActionButtons.tsx
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { useState } from "react";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";

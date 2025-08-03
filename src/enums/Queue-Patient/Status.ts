@@ -7,7 +7,7 @@ export enum Status {
   IN_PROGRESS = "IN_PROGRESS",
   PENDING = "PENDING",
   FAILED = "FAILED",
-   WaitingResult = "WAITING_RESULT",
+   AWAITING_RESULT = "AWAITING_RESULT",
   CALLING = "CALLING",
 
 }
@@ -22,7 +22,7 @@ export const StatusLabel: Record<Status, string> = {
   [Status.PENDING]: "Đang chờ",
   [Status.FAILED]: "Thất bại",
   [Status.CALLING]: "Đang gọi", 
-    [Status.WaitingResult]: "Chờ kết quả",
+    [Status.AWAITING_RESULT]: "Chờ kết quả",
 
 };
 
@@ -36,5 +36,5 @@ export const StatusColor: Record<Status, string> = {
   [Status.PENDING]: "yellow",
   [Status.FAILED]: "red",
   [Status.CALLING]: "yellow", 
-  [Status.WaitingResult]: "cyan",
+  [Status.AWAITING_RESULT]: "cyan",
 };

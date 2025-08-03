@@ -8,6 +8,7 @@ export interface MedicalService {
   serviceCode: string; 
   department: Department;
   defaultService:boolean;
+  
 
 }
 
@@ -23,7 +24,7 @@ export interface Department {
   description: string;
   roomNumber: string;
   type: string;
-  specialization?: Specialization; // thêm dòng này
+  specialization?: Specialization; 
 }
 
 export interface CreateMedicalServiceRequest {

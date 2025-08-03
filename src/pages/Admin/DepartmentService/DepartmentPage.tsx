@@ -1,51 +1,53 @@
+// Responsive MedicalServicePage.tsx - updated with DepartmentPage structure
 import { useEffect, useState } from "react";
-import { Button, Select, TextInput } from "@mantine/core";
-import { toast } from "react-toastify";
-import PageMeta from "../../../components/common/PageMeta";
+import { Select, Button, TextInput, Paper, ScrollArea } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
-import { DepartmentTypeLabel } from "../../../enums/Admin/DepartmentEnums";
-import { DepartmentResponse } from "../../../types/Admin/Department/DepartmentTypeResponse";
-import CreateEditDepartmentModal from "../../../components/admin/Department/CreateEditDepartmentModal";
+import useMedicalService from "../../../hooks/medical-service/useMedicalService";
+import axiosInstance from "../../../services/axiosInstance";
+import { toast } from "react-toastify";
+import CreateEditModal from "../../../components/admin/MedicalService/CreateEditModal";
+import {
+  CreateMedicalServiceRequest,
+  Department,
+  MedicalService,
+} from "../../../types/Admin/MedicalService/MedicalService";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
-import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 
-function getEnumLabel(
-  enumLabelMap: Record<string, string>,
-  key: string
-): string {
-  return enumLabelMap[key] ?? key;
-}
-
-const DepartmentPage = () => {
+const MedicalServicePage = () => {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const {
-    departments,
+    medicalServices,
     totalItems,
     loading,
-    fetchDepartments,
-    fetchDepartmentById,
-    handleDeleteDepartmentById,
-  } = useDepartmentService();
+    fetchAllMedicalServices,
+    fetchMedicalServiceById,
+    handleDeleteMedicalServiceById,
+  } = useMedicalService();
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const [modalOpened, setModalOpened] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] =
-    useState<DepartmentResponse | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
-  const [, setEditingId] = useState<string | null>(null);
-
-  const [inputName, setInputName] = useState("");
-  const [filterName, setFilterName] = useState("");
-  const [inputRoom, setInputRoom] = useState("");
-  const [filterRoom, setFilterRoom] = useState("");
-  const [inputType, setInputType] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState("");
+  const [modalOpened, setModalOpened] = useState(false);
+  const [selectedService, setSelectedService] = useState<MedicalService | null>(
+    null
+  );
+  const [searchNameInput, setSearchNameInput] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    string | undefined
+  >(undefined);
+  const [departmentFilterInput, setDepartmentFilterInput] = useState<
+    string | undefined
+  >(undefined);
+  const [departments, setDepartments] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [, setServiceNameOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   const { setting } = useSettingAdminService();
-
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
       setPageSize(setting.paginationSizeList[0]);
@@ -53,175 +55,185 @@ const DepartmentPage = () => {
   }, [setting]);
 
   useEffect(() => {
-    fetchDepartments({
-      page: page - 1,
-      size: pageSize,
-      name: filterName || undefined,
-      type: filterType || undefined,
-      roomNumber: filterRoom || undefined,
-    });
-  }, [page, pageSize, filterName, filterType, filterRoom]);
+    fetchAllMedicalServices(page - 1, pageSize);
+  }, [page, pageSize, searchName, selectedDepartmentId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const departmentsRes = await axiosInstance.get("/departments/all");
+        setDepartments(
+          departmentsRes.data.result.map((d: Department) => ({
+            label: d.name,
+            value: d.id,
+          }))
+        );
+
+        const servicesRes = await axiosInstance.get("/medical-services", {
+          params: { page: 0, size: 1000 },
+        });
+        const serviceNameOptions = Array.from(
+          new Set(
+            (servicesRes.data.result.content as MedicalService[]).map(
+              (s) => s.name
+            )
+          )
+        ).map((name) => ({ label: name, value: name }));
+        setServiceNameOptions(serviceNameOptions);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleAdd = () => {
-    setSelectedDepartment(null);
-    setIsViewMode(false);
-    setEditingId(null);
+    setSelectedService(null);
     setModalOpened(true);
   };
-  const handleView = async (row: DepartmentResponse) => {
-    const res = await fetchDepartmentById(row.id);
-    if (res) {
-      setSelectedDepartment(res);
+
+  const handleView = async (row: MedicalService) => {
+    const data = await fetchMedicalServiceById(row.id);
+    if (data) {
+      setSelectedService(data);
       setIsViewMode(true);
       setModalOpened(true);
     } else {
-      toast.error("Không thể xem chi tiết phòng ban");
-    }
-  };
-  const handleEdit = async (row: DepartmentResponse) => {
-    const res = await fetchDepartmentById(row.id);
-    if (res) {
-      setSelectedDepartment(res);
-      setEditingId(row.id);
-      setIsViewMode(false);
-      setModalOpened(true);
-    } else {
-      toast.error("Lỗi khi lấy thông tin phòng ban");
+      toast.error("Failed to fetch service details");
     }
   };
 
-  const handleDelete = async (row: DepartmentResponse) => {
-    await handleDeleteDepartmentById(row.id);
-    fetchDepartments({
-      page: page - 1,
-      size: pageSize,
-      name: filterName || undefined,
-      type: filterType || undefined,
-      roomNumber: filterRoom || undefined,
-    });
+  const handleEdit = async (row: MedicalService) => {
+    const data = await fetchMedicalServiceById(row.id);
+    if (data) {
+      setSelectedService(data);
+      setModalOpened(true);
+    } else {
+      toast.error("Failed to fetch service details");
+    }
+  };
+
+  const handleDelete = async (row: MedicalService) => {
+    await handleDeleteMedicalServiceById(row.id);
+  };
+
+  const handleSubmit = async (formData: CreateMedicalServiceRequest) => {
+    try {
+      if (selectedService) {
+        await axiosInstance.put(
+          `/medical-services/${selectedService.id}`,
+          formData
+        );
+        toast.success("Updated successfully");
+      } else {
+        await axiosInstance.post(`/medical-services`, formData);
+        toast.success("Created successfully");
+      }
+      fetchAllMedicalServices(page - 1, pageSize);
+    } catch (error) {
+      console.error("Error saving medical service", error);
+      toast.error("An error occurred");
+    } finally {
+      setModalOpened(false);
+    }
   };
 
   const handleSearch = () => {
+    setSearchName(searchNameInput.trim());
+    setSelectedDepartmentId(departmentFilterInput);
     setPage(1);
-    setFilterName(inputName.trim());
-    setFilterRoom(inputRoom.trim());
-    setFilterType(inputType || "");
   };
 
   const handleReset = () => {
-    setInputName("");
-    setFilterName("");
-    setInputRoom("");
-    setFilterRoom("");
-    setInputType(null);
-    setFilterType("");
+    setSearchNameInput("");
+    setSearchName("");
+    setDepartmentFilterInput(undefined);
+    setSelectedDepartmentId(undefined);
     setPage(1);
-    fetchDepartments({ page: 0, size: pageSize });
   };
 
   const columns = [
-    createColumn<DepartmentResponse>({ key: "name", label: "Tên phòng ban" }),
-    createColumn<DepartmentResponse>({
+    createColumn<MedicalService>({
+      key: "name",
+      label: "Tên Dịch Vụ",
+      align: "left",
+    }),
+    createColumn<MedicalService>({
       key: "description",
       label: "Mô tả",
       render: (row) => {
         const desc = row.description || "";
         const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
-
         return <span title={desc}>{short}</span>;
       },
     }),
-    createColumn<DepartmentResponse>({ key: "roomNumber", label: "Số phòng" }),
-    createColumn<DepartmentResponse>({
-      key: "type",
-      label: "Loại phòng",
-      render: (row) => getEnumLabel(DepartmentTypeLabel, row.type),
+    createColumn<MedicalService>({
+      key: "department",
+      label: "Tên phòng",
+      render: (row) => row.department.name,
+      align: "left",
     }),
-    createColumn<DepartmentResponse>({
-      key: "Specialization",
-      label: "Chuyên khoa",
-      render: (row) => row.specialization?.name ?? "Không có",
+    createColumn<MedicalService>({
+      key: "defaultService",
+      label: "Mặc định",
+      render: (row) => (row.defaultService ? "✅" : "❌"),
+      align: "right",
+    }),
+    createColumn<MedicalService>({
+      key: "price",
+      label: "Giá",
+      render: (row) => `${row.price.toLocaleString()} VND`,
+      align: "left",
+    }),
+    createColumn<MedicalService>({
+      key: "vat",
+      label: "VAT (%)",
+      render: (row) => `${row.vat}%`,
+      align: "left",
     }),
   ];
 
   return (
-    <>
-      <PageMeta
-        title="Quản lý phòng ban | Admin Dashboard"
-        description="Trang quản lý phòng ban trong hệ thống"
-      />
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2  mb-4">
-        <h1 className="text-xl font-bold">Phòng ban</h1>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h1 className="text-xl font-bold">Dịch Vụ Khám</h1>
         <Button color="blue" onClick={handleAdd}>
           Tạo
         </Button>
       </div>
 
       <div className="grid grid-cols-12 gap-4 mb-4">
-        {/* 3 ô input: chiếm 10 cột => mỗi cái ~ col-span-4 */}
-        <div className="col-span-4">
-          <FloatingLabelWrapper label="Chọn loại phòng">
+        <div className="col-span-12 md:col-span-5">
+          <FloatingLabelWrapper label="Chọn phòng ban">
             <Select
-              key={inputType || "empty"}
-              placeholder="Chọn loại phòng"
-              className="w-full"
-              styles={{ input: { height: 35 } }}
-              value={inputType}
-              onChange={setInputType}
-              data={[
-                { value: "", label: "Tất cả" },
-                ...Object.entries(DepartmentTypeLabel).map(
-                  ([value, label]) => ({
-                    value,
-                    label,
-                  })
-                ),
-              ]}
+              placeholder="Chọn phòng ban"
+              data={departments}
+              value={departmentFilterInput}
+              onChange={(value) => setDepartmentFilterInput(value || undefined)}
               clearable
               searchable
             />
           </FloatingLabelWrapper>
         </div>
 
-        <div className="col-span-3">
-          <FloatingLabelWrapper label="Tìm theo tên">
+        <div className="col-span-12 md:col-span-5">
+          <FloatingLabelWrapper label="Nhập tên dịch vụ">
             <TextInput
-              type="text"
-              placeholder="Nhập tên"
-              value={inputName}
-              onChange={(e) => setInputName(e.target.value)}
+              placeholder="Nhập tên dịch vụ"
+              value={searchNameInput}
+              onChange={(e) => setSearchNameInput(e.currentTarget.value)}
             />
           </FloatingLabelWrapper>
         </div>
 
-        <div className="col-span-3">
-          <FloatingLabelWrapper label="Tìm theo số phòng">
-            <TextInput
-              type="text"
-              placeholder="Nhập số phòng"
-              value={inputRoom}
-              onChange={(e) => setInputRoom(e.target.value)}
-            />
-          </FloatingLabelWrapper>
-        </div>
-
-        {/* Nút: chiếm 2 cột */}
-        <div className="col-span-2  gap-2 flex items-end">
-          <Button
-            variant="light"
-            color="gray"
-            onClick={handleReset}
-            style={{ height: 35 }}
-            fullWidth
-          >
+        <div className="col-span-12 md:col-span-2 flex items-end gap-2">
+          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
             Tải lại
           </Button>
           <Button
             variant="filled"
             color="blue"
             onClick={handleSearch}
-            style={{ height: 35 }}
             fullWidth
           >
             Tìm kiếm
@@ -229,45 +241,41 @@ const DepartmentPage = () => {
         </div>
       </div>
 
-      <CustomTable
-        data={departments}
-        columns={columns}
-        page={page}
-        pageSize={pageSize}
-        totalItems={totalItems}
-        onPageChange={setPage}
-        onPageSizeChange={(newSize) => {
-          setPageSize(newSize);
-          setPage(1);
-        }}
-        loading={loading}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <ScrollArea offsetScrollbars type="always" className="w-full max-w-full">
+        <div className="min-w-full">
+          <Paper shadow="xs" radius="md" withBorder className="min-w-full">
+            <CustomTable
+              data={medicalServices}
+              columns={columns}
+              page={page}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setPage}
+              onPageSizeChange={(newSize) => {
+                setPageSize(newSize);
+                setPage(1);
+              }}
+              loading={loading}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </Paper>
+        </div>
+      </ScrollArea>
 
-      <CreateEditDepartmentModal
-        opened={modalOpened}
+      <CreateEditModal
         isViewMode={isViewMode}
+        opened={modalOpened}
         onClose={() => {
           setModalOpened(false);
-          setSelectedDepartment(null);
-          setEditingId(null);
           setIsViewMode(false);
         }}
-        initialData={selectedDepartment}
-        onSubmit={() =>
-          fetchDepartments({
-            page: page - 1,
-            size: pageSize,
-            name: filterName || undefined,
-            type: filterType || undefined,
-            roomNumber: filterRoom || undefined,
-          })
-        }
+        initialData={selectedService}
+        onSubmit={handleSubmit}
       />
-    </>
+    </div>
   );
 };
 
-export default DepartmentPage;
+export default MedicalServicePage;
