@@ -21,6 +21,7 @@ export interface InvoiceItem {
   discount: number;
   vat: number;
   total: number;
+  medicalServiceId?: string;
 }
 
 export interface InvoiceDetail {

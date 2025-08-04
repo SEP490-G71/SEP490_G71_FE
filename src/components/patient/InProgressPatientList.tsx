@@ -1,14 +1,9 @@
 import { Paper } from "@mantine/core";
-import { useEffect } from "react";
 import { Column } from "../../types/table";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
 import { MedicalRecordRoomFilter } from "../../hooks/medicalRecord/useMedicalRecordByRoom";
-import {
-  MedicalRecordStatus,
-  MedicalRecordStatusMap,
-} from "../../enums/MedicalRecord/MedicalRecordStatus";
-import dayjs from "dayjs";
+import { MedicalRecordStatusMap } from "../../enums/MedicalRecord/MedicalRecordStatus";
 
 interface Props {
   records: MedicalRecord[];
@@ -30,28 +25,11 @@ const InProgressPatientList = ({
   records,
   loading,
   pagination,
-  fetchMedicalRecords,
   selectedId,
   onSelect,
   setCurrentPage,
   setPageSize,
-  roomNumber,
 }: Props) => {
-  useEffect(() => {
-    const today = dayjs().format("YYYY-MM-DD");
-
-    if (!roomNumber) return;
-
-    fetchMedicalRecords({
-      roomNumber,
-      page: pagination.pageNumber,
-      size: pagination.pageSize,
-      status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
-      fromDate: today,
-      toDate: today,
-    });
-  }, [pagination.pageNumber, pagination.pageSize, roomNumber]);
-
   const columns: Column<MedicalRecord>[] = [
     {
       key: "status",

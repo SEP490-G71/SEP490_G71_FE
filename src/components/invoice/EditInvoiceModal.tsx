@@ -3,20 +3,32 @@ import { useEffect, useState } from "react";
 import { MedicalService } from "../../types/Admin/MedicalService/MedicalService";
 import { ServiceRow } from "../../types/serviceRow";
 import ServiceTable from "../medical-examination/MedicalServiceTable";
+import { useUpdateInvoiceItems } from "../../hooks/invoice/useUpdateInvoiceItems";
+import { toast } from "react-toastify";
 
 interface Props {
   opened: boolean;
   onClose: () => void;
+  invoiceId: string;
+  staffId: string;
   invoiceItems: {
     serviceCode: string;
     name: string;
+    medicalServiceId: string | null;
     quantity: number;
     price: number;
     discount: number;
     vat: number;
     total: number;
   }[];
+
   availableServices: MedicalService[];
+  serviceOptions: {
+    group: string;
+    items: { value: string; label: string }[];
+  }[];
+
+  // defaultServiceIds: string[];
   onChange?: (rows: ServiceRow[]) => void;
   editable?: boolean;
 }
@@ -27,8 +39,12 @@ const ViewEditInvoiceServicesModal = ({
   invoiceItems,
   availableServices,
   onChange,
-  editable = false,
-}: Props) => {
+  editable = true,
+  invoiceId,
+  staffId,
+  serviceOptions,
+}: // defaultServiceIds,
+Props) => {
   const [serviceRows, setServiceRows] = useState<ServiceRow[]>([]);
 
   useEffect(() => {
@@ -43,7 +59,7 @@ const ViewEditInvoiceServicesModal = ({
 
       return {
         id: index + 1,
-        serviceId: matched?.id ?? null,
+        serviceId: matched?.id ?? item.medicalServiceId ?? null,
         serviceCode: item.serviceCode,
         name: item.name,
         price: item.price,
@@ -72,7 +88,7 @@ const ViewEditInvoiceServicesModal = ({
 
     setServiceRows(rows);
   }, [opened, invoiceItems, availableServices, editable]);
-
+  const { updateInvoiceItems } = useUpdateInvoiceItems();
   return (
     <Modal
       opened={opened}
@@ -99,24 +115,11 @@ const ViewEditInvoiceServicesModal = ({
                 serviceRows={serviceRows}
                 setServiceRows={setServiceRows}
                 medicalServices={availableServices}
-                serviceOptions={Object.entries(
-                  availableServices.reduce<
-                    Record<string, { value: string; label: string }[]>
-                  >((acc, s) => {
-                    const group = s.department?.specialization?.name || "Khác";
-                    if (!acc[group]) acc[group] = [];
-                    acc[group].push({
-                      value: s.id,
-                      label: `${s.serviceCode} - ${s.name}`,
-                    });
-                    return acc;
-                  }, {})
-                ).map(([group, items]) => ({
-                  group,
-                  items,
-                }))}
-                editable={true}
+                serviceOptions={serviceOptions}
+                // defaultServiceIds={defaultServiceIds}
+                editable={editable}
                 showDepartment={true}
+                allowSelectDefaultServices={true}
               />
             ) : (
               <Text ta="center" c="dimmed" mt="md">
@@ -133,10 +136,26 @@ const ViewEditInvoiceServicesModal = ({
         </Button>
         {editable && onChange && (
           <Button
-            onClick={() => {
+            onClick={async () => {
               const cleanedRows = serviceRows.filter((r) => r.serviceId);
-              onChange(cleanedRows);
-              onClose();
+
+              const payload = {
+                invoiceId,
+                staffId,
+                services: cleanedRows.map((r) => ({
+                  serviceId: r.serviceId!,
+                  quantity: r.quantity,
+                })),
+              };
+
+              try {
+                await updateInvoiceItems(payload);
+                toast.success("✅ Cập nhật dịch vụ thành công");
+                onChange?.(cleanedRows);
+                onClose();
+              } catch (err) {
+                toast.error("❌ Lỗi khi cập nhật dịch vụ");
+              }
             }}
           >
             Lưu dịch vụ

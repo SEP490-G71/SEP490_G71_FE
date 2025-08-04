@@ -20,6 +20,7 @@ interface Props {
   editable?: boolean;
   showDepartment?: boolean;
   invoiceDetail?: InvoiceDetail;
+  allowSelectDefaultServices?: boolean;
 }
 
 const cellStyle = {
@@ -54,6 +55,7 @@ const ServiceTable = ({
   showDepartment = false,
   nonDefaultServiceOptions,
   invoiceDetail,
+  allowSelectDefaultServices,
 }: Props) => {
   const getServiceDetail = (id: string | null) =>
     medicalServices.find((s) => s.id === id);
@@ -116,7 +118,9 @@ const ServiceTable = ({
 
   const renderRow = (row: ServiceRow, index: number) => {
     const optionsToUse =
-      index === 0 ? serviceOptions : nonDefaultServiceOptions;
+      allowSelectDefaultServices || index === 0
+        ? serviceOptions
+        : nonDefaultServiceOptions;
 
     const filteredOptions = optionsToUse ?? [];
 

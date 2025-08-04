@@ -181,8 +181,9 @@ const PatientPanel = ({
   };
 
   const toDateStringSafe = (value: any) => {
+    if (!value) return undefined;
     if (typeof value === "string") return value;
-    if (value instanceof Date) return value.toISOString().split("T")[0];
+    if (value instanceof Date) return dayjs(value).format("YYYY-MM-DD");
     return undefined;
   };
 
@@ -251,6 +252,7 @@ const PatientPanel = ({
     <Paper p="md" shadow="xs" withBorder radius={0}>
       <div className="flex flex-col">
         <FilterPanel
+          key={activeTab}
           fields={
             activeTab === "waiting"
               ? waitingFilterFields
@@ -317,6 +319,8 @@ const PatientPanel = ({
                 roomNumber: department?.roomNumber ?? "",
                 page: pagination.pageNumber,
                 size: pagination.pageSize,
+                fromDate: todayStr,
+                toDate: todayStr,
                 status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
               })
             }

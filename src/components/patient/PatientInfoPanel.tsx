@@ -11,6 +11,7 @@ interface Props {
   onCallPatient?: () => void;
   onCancelQueue?: () => void;
   onConfirm?: () => void;
+  mode?: "billing" | "examination";
 }
 
 const PatientInfoPanel = ({
@@ -19,6 +20,7 @@ const PatientInfoPanel = ({
   onConfirm,
   onCancelQueue,
   onCallPatient,
+  mode,
 }: Props) => {
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [cancelModalOpened, setCancelModalOpened] = useState(false);
@@ -106,7 +108,7 @@ const PatientInfoPanel = ({
           </Text>
         </Grid.Col>
 
-        {patient && (
+        {patient && mode !== "billing" && (
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <PatientActionButtons
               patient={patient}
