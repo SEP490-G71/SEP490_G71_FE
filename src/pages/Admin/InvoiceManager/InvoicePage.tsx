@@ -7,7 +7,6 @@ import PageMeta from "../../../components/common/PageMeta";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { InvoiceResponse } from "../../../types/Invoice/invoice";
-import EcommerceMetrics from "../../../components/ecommerce/EcommerceMetrics";
 import { useFilteredInvoices } from "../../../hooks/invoice/useInvoice";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import { useInvoiceStatistics } from "../../../hooks/invoice/useInvoiceStatistics";
@@ -17,6 +16,7 @@ import { InvoiceStatusMap } from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { usePreviewInvoice } from "../../../hooks/invoice/payment/usePreviewInvoice";
 import { useSearchPatients } from "../../../hooks/Patient-Management/useSearchPatients";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
+import InvoiceMetrics from "../../../components/ecommerce/InvoiceMetrics";
 
 const InvoicePage = () => {
   const [filterStatus, setFilterStatus] = useState("");
@@ -255,7 +255,7 @@ const InvoicePage = () => {
         </Button>
       </div>
 
-      <EcommerceMetrics stats={stats} />
+      <InvoiceMetrics stats={stats} />
 
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 my-6">
         <FloatingLabelWrapper label="Trạng thái">

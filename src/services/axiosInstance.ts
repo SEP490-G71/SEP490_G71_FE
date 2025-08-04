@@ -14,7 +14,7 @@ axiosInstance.interceptors.request.use(
     const hostname = window.location.hostname;
     console.log(hostname);
 
-         const subdomain = hostname.split(".")[0];
+       const subdomain = hostname.split(".")[0];
        //const subdomain = "test";
 
     console.log(subdomain);
@@ -23,7 +23,11 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (subdomain && !config.url?.includes("/auth/register")) {
+    if (
+      subdomain &&
+      !config.url?.includes("/auth/register") &&
+      !config.url?.includes("/service-packages")
+    ) {
       config.headers["X-Tenant-ID"] = subdomain;
     }
 

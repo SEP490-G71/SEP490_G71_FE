@@ -1,13 +1,19 @@
 import { CheckCircle2 } from "lucide-react";
-import { useServicePackages } from "../../hooks/LangdingPagesAdmin/useServicePackages";
+import useServicePackages from "../../hooks/LangdingPagesAdmin/useServicePackages";
 import { formatCurrency } from "../../hooks/LangdingPagesAdmin/formatCurrency";
+import { ServicePackage } from "../../types/Admin/LandingPageAdmin/ServicePackage";
+import { useEffect } from "react";
 
 export const Pricing = ({
   onRegisterClick,
 }: {
   onRegisterClick: (packageId: string) => void;
 }) => {
-  const { servicePackages, loading } = useServicePackages();
+  const { servicePackages, loading, fetchServicePackages } =
+    useServicePackages();
+  useEffect(() => {
+    fetchServicePackages();
+  }, []);
 
   const featuresByPackage: Record<
     string,
@@ -17,7 +23,6 @@ export const Pricing = ({
       { text: "Quản lý lịch hẹn cơ bản", isIncluded: true },
       { text: "Hỗ trợ khách hàng 24/7", isIncluded: true },
       { text: "Thống kê đơn giản", isIncluded: true },
-      { text: "Hỗ trợ nhiều người dùng", isIncluded: false },
       { text: "Báo cáo tài chính nâng cao", isIncluded: false },
       { text: "Tự động gửi email nhắc lịch", isIncluded: false },
     ],
@@ -25,7 +30,6 @@ export const Pricing = ({
       { text: "Quản lý lịch hẹn cơ bản", isIncluded: true },
       { text: "Hỗ trợ khách hàng 24/7", isIncluded: true },
       { text: "Thống kê đơn giản", isIncluded: true },
-      { text: "Hỗ trợ nhiều người dùng", isIncluded: true },
       { text: "Báo cáo tài chính nâng cao", isIncluded: true },
       { text: "Tự động gửi email nhắc lịch", isIncluded: false },
     ],
@@ -33,7 +37,6 @@ export const Pricing = ({
       { text: "Quản lý lịch hẹn cơ bản", isIncluded: true },
       { text: "Hỗ trợ khách hàng 24/7", isIncluded: true },
       { text: "Thống kê đơn giản", isIncluded: true },
-      { text: "Hỗ trợ nhiều người dùng", isIncluded: true },
       { text: "Báo cáo tài chính nâng cao", isIncluded: true },
       { text: "Tự động gửi email nhắc lịch", isIncluded: true },
     ],
@@ -41,7 +44,6 @@ export const Pricing = ({
       { text: "Quản lý lịch hẹn cơ bản", isIncluded: true },
       { text: "Hỗ trợ khách hàng 24/7", isIncluded: false },
       { text: "Thống kê đơn giản", isIncluded: false },
-      { text: "Hỗ trợ nhiều người dùng", isIncluded: false },
       { text: "Báo cáo tài chính nâng cao", isIncluded: false },
       { text: "Tự động gửi email nhắc lịch", isIncluded: false },
     ],
@@ -66,7 +68,7 @@ export const Pricing = ({
         <p className="text-center">Đang tải...</p>
       ) : (
         <div className="flex flex-wrap">
-          {servicePackages.map((option) => (
+          {servicePackages.map((option: ServicePackage) => (
             <div key={option.id} className="w-full sm:w-1/2 lg:w-1/4 p-2">
               {/* ✅ SỬA: dùng flex-col h-full để cố định chiều cao + đều nút */}
               <div className="flex flex-col h-full border border-neutral-700 rounded-xl min-h-[500px] p-6">

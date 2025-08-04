@@ -10,12 +10,13 @@ import {
   Tabs,
   Paper,
   Checkbox,
+  Text,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { IconSearch } from "@tabler/icons-react";
+// import { IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
-import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
+// import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
@@ -29,18 +30,30 @@ import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminSe
 import { useSpecializations } from "../../../hooks/Specializations/useSpecializations";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import usePatientSearch from "../../../hooks/Medical-Record/usePatientSearch";
+import axiosInstance from "../../../services/axiosInstance";
+import { Switch } from "@mantine/core";
+
+interface PatientOption {
+  value: string;
+  label: string;
+  patient?: Patient;
+}
 
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
-  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  // const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [confirmedPatient, setConfirmedPatient] = useState<Patient | null>(
     null
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [tempSelectedPatient, setTempSelectedPatient] =
-    useState<Patient | null>(null);
-  const [modalOpened, setModalOpened] = useState(false);
+  // const [tempSelectedPatient, setTempSelectedPatient] =
+  //   useState<Patient | null>(null);
+  // const [modalOpened, setModalOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<PatientOption | null>(
+    null
+  );
+  const [isTyping, setIsTyping] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -54,12 +67,16 @@ export default function RegisterMedicalExaminationPage() {
   const { options: patientOptions, searchPatients } = usePatientSearch();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
 
   const [onlinePatients, setOnlinePatients] = useState<Patient[]>([]);
   const [totalOnlinePatients, setTotalOnlinePatients] = useState(0);
   const [onlinePage, setOnlinePage] = useState(1);
   const [onlinePageSize, setOnlinePageSize] = useState(10);
   const [onlineDate, setOnlineDate] = useState<Date | null>(new Date());
+  const [activeTab, setActiveTab] = useState<
+    "register-info" | "register-info-2"
+  >("register-info");
 
   const today = dayjs().startOf("day").toDate();
   const [searchFilters, setSearchFilters] = useState({
@@ -93,7 +110,6 @@ export default function RegisterMedicalExaminationPage() {
   useEffect(() => {
     fetchAllSpecializations();
 
-    // Gán filter mặc định là ngày hôm nay ngay khi load
     const today = dayjs().startOf("day").toDate();
     const defaultFilters = {
       fullName: "",
@@ -110,7 +126,6 @@ export default function RegisterMedicalExaminationPage() {
     setSubmittedFilters(defaultFilters);
   }, []);
 
-  // Định nghĩa ở ngoài useEffect
   const loadOnlinePatients = async () => {
     if (!onlineDate) return;
 
@@ -141,7 +156,6 @@ export default function RegisterMedicalExaminationPage() {
   }, [submittedOnlineFilters, onlinePage, onlinePageSize]);
 
   const {
-    fetchAllPatients,
     fetchTodayRegisteredPatients,
     queuePatient,
     createPatient,
@@ -157,6 +171,32 @@ export default function RegisterMedicalExaminationPage() {
       align: "left",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
+    // {
+    //   key: "status",
+    //   label: "Trạng trái",
+    //   align: "left",
+    //   render: (row) =>
+    //     row.status === "ACTIVE"
+    //       ? "Chưa đến"
+    //       : row.status === "INACTIVE"
+    //       ? "Đã đến"
+    //       : row.status ?? "-",
+    // },
+    {
+      key: "updateStatus",
+      label: "Trạng thái",
+      align: "center",
+      render: (row) => (
+        <Switch
+          size="sm"
+          color="teal"
+          checked={row.status === "INACTIVE"}
+          label={row.status === "INACTIVE" ? "Đã đến" : "Chưa đến"}
+          onChange={() => handleUpdateStatus(row)}
+        />
+      ),
+    },
+
     {
       key: "registeredAt",
       label: "Ngày đăng ký",
@@ -186,28 +226,27 @@ export default function RegisterMedicalExaminationPage() {
       label: "Trạng thái",
       align: "left",
       render: (row) => {
-        switch (row.status) {
-          case "WAITING":
-            return "Chờ khám";
-          case "IN_PROGRESS":
-            return "Đang khám";
-          case "DONE":
-            return "Hoàn thành";
-          case "CANCELED":
-            return "Đã hủy";
-          case "ACTIVE":
-            return "Hoạt động";
-          case "INACTIVE":
-            return "Không hoạt động";
-          case "PENDING":
-            return "Đang xử lý";
-          case "FAILED":
-            return "Thất bại";
-          default:
-            return row.status || "";
-        }
+        const statusMap: Record<string, { label: string; color: string }> = {
+          WAITING: { label: "Chờ khám", color: "gray" },
+          IN_PROGRESS: { label: "Đang khám", color: "blue" },
+          DONE: { label: "Hoàn thành", color: "green" },
+          CANCELED: { label: "Đã hủy", color: "red" },
+          ACTIVE: { label: "Hoạt động", color: "green" },
+          INACTIVE: { label: "Không hoạt động", color: "gray" },
+          PENDING: { label: "Đang xử lý", color: "orange" },
+          FAILED: { label: "Thất bại", color: "red" },
+        };
+
+        const status = row.status ?? "";
+        const mapped = statusMap[status] || {
+          label: status || "",
+          color: "black",
+        };
+
+        return <Text c={mapped.color}>{mapped.label}</Text>;
       },
     },
+
     {
       key: "specialization",
       label: "Chuyên khoa",
@@ -226,9 +265,28 @@ export default function RegisterMedicalExaminationPage() {
     },
   ];
 
+  const handleUpdateStatus = async (patient: Patient) => {
+    const newStatus = patient.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    try {
+      await axiosInstance.put(`/registered-online/status/${patient.id}`, {
+        status: newStatus,
+      });
+
+      toast.success("Cập nhật trạng thái thành công!");
+      loadOnlinePatients();
+    } catch (error) {
+      console.error("❌ Lỗi cập nhật trạng thái:", error);
+      toast.error("Cập nhật thất bại!");
+    }
+  };
+
   const handleReset = () => {
     setConfirmedPatient(null);
     setSelectedDate(null);
+    setSelectedOption(null);
+    setSearchInput("");
+    setIsTyping(false);
   };
 
   useEffect(() => {
@@ -351,6 +409,9 @@ export default function RegisterMedicalExaminationPage() {
         setTotalTodayPatients(totalElements);
         setConfirmedPatient(null);
         setSelectedDate(null);
+        setSelectedOption(null);
+        setSearchInput("");
+        setIsTyping(false);
       },
       updatedPatient.phongKham || undefined,
       updatedPatient.specializationId,
@@ -358,12 +419,12 @@ export default function RegisterMedicalExaminationPage() {
     );
   };
 
-  const openModal = async () => {
-    const { content } = await fetchAllPatients(0, 100);
-    setSearchResults(content);
-    setTempSelectedPatient(confirmedPatient);
-    setModalOpened(true);
-  };
+  // const openModal = async () => {
+  //   const { content } = await fetchAllPatients(0, 100);
+  //   setSearchResults(content);
+  //   setTempSelectedPatient(confirmedPatient);
+  //   setModalOpened(true);
+  // };
 
   const handleCreatePatient = async (
     data: Partial<Patient>,
@@ -371,13 +432,11 @@ export default function RegisterMedicalExaminationPage() {
   ): Promise<void> => {
     if (!data.firstName || !data.lastName || !data.dob || !data.gender) {
       toast.error("Vui lòng nhập đầy đủ thông tin bệnh nhân");
-      return;
     }
 
     const created = await createPatient(data as Patient);
     if (!created) {
-      toast.error("Tạo bệnh nhân thất bại");
-      return;
+      throw new Error("Creation failed");
     }
 
     const newPatient = {
@@ -387,7 +446,6 @@ export default function RegisterMedicalExaminationPage() {
       phongKham: "",
     };
 
-    // setPatientsToday((prev) => [...prev, newPatient]);
     setConfirmedPatient(newPatient);
     setSelectedDate(new Date(newPatient.ngayDangKy));
     setCreateModalOpened(false);
@@ -416,7 +474,7 @@ export default function RegisterMedicalExaminationPage() {
         Đăng ký khám bệnh
       </Title>
 
-      <SearchPatientModal
+      {/* <SearchPatientModal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         patients={searchResults}
@@ -426,7 +484,7 @@ export default function RegisterMedicalExaminationPage() {
           setConfirmedPatient(tempSelectedPatient);
           setModalOpened(false);
         }}
-      />
+      /> */}
 
       <CreateModal
         opened={createModalOpened}
@@ -632,14 +690,34 @@ export default function RegisterMedicalExaminationPage() {
         {/* Bên phải: Tabs thông tin chi tiết */}
         <div className="w-full lg:flex-[2] min-w-[500px]">
           <Paper p="md" shadow="sm" radius="md" withBorder>
-            <Tabs defaultValue="register-info">
+            <Tabs
+              value={activeTab}
+              onChange={(value) =>
+                setActiveTab(value as "register-info" | "register-info-2")
+              }
+            >
               <div className="w-full flex justify-between items-center mb-4">
-                <Tabs.List className="flex gap-4">
-                  <Tabs.Tab value="register-info">Thông tin đăng ký</Tabs.Tab>
-                  <Tabs.Tab value="register-info-2">
+                <Group gap="sm" mb="md">
+                  <Button
+                    color="blue"
+                    variant={
+                      activeTab === "register-info" ? "filled" : "outline"
+                    }
+                    onClick={() => setActiveTab("register-info")}
+                  >
+                    Thông tin đăng ký
+                  </Button>
+
+                  <Button
+                    color="blue"
+                    variant={
+                      activeTab === "register-info-2" ? "filled" : "outline"
+                    }
+                    onClick={() => setActiveTab("register-info-2")}
+                  >
                     Thông tin đăng ký online
-                  </Tabs.Tab>
-                </Tabs.List>
+                  </Button>
+                </Group>
 
                 <div className="flex gap-2">
                   <Button variant="default" onClick={handleReset}>
@@ -663,27 +741,56 @@ export default function RegisterMedicalExaminationPage() {
                 <Divider label="1. Thông tin người đăng ký" mb="sm" />
                 <Grid gutter="xs">
                   {/* Mã bệnh nhân + tìm kiếm */}
-                  <Grid.Col span={4}>
-                    <Group align="end">
-                      <TextInput
-                        label="Mã bệnh nhân"
-                        placeholder="Mã bệnh nhân"
-                        style={{ flex: 1 }}
-                        value={confirmedPatient?.patientCode || ""}
-                        disabled
-                      />
-                      <Button
-                        variant="filled"
-                        leftSection={<IconSearch size={16} />}
-                        onClick={openModal}
-                      >
-                        Tìm kiếm
-                      </Button>
-                    </Group>
+                  <Grid.Col span={6}>
+                    <Select
+                      label="Mã bệnh nhân"
+                      searchable
+                      placeholder="Nhập tên, mã BN hoặc số điện thoại"
+                      data={patientOptions}
+                      searchValue={
+                        isTyping ? searchInput : selectedOption?.label ?? ""
+                      }
+                      onSearchChange={(query) => {
+                        setIsTyping(true);
+                        setSearchInput(query);
+                        searchPatients(query);
+                      }}
+                      onBlur={() => {
+                        setIsTyping(false);
+                      }}
+                      value={
+                        confirmedPatient ? String(confirmedPatient.id) : ""
+                      }
+                      onChange={(value) => {
+                        const selected = patientOptions.find(
+                          (opt) => opt.value === value
+                        );
+                        if (!selected) return;
+
+                        setSelectedOption(selected);
+
+                        axiosInstance.get(`/patients/${value}`).then((res) => {
+                          const patient = res.data?.result;
+                          if (patient) {
+                            setConfirmedPatient({
+                              ...patient,
+                              ngayDangKy: new Date()
+                                .toISOString()
+                                .split("T")[0],
+                              stt: "",
+                              phongKham: "",
+                            });
+                            setSelectedDate(new Date());
+                            setSearchInput(""); // ✅ reset input sau khi chọn
+                            setIsTyping(false); // ✅ reset trạng thái gõ
+                          }
+                        });
+                      }}
+                    />
                   </Grid.Col>
 
                   {/* Họ và tên */}
-                  <Grid.Col span={4}>
+                  <Grid.Col span={6}>
                     <TextInput
                       label="Họ tên"
                       placeholder="Nhập họ và tên"
@@ -699,7 +806,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Ngày sinh */}
-                  <Grid.Col span={2}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Ngày sinh"
                       placeholder="Ngày sinh"
@@ -713,7 +820,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Giới tính */}
-                  <Grid.Col span={2}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Giới tính"
                       value={confirmedPatient?.gender === "MALE" ? "Nam" : "Nữ"}
@@ -722,7 +829,7 @@ export default function RegisterMedicalExaminationPage() {
                   </Grid.Col>
 
                   {/* Số điện thoại */}
-                  <Grid.Col span={6}>
+                  <Grid.Col span={4}>
                     <TextInput
                       label="Điện thoại"
                       placeholder="Điện thoại"
@@ -730,23 +837,11 @@ export default function RegisterMedicalExaminationPage() {
                       disabled
                     />
                   </Grid.Col>
-
-                  {/* Mã lịch hẹn */}
-                  <Grid.Col span={6}>
-                    <TextInput
-                      label="Mã lịch hẹn"
-                      placeholder="Mã lịch hẹn"
-                      value={confirmedPatient?.maLichHen || ""}
-                      disabled
-                    />
-                  </Grid.Col>
                 </Grid>
 
-                {/* Thông tin đăng ký */}
                 <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
                 {confirmedPatient && (
                   <div className="grid grid-cols-12 gap-2">
-                    {/* Chuyên khoa */}
                     <div className="col-span-12 md:col-span-3">
                       <Select
                         label="Chuyên khoa"
@@ -765,7 +860,7 @@ export default function RegisterMedicalExaminationPage() {
                                   specialization:
                                     specializations.find((s) => s.id === value)
                                       ?.name || "",
-                                  phongKham: "", // 👉 reset lại phòng khám khi đổi chuyên khoa
+                                  phongKham: "",
                                 }
                               : prev
                           )
@@ -775,7 +870,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Phòng khám */}
                     <div className="col-span-12 md:col-span-3">
                       <Select
                         label="Phòng khám"
@@ -800,7 +894,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Ngày đăng ký */}
                     <div className="col-span-12 md:col-span-3">
                       <DatePickerInput
                         label="Ngày đăng ký"
@@ -815,7 +908,6 @@ export default function RegisterMedicalExaminationPage() {
                       />
                     </div>
 
-                    {/* Ưu tiên */}
                     <div className="col-span-12 md:col-span-3 flex items-end">
                       <Checkbox
                         label="Ưu tiên"

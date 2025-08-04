@@ -1,7 +1,6 @@
 export interface Patient {
   id: number;
   patientCode: string;
-  maLichHen: string;
   firstName: string;
   middleName: string;
   lastName: string;
