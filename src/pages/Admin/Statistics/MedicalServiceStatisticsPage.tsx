@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { Button, TextInput } from "@mantine/core";
-import { LuDownload, LuSearch } from "react-icons/lu";
+import { LuSearch } from "react-icons/lu";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import useMedicalServiceStatistic from "../../../hooks/Statistics/MedicalServiceStatistics/useMedicalServiceStatistic";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
@@ -64,28 +64,45 @@ const MedicalServiceStatisticsPage = () => {
         </div>
       ),
     }),
-
     createColumn({
       key: "totalOriginal",
       label: "Giá gốc",
-      render: (row) =>
-        (row.totalOriginal ?? 0).toLocaleString("vi-VN") + " VND",
+      align: "right",
+      render: (row) => (
+        <div className="text-right">
+          {(row.totalOriginal ?? 0).toLocaleString("vi-VN")} VND
+        </div>
+      ),
     }),
     createColumn({
       key: "totalDiscount",
       label: "Giảm giá",
-      render: (row) =>
-        (row.totalDiscount ?? 0).toLocaleString("vi-VN") + " VND",
+      align: "right",
+      render: (row) => (
+        <div className="text-right">
+          {(row.totalDiscount ?? 0).toLocaleString("vi-VN")} VND
+        </div>
+      ),
     }),
     createColumn({
       key: "totalVat",
       label: "VAT",
-      render: (row) => (row.totalVat ?? 0).toLocaleString("vi-VN") + " VND",
+      align: "right",
+      render: (row) => (
+        <div className="text-right">
+          {(row.totalVat ?? 0).toLocaleString("vi-VN")} VND
+        </div>
+      ),
     }),
     createColumn({
       key: "totalRevenue",
       label: "Tổng thanh toán",
-      render: (row) => (row.totalRevenue ?? 0).toLocaleString("vi-VN") + " VND",
+      align: "right",
+      render: (row) => (
+        <div className="text-right">
+          {(row.totalRevenue ?? 0).toLocaleString("vi-VN")} VND
+        </div>
+      ),
     }),
   ];
 
@@ -94,10 +111,21 @@ const MedicalServiceStatisticsPage = () => {
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-xl font-bold">Thống kê dịch vụ y tế</h1>
         <Button
-          leftSection={<LuDownload size={16} />}
+          leftSection={
+            <img
+              src="/images/icons8-excel-48.png"
+              alt="Excel"
+              className="w-6 h-6 object-contain"
+            />
+          }
           onClick={handleExport}
-          variant="filled"
-          color="blue"
+          variant="default"
+          style={{
+            backgroundColor: "#bbf7d0",
+            color: "#15803d",
+            border: "1px solid #15803d",
+            fontWeight: 600,
+          }}
         >
           Xuất Excel
         </Button>

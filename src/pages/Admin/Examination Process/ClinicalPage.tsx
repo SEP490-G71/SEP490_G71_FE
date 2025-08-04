@@ -142,6 +142,13 @@ const ClinicalPage = () => {
       wrapper: FloatingLabelWrapper,
     },
     {
+      key: "patientPhone",
+      label: "SDT",
+      type: "text",
+      wrapper: FloatingLabelWrapper,
+      placeholder: "Nhập SDT",
+    },
+    {
       key: "status",
       label: "Trạng thái",
       type: "select",
@@ -216,6 +223,7 @@ const ClinicalPage = () => {
     completedBy: result?.completedBy ?? "",
     imageUrls: result?.imageUrls ?? [],
     note: result?.note ?? "",
+    description: result?.description ?? "",
   });
   return (
     <Grid>
@@ -236,9 +244,6 @@ const ClinicalPage = () => {
       {/* FILTER SECTION */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
         <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
-          {/* <Title order={5} mb="sm">
-            Bộ lọc hồ sơ
-          </Title> */}
           <FilterPanel
             key={filterKey}
             fields={filterFields}
@@ -268,9 +273,6 @@ const ClinicalPage = () => {
       {/* DETAIL VIEW SECTION */}
       <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
         <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>
-          {/* <Title order={5} mb="xs">
-            Thông tin khám & thực hiện dịch vụ
-          </Title> */}
           <HeaderBar
             selectedOrder={selectedOrder}
             isResultMode={isResultMode}

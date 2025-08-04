@@ -19,7 +19,7 @@ export const useUpdateInvoiceItems = () => {
     try {
       setUpdating(true);
 
-      const res = await axiosInstance.post("/invoices/update-items", payload);
+      const res = await axiosInstance.put("/invoices/update-items", payload);
       const result = res.data?.result;
 
       if (!result || res.data.code !== 1000) {

@@ -12,15 +12,16 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import uploadMedicalResult from "../../hooks/medicalRecord/uploadMedicalResult";
+import updateMedicalResult from "../../hooks/medicalRecord/updateMedicalResult";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
-import updateMedicalResult from "../../hooks/medicalRecord/updateMedicalResult";
 
 interface MedicalRecordResult {
   id: string;
   completedBy: string;
   imageUrls: string[];
   note: string;
+  description: string | null;
 }
 
 interface Props {
@@ -32,9 +33,9 @@ interface Props {
     resultText: string;
     selectedStaffId: string | null;
     performedAt: Date;
-    conclusion: string;
     suggestion: string;
     images: string[];
+    note: string;
   }) => void;
   onCancel: () => void;
   initialResult?: MedicalRecordResult;
@@ -51,8 +52,9 @@ const ServiceResultPanel = ({
 }: Props) => {
   const [date] = useState<Date | null>(new Date());
   const [description, setDescription] = useState("");
-  const [conclusion, setConclusion] = useState("Bình thường");
-  const [suggestion, setSuggestion] = useState("");
+  const [note, setNote] = useState("");
+  const [suggestion] = useState("");
+
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [activeImage, setActiveImage] = useState<string | null>(null);
@@ -60,9 +62,8 @@ const ServiceResultPanel = ({
 
   useEffect(() => {
     if (initialResult) {
-      setDescription(initialResult.note || "");
-      setConclusion("Bình thường");
-      setSuggestion("");
+      setDescription(initialResult.description || "");
+      setNote(initialResult.note || "");
       setImagePreviews(initialResult.imageUrls || []);
       setActiveImage(initialResult.imageUrls?.[0] || null);
     }
@@ -115,11 +116,12 @@ const ServiceResultPanel = ({
     try {
       if (initialResult) {
         await updateMedicalResult(
-          initialResult?.id ?? "",
+          initialResult.id,
           uploadedFiles,
           imagePreviews.filter((url) => !url.startsWith("blob:")),
           technicalId,
-          conclusion
+          description,
+          note
         );
         toast.success("Đã sửa kết quả và upload file thành công.");
       } else {
@@ -127,7 +129,8 @@ const ServiceResultPanel = ({
           medicalOrderId,
           uploadedFiles,
           technicalId,
-          conclusion
+          description,
+          note
         );
         toast.success("Đã lưu kết quả và upload file thành công.");
       }
@@ -136,9 +139,9 @@ const ServiceResultPanel = ({
         resultText: description.trim(),
         selectedStaffId: technicalId,
         performedAt: date,
-        conclusion: conclusion.trim(),
         suggestion: suggestion.trim(),
         images: imagePreviews,
+        note: note.trim(),
       });
     } catch (error: any) {
       const code = error?.response?.data?.code;
@@ -204,9 +207,9 @@ const ServiceResultPanel = ({
           />
 
           <TextInput
-            label="Kết luận"
-            value={conclusion}
-            onChange={(e) => setConclusion(e.currentTarget.value)}
+            label="Ghi chú"
+            value={note}
+            onChange={(e) => setNote(e.currentTarget.value)}
             mt="sm"
           />
         </Grid.Col>

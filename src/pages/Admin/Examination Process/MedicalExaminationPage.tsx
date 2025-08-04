@@ -23,11 +23,20 @@ import { toast } from "react-toastify";
 import MedicalHistoryPanel from "../../../components/medical-examination/MedicalHistoryPanel";
 import ExaminationSectionForm from "../../../components/medical-examination/ExaminationSectionForm";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
+import updatePatientStatus from "../../../hooks/queue-patients/updatePatientStatus";
+import EndExaminationModal from "../../../components/medical-examination/EndExaminationModal";
+import { vitalSignValidators } from "../../../components/utils/vitalSignValidators";
+import useDefaultMedicalService from "../../../hooks/department-service/useDefaultMedicalService";
+import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
+import useMedicalRecordDetail from "../../../hooks/medicalRecord/useMedicalRecordDetail";
+import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
+import dayjs from "dayjs";
 const MedicalExaminationPage = () => {
   const { userInfo } = useUserInfo();
   const { department } = useMyDepartment();
+  const { defaultService } = useDefaultMedicalService(department?.id ?? null);
   const { fetchStaffsById } = useStaffs();
-
+  const [endExamModalOpened, setEndExamModalOpened] = useState(false);
   const [doctorName, setDoctorName] = useState("Không rõ");
   const [activeTab, setActiveTab] = useState<"info" | "service" | "history">(
     "info"
@@ -35,9 +44,11 @@ const MedicalExaminationPage = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
-  const { patientDetail: selectedPatient } =
+  const [selectedMedicalRecord, setSelectedMedicalRecord] =
+    useState<MedicalRecord | null>(null);
+  const { patientDetail: selectedPatient, refetch: refetchPatientDetail } =
     useQueuePatientDetail(selectedPatientId);
-
+  const [isQueuePatientMode, setIsQueuePatientMode] = useState(true);
   const {
     patients,
     totalItems,
@@ -49,9 +60,44 @@ const MedicalExaminationPage = () => {
     updateFilters,
   } = useQueuePatientService({
     roomNumber: department?.roomNumber ?? "",
-    registeredTimeFrom: new Date().toISOString().split("T")[0],
-    registeredTimeTo: new Date().toISOString().split("T")[0],
+    registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+    registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+    status: "",
   });
+
+  const {
+    recordDetail,
+
+    fetchMedicalRecordDetail,
+  } = useMedicalRecordDetail();
+
+  useEffect(() => {
+    if (recordDetail && selectedMedicalRecord) {
+      form.setValues({
+        appointmentDate: new Date(),
+        doctor: userInfo?.userId ?? "",
+        department: department?.id ?? "",
+        symptoms: recordDetail.diagnosisText || "",
+        notes: recordDetail.notes || "",
+        temperature: recordDetail.temperature,
+        respiratoryRate: recordDetail.respiratoryRate,
+        bloodPressure: recordDetail.bloodPressure,
+        heartRate: recordDetail.heartRate,
+        heightCm: recordDetail.heightCm,
+        weightKg: recordDetail.weightKg,
+        bmi: recordDetail.bmi,
+        spo2: recordDetail.spo2,
+      });
+
+      setServiceRows(
+        recordDetail.orders?.map((order, index) => ({
+          id: index + 1,
+          serviceId: order.id, // hoặc dùng order.serviceId nếu có
+          quantity: 1,
+        })) ?? []
+      );
+    }
+  }, [recordDetail, selectedMedicalRecord]);
 
   const form = useForm({
     initialValues: {
@@ -69,48 +115,17 @@ const MedicalExaminationPage = () => {
       bmi: 0,
       spo2: 0,
     },
-
     validate: {
-      temperature: (value) =>
-        value < 35 || value > 42
-          ? "Nhiệt độ phải trong khoảng 35°C - 42°C"
-          : null,
-
-      respiratoryRate: (value) =>
-        value < 8 || value > 30
-          ? "Nhịp thở phải trong khoảng 8 - 30 lần/phút"
-          : null,
-
-      bloodPressure: (value) => {
-        const regex = /^\d{2,3}\/\d{2,3}$/;
-        return !regex.test(value)
-          ? "Huyết áp không hợp lệ (ví dụ: 120/80)"
-          : null;
-      },
-
-      heartRate: (value) =>
-        value < 40 || value > 180
-          ? "Mạch phải trong khoảng 40 - 180 lần/phút"
-          : null,
-
-      spo2: (value) =>
-        value < 70 || value > 100 ? "SpO2 phải trong khoảng 70 - 100%" : null,
-
-      heightCm: (value) =>
-        value < 50 || value > 250
-          ? "Chiều cao phải trong khoảng 50 - 250 cm"
-          : null,
-
-      weightKg: (value) =>
-        value < 15 || value > 120
-          ? "Cân nặng phải trong khoảng 15 - 120 kg"
-          : null,
-
-      bmi: (value) =>
-        value < 10 || value > 60 ? "BMI phải trong khoảng 10 - 60" : null,
+      temperature: vitalSignValidators.temperature,
+      respiratoryRate: vitalSignValidators.respiratoryRate,
+      bloodPressure: vitalSignValidators.bloodPressure,
+      heartRate: vitalSignValidators.heartRate,
+      spo2: vitalSignValidators.spo2,
+      heightCm: vitalSignValidators.heightCm,
+      weightKg: vitalSignValidators.weightKg,
+      bmi: vitalSignValidators.bmi,
     },
   });
-
   interface ServiceRow {
     id: number;
     serviceId: string | null;
@@ -123,16 +138,83 @@ const MedicalExaminationPage = () => {
 
   const { medicalServices, fetchAllMedicalServicesNoPagination } =
     useMedicalService();
-  const serviceOptions = medicalServices.map((item) => ({
-    value: item.id,
-    label: item.name,
+
+  const defaultServiceIds = medicalServices
+    .filter((s) => s.defaultService)
+    .map((s) => s.id);
+
+  const serviceOptions = Object.entries(
+    medicalServices.reduce<Record<string, { value: string; label: string }[]>>(
+      (acc, s) => {
+        const group = s.department?.specialization?.name || "Khác";
+        if (!acc[group]) acc[group] = [];
+        acc[group].push({
+          value: s.id,
+          label: `${s.serviceCode} - ${s.name}`,
+        });
+        return acc;
+      },
+      {}
+    )
+  ).map(([group, items]) => ({
+    group,
+    items,
   }));
+
+  const nonDefaultServiceOptions = Object.entries(
+    medicalServices
+      .filter((s) => !s.defaultService)
+      .reduce<Record<string, { value: string; label: string }[]>>((acc, s) => {
+        const group = s.department?.specialization?.name || "Khác";
+        if (!acc[group]) acc[group] = [];
+        acc[group].push({
+          value: s.id,
+          label: `${s.serviceCode} - ${s.name}`,
+        });
+        return acc;
+      }, {})
+  ).map(([group, items]) => ({
+    group,
+    items,
+  }));
+
+  useEffect(() => {
+    if (selectedPatient) {
+      form.reset();
+
+      const defaultRow = defaultService
+        ? [
+            {
+              id: 1,
+              serviceId: defaultService.id,
+              serviceCode: defaultService.serviceCode,
+              name: defaultService.name,
+              price: defaultService.price,
+              quantity: 1,
+              discount: defaultService.discount,
+              vat: defaultService.vat,
+              departmentName: defaultService.department?.name || "",
+              total: Math.round(defaultService.price),
+              isDefault: true,
+            },
+            {
+              id: 2,
+              serviceId: null,
+              quantity: 1,
+            },
+          ]
+        : [{ id: 1, serviceId: null, quantity: 1 }];
+
+      setServiceRows(defaultRow);
+    }
+  }, [selectedPatient, defaultService]);
+
   useEffect(() => {
     if (department?.roomNumber) {
       updateFilters({
         roomNumber: department.roomNumber,
-        registeredTimeFrom: new Date().toISOString().split("T")[0],
-        registeredTimeTo: new Date().toISOString().split("T")[0],
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
     }
   }, [department?.roomNumber]);
@@ -154,21 +236,30 @@ const MedicalExaminationPage = () => {
   const totalPages = Math.ceil(totalItems / pageSize);
   const { submitExamination } = useMedicalRecord();
 
-  const handleEndExamination = () => {
-    if (selectedPatient) {
-      setSelectedPatientId(null);
-
-      toast.success("Đã kết thúc khám bệnh cho bệnh nhân.");
-    }
-  };
-
   useEffect(() => {
     if (selectedPatient) {
       form.reset();
       setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
     }
   }, [selectedPatientId]);
+  const handleSelectQueuePatient = (p: QueuePatient | null) => {
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+    setSelectedMedicalRecord(null);
+    setSelectedPatientId(p?.id ?? null);
+    setIsQueuePatientMode(true);
+  };
 
+  const handleSelectMedicalRecord = async (record: MedicalRecord) => {
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+    setSelectedPatientId(null);
+    setSelectedMedicalRecord(record);
+    setIsQueuePatientMode(false);
+    await fetchMedicalRecordDetail(record.id);
+  };
   const handleSave = async () => {
     const validation = form.validate();
 
@@ -200,11 +291,98 @@ const MedicalExaminationPage = () => {
       services: serviceRows,
     };
 
-    console.log("📦 Payload to submit:", payload);
-
     await submitExamination(payload);
+    // Cập nhật trạng thái sang WAITING_RESULT
+    try {
+      await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
+      toast.success("✅ Đã lưu khám và chuyển trạng thái sang chờ kết quả");
+      setSelectedPatientId(null);
+
+      updateFilters({
+        roomNumber: department?.roomNumber,
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+      });
+    } catch {
+      toast.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân sau khi lưu");
+    }
+  };
+  const handleConfirmExamination = async () => {
+    if (!selectedPatient) return;
+
+    if (selectedPatient.status !== "CALLING") {
+      toast.error("❌ Chỉ được xác nhận khi bệnh nhân đang được gọi vào khám.");
+      return;
+    }
+
+    try {
+      await updatePatientStatus(selectedPatient.id, "IN_PROGRESS");
+      toast.success("✅ Bệnh nhân đã vào khám");
+      await refetchPatientDetail();
+      updateFilters({
+        roomNumber: department?.roomNumber,
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+      });
+      setSelectedPatientId(null);
+    } catch {
+      // Toast lỗi đã xử lý trong file updatePatientStatus.ts
+    }
   };
 
+  const handleCancelQueue = async () => {
+    if (!selectedPatient) return;
+
+    if (selectedPatient.status !== "CALLING") {
+      toast.error("❌ Chỉ huỷ được bệnh nhân đang ở trạng thái gọi.");
+      return;
+    }
+
+    try {
+      await updatePatientStatus(selectedPatient.id, "CANCELED");
+      toast.success("🚫 Đã huỷ gọi bệnh nhân");
+      await refetchPatientDetail();
+      updateFilters({
+        roomNumber: department?.roomNumber,
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+      });
+
+      setSelectedPatientId(null);
+    } catch {
+      toast.error("❌ Huỷ gọi bệnh nhân thất bại");
+    }
+  };
+
+  const handleCallPatient = async () => {
+    if (!selectedPatient) return;
+
+    if (selectedPatient.status !== "WAITING") {
+      toast.error("❌ Chỉ gọi được bệnh nhân đang chờ.");
+      return;
+    }
+
+    try {
+      await updatePatientStatus(selectedPatient.id, "CALLING");
+      toast.success("📣 Đã gọi bệnh nhân");
+      await refetchPatientDetail();
+      updateFilters({
+        roomNumber: department?.roomNumber,
+        registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+        registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+      });
+      setSelectedPatientId(null);
+    } catch {
+      toast.error("❌ Gọi bệnh nhân thất bại");
+    }
+  };
+  const handleSwitchListReset = () => {
+    setSelectedMedicalRecord(null);
+    setSelectedPatientId(null);
+    form.reset();
+    setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+    setActiveTab("info");
+  };
   return (
     <>
       {department && (
@@ -225,8 +403,11 @@ const MedicalExaminationPage = () => {
       <Grid p="md" gutter="md" align="stretch">
         <Grid.Col span={{ base: 12, md: 5 }} style={{ height: "100%" }}>
           <PatientPanel
-            selectedPatient={selectedPatient}
-            onSelectPatient={(p) => setSelectedPatientId(p?.id ?? null)}
+            selectedQueuePatient={selectedPatient}
+            selectedMedicalRecord={selectedMedicalRecord}
+            onSelectQueuePatient={handleSelectQueuePatient}
+            onSelectMedicalRecord={handleSelectMedicalRecord}
+            onSwitchListReset={handleSwitchListReset}
             patients={patients}
             totalElements={totalItems}
             pageSize={pageSize}
@@ -271,8 +452,11 @@ const MedicalExaminationPage = () => {
                 variant="light"
                 color="red"
                 size="sm"
-                onClick={handleEndExamination}
-                disabled={!selectedPatient}
+                onClick={() => setEndExamModalOpened(true)}
+                disabled={
+                  !selectedPatient ||
+                  selectedPatient.status !== "AWAITING_RESULT"
+                }
               >
                 Kết thúc khám
               </Button>
@@ -281,7 +465,18 @@ const MedicalExaminationPage = () => {
             <Title order={4} mb="sm" c="blue.9" size="h5">
               1. Thông tin người đăng ký
             </Title>
-            <PatientInfoPanel patient={selectedPatient} />
+            <PatientInfoPanel
+              key={
+                isQueuePatientMode
+                  ? `queue-${selectedPatient?.id ?? "empty"}`
+                  : `record-${selectedMedicalRecord?.id ?? "empty"}`
+              }
+              patient={isQueuePatientMode ? selectedPatient : null}
+              medicalRecord={recordDetail}
+              onConfirm={handleConfirmExamination}
+              onCancelQueue={handleCancelQueue}
+              onCallPatient={handleCallPatient}
+            />
 
             <form>
               {activeTab === "info" && (
@@ -315,8 +510,11 @@ const MedicalExaminationPage = () => {
                       setServiceRows={setServiceRows}
                       medicalServices={medicalServices}
                       serviceOptions={serviceOptions}
+                      nonDefaultServiceOptions={nonDefaultServiceOptions}
+                      defaultServiceIds={defaultServiceIds}
                       editable={true}
                       showDepartment={true}
+                      allowSelectDefaultServices={true}
                     />
                   </ScrollArea>
                 </>
@@ -339,6 +537,7 @@ const MedicalExaminationPage = () => {
                       type="button"
                       leftSection={<IconDeviceFloppy size={16} />}
                       onClick={handleSave}
+                      disabled={selectedPatient?.status !== "IN_PROGRESS"}
                     >
                       Lưu
                     </Button>
@@ -349,6 +548,28 @@ const MedicalExaminationPage = () => {
           </Paper>
         </Grid.Col>
       </Grid>
+      {selectedPatient && selectedPatient.id && (
+        <EndExaminationModal
+          opened={endExamModalOpened}
+          onClose={() => setEndExamModalOpened(false)}
+          form={form}
+          medicalRecordId={selectedPatient.id}
+          patientId={selectedPatient.id}
+          doctorName={doctorName}
+          doctorId={userInfo?.userId ?? ""}
+          roomNumber={department?.roomNumber ?? ""}
+          departmentName={department?.name ?? ""}
+          departmentId={department?.id ?? ""}
+          onDone={() => {
+            setSelectedPatientId(null);
+            updateFilters({
+              roomNumber: department?.roomNumber,
+              registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
+              registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+            });
+          }}
+        />
+      )}
     </>
   );
 };

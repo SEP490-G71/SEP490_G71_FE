@@ -11,10 +11,12 @@ export const DepartmentFormFields = ({
   form,
   specializations,
   isViewMode,
+  isCreateMode,
 }: {
   form: ReturnType<typeof useForm<DepartmentRequest>>;
   specializations: { id: string; name: string }[];
   isViewMode: boolean;
+  isCreateMode: boolean;
 }) => {
   const [isKhamBenh, setIsKhamBenh] = useState(false);
 
@@ -83,6 +85,30 @@ export const DepartmentFormFields = ({
           error={form.errors.specializationId}
           clearable
           disabled={isViewMode}
+          mt="sm"
+          required
+        />
+      )}
+
+      {isKhamBenh && isCreateMode && (
+        <TextInput
+          label="Giá mặc định dịch vụ (VNĐ)"
+          placeholder="Nhập giá mặc định"
+          type="text"
+          value={
+            form.values.defaultServicePrice > 0
+              ? Intl.NumberFormat("vi-VN").format(
+                  form.values.defaultServicePrice
+                )
+              : ""
+          }
+          onChange={(e) => {
+            const raw = e.currentTarget.value.replace(/\D/g, "");
+            const numberValue = parseInt(raw || "0", 10);
+            form.setFieldValue("defaultServicePrice", numberValue);
+          }}
+          disabled={isViewMode}
+          error={form.errors.defaultServicePrice}
           mt="sm"
           required
         />

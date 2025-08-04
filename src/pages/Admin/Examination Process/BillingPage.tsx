@@ -36,6 +36,7 @@ import FilterPanel, {
 } from "../../../components/common/FilterSection";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import { mapDetailToQueuePatient } from "../../../components/common/patient.mapper";
+import useMedicalService from "../../../hooks/medical-service/useMedicalService";
 
 const BillingPage = () => {
   const { userInfo } = useUserInfo();
@@ -44,7 +45,8 @@ const BillingPage = () => {
   const { updateFilters } = useQueuePatientService();
   const { staffs, fetchStaffs } = useStaffs();
   const todayString = dayjs().format("YYYY-MM-DD");
-
+  const { medicalServices, fetchAllMedicalServicesNoPagination } =
+    useMedicalService();
   const {
     invoices,
     invoiceDetail,
@@ -95,6 +97,10 @@ const BillingPage = () => {
   }, []);
 
   useEffect(() => {
+    fetchAllMedicalServicesNoPagination();
+  }, []);
+
+  useEffect(() => {
     setStaffOptions(staffs.map((s) => ({ value: s.id, label: s.fullName })));
   }, [staffs]);
 
@@ -132,6 +138,24 @@ const BillingPage = () => {
       updateFilters({ patientCode: selected.patientCode });
     }
   };
+
+  const serviceOptions = Object.entries(
+    medicalServices.reduce<Record<string, { value: string; label: string }[]>>(
+      (acc, s) => {
+        const group = s.department?.specialization?.name || "Khác";
+        if (!acc[group]) acc[group] = [];
+        acc[group].push({
+          value: s.id,
+          label: `${s.serviceCode} - ${s.name}`,
+        });
+        return acc;
+      },
+      {}
+    )
+  ).map(([group, items]) => ({
+    group,
+    items,
+  }));
 
   const rowsFromInvoice: ServiceRow[] =
     invoiceDetail?.items.map((item, index) => ({
@@ -294,7 +318,7 @@ const BillingPage = () => {
             </Button>
           </Group>
 
-          <PatientInfoPanel patient={selectedPatient} />
+          <PatientInfoPanel patient={selectedPatient} mode="billing" />
 
           <Box mt="xl">
             <Textarea
@@ -350,9 +374,24 @@ const BillingPage = () => {
         <ViewEditInvoiceServicesModal
           opened={viewModalOpened}
           onClose={() => setViewModalOpened(false)}
-          invoiceItems={invoiceDetail.items}
-          availableServices={[]}
-          editable={false}
+          invoiceItems={invoiceDetail.items.map((item) => ({
+            serviceCode: item.serviceCode,
+            name: item.name,
+            medicalServiceId: item.medicalServiceId ?? null,
+            quantity: item.quantity,
+            price: item.price,
+            discount: item.discount,
+            vat: item.vat,
+            total: item.total,
+          }))}
+          availableServices={medicalServices}
+          serviceOptions={serviceOptions}
+          onChange={() => {
+            fetchInvoiceDetail(invoiceDetail.invoiceId);
+          }}
+          editable={true}
+          invoiceId={invoiceDetail.invoiceId}
+          staffId={userInfo?.userId ?? ""}
         />
       )}
 

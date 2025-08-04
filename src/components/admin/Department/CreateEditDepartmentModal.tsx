@@ -58,6 +58,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       roomNumber: "",
       type: undefined as unknown as DepartmentType,
       specializationId: "",
+      defaultServicePrice: 0,
     },
     validateInputOnChange: true,
     validateInputOnBlur: true,
@@ -83,6 +84,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             roomNumber: initialData.roomNumber || "",
             type: initialData.type as DepartmentType,
             specializationId: initialData.specialization?.id || "",
+            // defaultServicePrice: initialData.defaultServicePrice ?? 0,
           });
         } else {
           form.setValues({
@@ -91,6 +93,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             roomNumber: "",
             type: "" as any,
             specializationId: "",
+            defaultServicePrice: 0,
           });
         }
 
@@ -217,6 +220,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
             form={form}
             specializations={specializations}
             isViewMode={isViewMode}
+            isCreateMode={!initialData}
           />
 
           {initialData && (

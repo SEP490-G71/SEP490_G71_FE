@@ -4,7 +4,8 @@ const uploadMedicalResult = async (
   resultId: string,
   files: File[],
   staffId: string,
-  note: string
+  note: string,
+   description: string
 ) => {
   const formData = new FormData();
   files.forEach((file) => {
@@ -12,6 +13,7 @@ const uploadMedicalResult = async (
   });
   formData.append("staffId", staffId);
   formData.append("note", note);
+  formData.append("description", description);
 
   return axiosInstance.post(
     `/medical-results/${resultId}/upload`,
