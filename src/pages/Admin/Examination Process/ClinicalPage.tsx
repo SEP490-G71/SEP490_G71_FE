@@ -142,6 +142,13 @@ const ClinicalPage = () => {
       wrapper: FloatingLabelWrapper,
     },
     {
+      key: "patientPhone",
+      label: "SDT",
+      type: "text",
+      wrapper: FloatingLabelWrapper,
+      placeholder: "Nhập SDT",
+    },
+    {
       key: "status",
       label: "Trạng thái",
       type: "select",

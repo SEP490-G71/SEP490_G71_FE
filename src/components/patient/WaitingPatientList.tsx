@@ -36,13 +36,17 @@ const WaitingPatientList = ({
   const filteredPatients = useMemo(
     () =>
       patients.filter(
-        (p) => p.status !== Status.IN_PROGRESS && p.status !== Status.DONE
+        (p) =>
+          p.status !== Status.CANCELED &&
+          p.status !== Status.DONE &&
+          p.status !== Status.AWAITING_RESULT
       ),
     [patients]
   );
 
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
+      { key: "queueOrder", label: "STT" },
       {
         key: "status",
         label: "Trạng thái",

@@ -62,6 +62,7 @@ const MedicalExaminationPage = () => {
     roomNumber: department?.roomNumber ?? "",
     registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
     registeredTimeTo: dayjs().format("YYYY-MM-DD"),
+    status: "",
   });
 
   const {
@@ -513,6 +514,7 @@ const MedicalExaminationPage = () => {
                       defaultServiceIds={defaultServiceIds}
                       editable={true}
                       showDepartment={true}
+                      allowSelectDefaultServices={true}
                     />
                   </ScrollArea>
                 </>

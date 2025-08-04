@@ -67,6 +67,7 @@ const PatientPanel = ({
     Status.CANCELED,
     Status.IN_PROGRESS,
     Status.CALLING,
+    Status.AWAITING_RESULT,
   ];
 
   const waitingFilterFields: FilterField[] = [
@@ -244,7 +245,7 @@ const PatientPanel = ({
 
   const filteredPatients = useMemo(() => {
     return patients.filter(
-      (p) => p.status !== Status.IN_PROGRESS && p.status !== Status.DONE
+      (p) => p.status !== Status.CANCELED && p.status !== Status.DONE
     );
   }, [patients]);
 
@@ -293,7 +294,7 @@ const PatientPanel = ({
               onSwitchListReset();
             }}
           >
-            Danh sách đang khám
+            Danh sách chờ kết quả
           </Text>
         </Group>
 
