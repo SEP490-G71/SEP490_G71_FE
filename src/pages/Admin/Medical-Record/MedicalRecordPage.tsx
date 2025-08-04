@@ -70,8 +70,8 @@ export const MedicalRecordPage = () => {
   }, [setting]);
 
   useEffect(() => {
-    fetchAllMedicalRecords(page - 1, pageSize);
-  }, [page, pageSize, sortDir, filters]);
+    fetchAllMedicalRecords(page - 1, pageSize, filters);
+  }, [page, pageSize, filters]);
 
   const handleSearch = () => {
     setFilters({
