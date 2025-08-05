@@ -1,5 +1,10 @@
-import { BoxIconLine, GroupIcon } from "../../icons";
-import { FaDollarSign } from "react-icons/fa";
+import {
+  FaDollarSign,
+  FaUser,
+  FaFileInvoice,
+  FaFileMedical,
+  FaBox,
+} from "react-icons/fa";
 
 export interface EcommerceStatsProps {
   stats: {
@@ -17,13 +22,13 @@ export default function EcommerceMetrics({ stats }: EcommerceStatsProps) {
       label: "Tổng hoá đơn",
       value: stats.totalInvoices || 0,
       isCurrency: false,
-      icon: <BoxIconLine />,
+      icon: <FaBox />,
     },
     {
       label: "Hoá đơn đã thanh toán",
       value: stats.paidInvoices || 0,
       isCurrency: false,
-      icon: <BoxIconLine />,
+      icon: <FaFileInvoice />,
     },
     {
       label: "Doanh thu",
@@ -35,13 +40,13 @@ export default function EcommerceMetrics({ stats }: EcommerceStatsProps) {
       label: "Tổng hồ sơ bệnh án",
       value: stats.totalMedicalRecords || 0,
       isCurrency: false,
-      icon: <GroupIcon />,
+      icon: <FaFileMedical />,
     },
     {
       label: "Bệnh nhân mới trong tháng",
       value: stats.newPatientsThisMonth || 0,
       isCurrency: false,
-      icon: <GroupIcon />,
+      icon: <FaUser />,
     },
   ];
 
