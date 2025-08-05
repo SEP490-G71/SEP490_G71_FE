@@ -70,11 +70,12 @@ export default function ChatbotWidget({
   // ✅ Scroll xuống đáy khi mở lại chatbot
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      const timeout = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 0); // hoặc requestAnimationFrame(() => ...)
+      return () => clearTimeout(timeout);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
