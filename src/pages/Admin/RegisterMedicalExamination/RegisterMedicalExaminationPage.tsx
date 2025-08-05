@@ -750,6 +750,11 @@ export default function RegisterMedicalExaminationPage() {
                       searchValue={
                         isTyping ? searchInput : selectedOption?.label ?? ""
                       }
+                      onDropdownOpen={() => {
+                        setIsTyping(true);
+                        setSearchInput("");
+                        searchPatients("");
+                      }}
                       onSearchChange={(query) => {
                         setIsTyping(true);
                         setSearchInput(query);
