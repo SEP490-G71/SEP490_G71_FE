@@ -26,10 +26,10 @@ const usePatientSearch = () => {
   // Hàm gọi API tìm kiếm
   const fetchPatients = async (searchTerm: string) => {
     const cleanedSearchTerm = searchTerm.trim();
-    if (!cleanedSearchTerm) {
-      setOptions([]);
-      return;
-    }
+    // if (!cleanedSearchTerm) {
+    //   setOptions([]);
+    //   return;
+    // }
 
     setLoading(true);
     try {
