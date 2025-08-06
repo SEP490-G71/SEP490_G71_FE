@@ -11,4 +11,5 @@ export interface SettingAdmin {
   queueCloseTime: string;
   minBookingDaysBefore: number;
   minLeaveDaysBefore: number;
+  monthlyTargetRevenue: number;
 }

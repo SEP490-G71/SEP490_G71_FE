@@ -9,32 +9,22 @@ import { Title } from "@mantine/core";
 const statusColor = (status: string): string => {
   switch (status) {
     case "WAITING":
-      return "#FFE082"; // Yellow 300
+      return "#FFE082";
     case "CALLING":
-      return "#FFB74D"; // Orange 300
+      return "#FFB74D";
     case "IN_PROGRESS":
-      return "#64B5F6"; // Blue 300
+      return "#64B5F6";
     case "DONE":
-      return "#81C784"; // Green 300
+      return "#81C784";
     case "CANCELED":
-      return "#EF5350"; // Red 400
+      return "#EF5350";
     default:
-      return "#E0E0E0"; // Light grey
+      return "#E0E0E0";
   }
 };
 
-const statusTextColor = (status: string): string => {
-  switch (status) {
-    case "CANCELED":
-    case "DONE":
-    case "IN_PROGRESS":
-    case "CALLING":
-    case "WAITING":
-      return "#000"; // hoặc "#fff" nếu bạn dùng màu nền đậm
-    default:
-      return "#000";
-  }
-};
+// ✅ Đã sửa để tránh warning TS6133 - không cần `status`
+const statusTextColor = (): string => "#000";
 
 const statusLabel = (status: string): string => {
   switch (status) {
@@ -43,7 +33,7 @@ const statusLabel = (status: string): string => {
     case "CALLING":
       return "📢 Đang gọi";
     case "IN_PROGRESS":
-      return "🩺 Đang khám";
+      return "🧪 Đang khám";
     case "DONE":
       return "✔️ Đã khám";
     case "CANCELED":
@@ -54,21 +44,9 @@ const statusLabel = (status: string): string => {
 };
 
 const columns: Column<QueuePatientsResponse & { index: number }>[] = [
-  {
-    key: "index",
-    label: "STT",
-    render: (row) => row.index + 1,
-    align: "left",
-  },
-  {
-    key: "fullName",
-    label: "Họ và tên",
-    align: "left",
-  },
-  {
-    key: "queueOrder",
-    label: "Thứ tự khám",
-  },
+  { key: "index", label: "STT", render: (row) => row.index + 1, align: "left" },
+  { key: "fullName", label: "Họ và tên", align: "left" },
+  { key: "queueOrder", label: "Thứ tự khám" },
   {
     key: "status",
     label: "Trạng thái",
@@ -79,21 +57,20 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
           padding: "4px 10px",
           borderRadius: "6px",
           backgroundColor: statusColor(row.status),
-          color: statusTextColor(row.status),
+          color: statusTextColor(), // ✅ Sửa ở đây: bỏ truyền `row.status`
           display: "inline-block",
         }}
       >
         {statusLabel(row.status)}
       </span>
     ),
-    align: "left", // Text => căn trái
+    align: "left",
   },
 ];
 
 const UserViewMedicalExaminationPage: React.FC = () => {
   const { queuePatients, loading } = useUserViewMedicalExamination();
   const { setting } = useSettingAdminService();
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
@@ -146,6 +123,16 @@ const UserViewMedicalExaminationPage: React.FC = () => {
 
   return (
     <div>
+      <style>
+        {`
+          @media (min-width: 1024px) {
+            .responsive-room-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+            }
+          }
+        `}
+      </style>
+
       {loading ? (
         <p>Đang tải dữ liệu...</p>
       ) : (
@@ -157,9 +144,10 @@ const UserViewMedicalExaminationPage: React.FC = () => {
           </div>
 
           <div
+            className="responsive-room-grid"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(100%, 1fr))",
               gap: "2rem",
               alignItems: "stretch",
             }}
@@ -167,10 +155,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
             {Object.entries(groupedPatients).map(([room, patients]) => {
               const paginatedPatients = patients
                 .slice((page - 1) * pageSize, page * pageSize)
-                .map((p, i) => ({
-                  ...p,
-                  index: (page - 1) * pageSize + i,
-                }));
+                .map((p, i) => ({ ...p, index: (page - 1) * pageSize + i }));
 
               return (
                 <div
@@ -213,7 +198,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                       }}
                       showActions={false}
                       pageSizeOptions={setting?.paginationSizeList
-                        .slice()
+                        ?.slice()
                         .sort((a, b) => a - b)}
                     />
                   </div>

@@ -21,6 +21,7 @@ export const SettingAdminPage: React.FC = () => {
   const { setting, loading, updateSetting } = useSettingAdminService();
   const [bankOptions, setBankOptions] = useState<BankOption[]>([]);
   const [banksLoading, setBanksLoading] = useState<boolean>(false);
+
   const timeOptions = Array.from({ length: 24 }, (_, hour) =>
     ["00", "15", "30", "45"].map((minute) => ({
       value: `${hour.toString().padStart(2, "0")}:${minute}`,
@@ -42,6 +43,7 @@ export const SettingAdminPage: React.FC = () => {
       queueCloseTime: "",
       minBookingDaysBefore: "",
       minLeaveDaysBefore: "",
+      monthlyTargetRevenue: "", // NEW
     },
     validate: {
       hospitalName: (v) => (v ? null : "Thông tin bắt buộc"),
@@ -64,6 +66,10 @@ export const SettingAdminPage: React.FC = () => {
         !v || isNaN(Number(v)) || Number(v) < 0 ? "Phải >= 0" : null,
       minLeaveDaysBefore: (v) =>
         !v || isNaN(Number(v)) || Number(v) < 0 ? "Phải >= 0" : null,
+      monthlyTargetRevenue: (v) =>
+        !v || isNaN(Number(v)) || Number(v) < 0
+          ? "Doanh thu mục tiêu phải >= 0"
+          : null,
     },
   });
 
@@ -78,6 +84,7 @@ export const SettingAdminPage: React.FC = () => {
         latestCheckInMinutes: setting.latestCheckInMinutes?.toString() || "",
         minBookingDaysBefore: setting.minBookingDaysBefore?.toString() || "",
         minLeaveDaysBefore: setting.minLeaveDaysBefore?.toString() || "",
+        monthlyTargetRevenue: setting.monthlyTargetRevenue?.toString() || "",
         queueOpenTime: convertTime(setting.queueOpenTime),
         queueCloseTime: convertTime(setting.queueCloseTime),
       });
@@ -114,6 +121,7 @@ export const SettingAdminPage: React.FC = () => {
       latestCheckInMinutes: Number(values.latestCheckInMinutes),
       minBookingDaysBefore: Number(values.minBookingDaysBefore),
       minLeaveDaysBefore: Number(values.minLeaveDaysBefore),
+      monthlyTargetRevenue: Number(values.monthlyTargetRevenue), // NEW
       paginationSizeList: values.paginationSizeList.map(Number),
     });
   };
@@ -150,7 +158,7 @@ export const SettingAdminPage: React.FC = () => {
               />
             </Grid.Col>
 
-            <Grid.Col span={12}>
+            <Grid.Col span={6}>
               <TextInput
                 label={
                   <span>
@@ -263,6 +271,28 @@ export const SettingAdminPage: React.FC = () => {
                 placeholder="1"
                 type="number"
                 {...form.getInputProps("minLeaveDaysBefore")}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <TextInput
+                label={
+                  <span>
+                    Doanh thu mục tiêu hàng tháng{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="2.000.000"
+                value={form.values.monthlyTargetRevenue
+                  .toString()
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                onChange={(e) => {
+                  const raw = e.currentTarget.value
+                    .replace(/\./g, "")
+                    .replace(/\D/g, "");
+                  form.setFieldValue("monthlyTargetRevenue", raw);
+                }}
+                rightSection={<span style={{ fontWeight: 600 }}>VNĐ</span>}
               />
             </Grid.Col>
 
