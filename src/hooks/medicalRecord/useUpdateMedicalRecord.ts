@@ -54,8 +54,6 @@ export const useUpdateMedicalRecord = () => {
           notes,
         }
       );
-
-      toast.success("✅ Cập nhật hồ sơ khám thành công");
       return res.data.result;
     } catch (error) {
       console.error("❌ Lỗi khi cập nhật hồ sơ khám:", error);

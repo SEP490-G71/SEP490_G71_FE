@@ -98,11 +98,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       icon: <FaUserPlus />,
       path: "/admin/medical-examination",
     },
-    {
-      name: "khám chuyên khoa",
-      icon: <FaUserPlus />,
-      path: "/admin/medical-examination/clinical",
-    },
+    // {
+    //   name: "khám chuyên khoa",
+    //   icon: <FaUserPlus />,
+    //   path: "/admin/medical-examination/clinical",
+    // },
     // {
     //   name: "Bệnh án",
     //   icon: <FaFileMedical />,

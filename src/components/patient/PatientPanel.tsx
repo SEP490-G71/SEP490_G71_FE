@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Divider, Group, Paper, Text } from "@mantine/core";
-import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
+import dayjs from "dayjs";
+
 import FilterPanel, { FilterField } from "../common/FilterSection";
-import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
-import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
-import { FloatingLabelWrapper } from "../common/FloatingLabelWrapper";
 import WaitingPatientList from "./WaitingPatientList";
 import InProgressPatientList from "./InProgressPatientList";
-import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
+import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
 import { MedicalRecordStatus } from "../../enums/MedicalRecord/MedicalRecordStatus";
 import useMedicalRecordByRoom from "../../hooks/medicalRecord/useMedicalRecordByRoom";
-import dayjs from "dayjs";
+
+import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
+import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
+import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
+import { FloatingLabelWrapper } from "../common/FloatingLabelWrapper";
 
 interface PatientPanelProps {
   selectedQueuePatient: QueuePatient | null;
@@ -28,6 +30,7 @@ interface PatientPanelProps {
   department?: DepartmentResponse | null;
   updateFilters: (filters: any) => void;
   onSwitchListReset: () => void;
+  onTabChange?: (tab: "waiting" | "inprogress") => void;
 }
 
 const PatientPanel = ({
@@ -45,12 +48,13 @@ const PatientPanel = ({
   department,
   updateFilters,
   onSwitchListReset,
+  onTabChange,
 }: PatientPanelProps) => {
   const [activeTab, setActiveTab] = useState<"waiting" | "inprogress">(
     "waiting"
   );
   const [hasFetchedInprogress, setHasFetchedInprogress] = useState(false);
-
+  const [resetTrigger, setResetTrigger] = useState(Date.now());
   const today = new Date();
   const todayStr = dayjs().format("YYYY-MM-DD");
 
@@ -61,6 +65,11 @@ const PatientPanel = ({
     fetchMedicalRecordsByRoom,
   } = useMedicalRecordByRoom();
 
+  const [sharedDateFilters, setSharedDateFilters] = useState({
+    fromDate: today,
+    toDate: today,
+  });
+
   const allowedStatuses: Status[] = [
     Status.WAITING,
     Status.DONE,
@@ -70,18 +79,7 @@ const PatientPanel = ({
     Status.AWAITING_RESULT,
   ];
 
-  const waitingFilterFields: FilterField[] = [
-    {
-      key: "status",
-      label: "Trạng thái",
-      placeholder: "Chọn trạng thái",
-      type: "select",
-      options: allowedStatuses.map((status) => ({
-        value: status,
-        label: StatusLabel[status],
-      })),
-      wrapper: FloatingLabelWrapper,
-    },
+  const baseFilterFields: FilterField[] = [
     {
       key: "name",
       label: "Tên bệnh nhân",
@@ -94,60 +92,6 @@ const PatientPanel = ({
       label: "SĐT",
       type: "text",
       placeholder: "Nhập số điện thoại...",
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "patientCode",
-      label: "Mã BN",
-      type: "text",
-      placeholder: "Nhập mã bệnh nhân...",
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "registeredTimeFrom",
-      label: "Từ ngày",
-      type: "date",
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "registeredTimeTo",
-      label: "Đến ngày",
-      type: "date",
-      wrapper: FloatingLabelWrapper,
-    },
-  ];
-
-  const inprogressFilterFields: FilterField[] = [
-    {
-      key: "status",
-      label: "Trạng thái",
-      placeholder: "Chọn trạng thái",
-      type: "select",
-      options: Object.values(MedicalRecordStatus).map((status) => ({
-        value: status,
-        label: status,
-      })),
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "patientName",
-      label: "Tên bệnh nhân",
-      type: "text",
-      placeholder: "Nhập tên...",
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "patientPhone",
-      label: "SĐT",
-      type: "text",
-      placeholder: "Nhập số điện thoại...",
-      wrapper: FloatingLabelWrapper,
-    },
-    {
-      key: "medicalRecordCode",
-      label: "Mã hồ sơ",
-      type: "text",
-      placeholder: "Nhập mã hồ sơ...",
       wrapper: FloatingLabelWrapper,
     },
     {
@@ -164,21 +108,61 @@ const PatientPanel = ({
     },
   ];
 
-  const initialWaitingFilters = {
+  const waitingOnlyFields: FilterField[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      placeholder: "Chọn trạng thái",
+      type: "select",
+      options: allowedStatuses.map((status) => ({
+        value: status,
+        label: StatusLabel[status],
+      })),
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "patientCode",
+      label: "Mã BN",
+      type: "text",
+      placeholder: "Nhập mã bệnh nhân...",
+      wrapper: FloatingLabelWrapper,
+    },
+  ];
+
+  const inprogressOnlyFields: FilterField[] = [
+    {
+      key: "status",
+      label: "Trạng thái",
+      placeholder: "Chọn trạng thái",
+      type: "select",
+      options: Object.values(MedicalRecordStatus).map((status) => ({
+        value: status,
+        label: status,
+      })),
+      wrapper: FloatingLabelWrapper,
+    },
+    {
+      key: "medicalRecordCode",
+      label: "Mã hồ sơ",
+      type: "text",
+      placeholder: "Nhập mã hồ sơ...",
+      wrapper: FloatingLabelWrapper,
+    },
+  ];
+
+  const filterFields =
+    activeTab === "waiting"
+      ? [...waitingOnlyFields, ...baseFilterFields]
+      : [...inprogressOnlyFields, ...baseFilterFields];
+
+  const initialFilters = {
     name: "",
     phone: "",
+    fromDate: sharedDateFilters.fromDate,
+    toDate: sharedDateFilters.toDate,
+    status: "",
     patientCode: "",
-    status: "",
-    registeredTimeFrom: today,
-    registeredTimeTo: today,
-  };
-
-  const initialInprogressFilters = {
-    name: "",
     medicalRecordCode: "",
-    status: "",
-    fromDate: today,
-    toDate: today,
   };
 
   const toDateStringSafe = (value: any) => {
@@ -189,42 +173,60 @@ const PatientPanel = ({
   };
 
   const handleSearch = (filters: any) => {
-    if (activeTab === "waiting") {
-      updateFilters({
-        ...filters,
-        roomNumber: department?.roomNumber,
-        registeredTimeFrom:
-          toDateStringSafe(filters.registeredTimeFrom) ?? todayStr,
-        registeredTimeTo:
-          toDateStringSafe(filters.registeredTimeTo) ?? todayStr,
-      });
-    } else {
-      fetchMedicalRecordsByRoom({
-        ...filters,
-        roomNumber: department?.roomNumber ?? "",
-        fromDate: toDateStringSafe(filters.fromDate) ?? todayStr,
-        toDate: toDateStringSafe(filters.toDate) ?? todayStr,
-      });
-    }
+    const { name, phone, fromDate, toDate, ...rest } = filters;
+
+    setSharedDateFilters({
+      fromDate: fromDate ?? today,
+      toDate: toDate ?? today,
+    });
+
+    const waitingFilters = {
+      ...rest,
+      name,
+      phone,
+      registeredTimeFrom: toDateStringSafe(fromDate) ?? todayStr,
+      registeredTimeTo: toDateStringSafe(toDate) ?? todayStr,
+      roomNumber: department?.roomNumber,
+    };
+
+    const inprogressFilters = {
+      ...rest,
+      patientName: name,
+      patientPhone: phone,
+      fromDate: toDateStringSafe(fromDate) ?? todayStr,
+      toDate: toDateStringSafe(toDate) ?? todayStr,
+      roomNumber: department?.roomNumber ?? "",
+    };
+
+    updateFilters(waitingFilters);
+    fetchMedicalRecordsByRoom(inprogressFilters);
   };
 
   const handleReset = () => {
-    if (activeTab === "waiting") {
-      updateFilters({
-        ...initialWaitingFilters,
-        registeredTimeFrom: todayStr,
-        registeredTimeTo: todayStr,
-        roomNumber: department?.roomNumber,
-        type: department?.type,
-      });
-    } else {
-      fetchMedicalRecordsByRoom({
-        ...initialInprogressFilters,
-        roomNumber: department?.roomNumber ?? "",
-        fromDate: todayStr,
-        toDate: todayStr,
-      });
-    }
+    setSharedDateFilters({
+      fromDate: today,
+      toDate: today,
+    });
+    setResetTrigger(Date.now());
+    updateFilters({
+      name: "",
+      phone: "",
+      patientCode: "",
+      status: "",
+      registeredTimeFrom: todayStr,
+      registeredTimeTo: todayStr,
+      roomNumber: department?.roomNumber,
+    });
+
+    fetchMedicalRecordsByRoom({
+      patientName: "",
+      patientPhone: "",
+      medicalRecordCode: "",
+      status: "",
+      fromDate: todayStr,
+      toDate: todayStr,
+      roomNumber: department?.roomNumber ?? "",
+    });
   };
 
   useEffect(() => {
@@ -245,7 +247,9 @@ const PatientPanel = ({
 
   const filteredPatients = useMemo(() => {
     return patients.filter(
-      (p) => p.status !== Status.CANCELED && p.status !== Status.DONE
+      (p) =>
+        //  p.status !== Status.CANCELED &&
+        p.status !== Status.DONE
     );
   }, [patients]);
 
@@ -253,17 +257,9 @@ const PatientPanel = ({
     <Paper p="md" shadow="xs" withBorder radius={0}>
       <div className="flex flex-col">
         <FilterPanel
-          key={activeTab}
-          fields={
-            activeTab === "waiting"
-              ? waitingFilterFields
-              : inprogressFilterFields
-          }
-          initialValues={
-            activeTab === "waiting"
-              ? initialWaitingFilters
-              : initialInprogressFilters
-          }
+          fields={filterFields}
+          resetTrigger={resetTrigger}
+          initialValues={initialFilters}
           onSearch={handleSearch}
           onReset={handleReset}
         />
@@ -278,6 +274,7 @@ const PatientPanel = ({
             style={{ cursor: "pointer" }}
             onClick={() => {
               setActiveTab("waiting");
+              onTabChange?.("waiting");
               onSwitchListReset();
             }}
           >
@@ -291,6 +288,7 @@ const PatientPanel = ({
             style={{ cursor: "pointer" }}
             onClick={() => {
               setActiveTab("inprogress");
+              onTabChange?.("inprogress");
               onSwitchListReset();
             }}
           >
