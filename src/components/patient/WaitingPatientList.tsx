@@ -3,11 +3,7 @@ import { Paper } from "@mantine/core";
 import { Column } from "../../types/table";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import { GenderLabel } from "../../enums/Gender";
-import {
-  Status,
-  StatusColor,
-  StatusLabel,
-} from "../../enums/Queue-Patient/Status";
+import { StatusColor, StatusLabel } from "../../enums/Queue-Patient/Status";
 import CustomTable from "../common/CustomTable";
 
 interface Props {
@@ -33,17 +29,6 @@ const WaitingPatientList = ({
   setCurrentPage,
   setPageSize,
 }: Props) => {
-  const filteredPatients = useMemo(
-    () =>
-      patients.filter(
-        (p) =>
-          p.status !== Status.CANCELED &&
-          p.status !== Status.DONE &&
-          p.status !== Status.AWAITING_RESULT
-      ),
-    [patients]
-  );
-
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
       { key: "queueOrder", label: "STT" },
@@ -84,7 +69,7 @@ const WaitingPatientList = ({
   return (
     <Paper withBorder>
       <CustomTable<QueuePatient>
-        data={filteredPatients}
+        data={patients}
         columns={columns}
         page={currentPage + 1}
         pageSize={pageSize}

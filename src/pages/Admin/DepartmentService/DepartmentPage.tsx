@@ -1,4 +1,3 @@
-// Responsive MedicalServicePage.tsx - updated with DepartmentPage structure
 import { useEffect, useState } from "react";
 import { Select, Button, TextInput, Paper, ScrollArea } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";

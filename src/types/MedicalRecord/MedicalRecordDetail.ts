@@ -18,10 +18,12 @@ export interface MedicalRecordVisit {
   calledTime: string;
   isPriority: boolean;
   registeredTime: string;
+  checkinTime:string;
   specialization: {
     id: string;
     name: string;
     description: string;
+    
   };
 }
 export interface MedicalRecordDetail {
@@ -49,4 +51,6 @@ export interface MedicalRecordDetail {
   spo2: number;
   visit: MedicalRecordVisit | null;
   orders: MedicalRecordOrder[];
+  
 }
+

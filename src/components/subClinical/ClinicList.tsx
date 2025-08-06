@@ -2,6 +2,7 @@ import { MedicalRecordStatusMap } from "../../enums/MedicalRecord/MedicalRecordS
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
 import { Column } from "../../types/table";
+import dayjs from "dayjs";
 
 interface ClinicListProps {
   records: MedicalRecord[];
@@ -48,6 +49,11 @@ const ClinicList = ({
     {
       key: "doctorName",
       label: "Người kê đơn",
+    },
+    {
+      key: "createdAt",
+      label: "Ngày tạo",
+      render: (row) => dayjs(row.createdAt).format("DD/MM/YYYY"),
     },
   ];
 

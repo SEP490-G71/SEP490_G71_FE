@@ -3,11 +3,9 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import PatientActionButtons from "./PatientActionButtons";
-import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 
 interface Props {
   patient?: QueuePatient | null;
-  medicalRecord?: MedicalRecordDetail | null;
   onCallPatient?: () => void;
   onCancelQueue?: () => void;
   onConfirm?: () => void;
@@ -16,7 +14,6 @@ interface Props {
 
 const PatientInfoPanel = ({
   patient,
-  medicalRecord,
   onConfirm,
   onCancelQueue,
   onCallPatient,
@@ -25,18 +22,13 @@ const PatientInfoPanel = ({
   const [confirmModalOpened, setConfirmModalOpened] = useState(false);
   const [cancelModalOpened, setCancelModalOpened] = useState(false);
 
-  // Ưu tiên patient, nếu không có thì lấy từ medicalRecord
-  const code = patient?.patientCode ?? medicalRecord?.patientCode ?? "---";
-  const fullName = patient?.fullName ?? medicalRecord?.patientName ?? "---";
-  const gender = patient?.gender ?? medicalRecord?.gender ?? undefined;
-  const dob = patient?.dob ?? medicalRecord?.dateOfBirth ?? null;
-  const phone = patient?.phone ?? medicalRecord?.phone ?? "---";
-  const specialization =
-    patient?.specialization ??
-    medicalRecord?.visit?.specialization?.name ??
-    "---";
-  const registeredTime =
-    patient?.registeredTime ?? medicalRecord?.visit?.registeredTime ?? null;
+  const code = patient?.patientCode ?? "---";
+  const fullName = patient?.fullName ?? "---";
+  const gender = patient?.gender ?? undefined;
+  const dob = patient?.dob ?? null;
+  const phone = patient?.phone ?? "---";
+  const specialization = patient?.specialization ?? "---";
+  const registeredTime = patient?.registeredTime ?? null;
 
   return (
     <>
@@ -46,7 +38,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Mã BN:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {code}
             </Text>
           </Text>
@@ -55,7 +47,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Họ tên:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {fullName}
             </Text>
           </Text>
@@ -64,7 +56,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Giới tính:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {gender === "MALE" ? "Nam" : gender === "FEMALE" ? "Nữ" : "---"}
             </Text>
           </Text>
@@ -73,7 +65,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             SDT:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {phone}
             </Text>
           </Text>
@@ -82,7 +74,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Chuyên khoa:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {specialization}
             </Text>
           </Text>
@@ -91,7 +83,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Ngày sinh:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {dob ? dayjs(dob).format("DD/MM/YYYY") : "---"}
             </Text>
           </Text>
@@ -100,7 +92,7 @@ const PatientInfoPanel = ({
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Text span size="md">
             Ngày đăng kí:{" "}
-            <Text span fw={700} size="md">
+            <Text span fw={700}>
               {registeredTime
                 ? dayjs(registeredTime).format("DD/MM/YYYY")
                 : "---"}
@@ -175,4 +167,5 @@ const PatientInfoPanel = ({
     </>
   );
 };
+
 export default PatientInfoPanel;

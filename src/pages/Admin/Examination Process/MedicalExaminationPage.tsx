@@ -24,28 +24,42 @@ import MedicalHistoryPanel from "../../../components/medical-examination/Medical
 import ExaminationSectionForm from "../../../components/medical-examination/ExaminationSectionForm";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import updatePatientStatus from "../../../hooks/queue-patients/updatePatientStatus";
-import EndExaminationModal from "../../../components/medical-examination/EndExaminationModal";
 import { vitalSignValidators } from "../../../components/utils/vitalSignValidators";
 import useDefaultMedicalService from "../../../hooks/department-service/useDefaultMedicalService";
 import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
 import useMedicalRecordDetail from "../../../hooks/medicalRecord/useMedicalRecordDetail";
 import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
 import dayjs from "dayjs";
+import PatientDetailSection from "../../../components/medical-examination/PatientDetailModal";
+import useUpdateMedicalRecord from "../../../hooks/medicalRecord/useUpdateMedicalRecord";
 const MedicalExaminationPage = () => {
   const { userInfo } = useUserInfo();
   const { department } = useMyDepartment();
   const { defaultService } = useDefaultMedicalService(department?.id ?? null);
   const { fetchStaffsById } = useStaffs();
-  const [endExamModalOpened, setEndExamModalOpened] = useState(false);
+  const [summary, setSummary] = useState("");
+  const { updateMedicalRecord } = useUpdateMedicalRecord();
   const [doctorName, setDoctorName] = useState("Không rõ");
-  const [activeTab, setActiveTab] = useState<"info" | "service" | "history">(
-    "info"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "info" | "service" | "history" | "detail"
+  >("info");
+
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
+  const [activeListTab, setActiveListTab] = useState<"waiting" | "inprogress">(
+    "waiting"
+  );
+
   const [selectedMedicalRecord, setSelectedMedicalRecord] =
     useState<MedicalRecord | null>(null);
+  useEffect(() => {
+    if (activeListTab === "inprogress") {
+      setActiveTab("detail");
+    } else if (activeListTab === "waiting") {
+      setActiveTab("info");
+    }
+  }, [activeListTab]);
   const { patientDetail: selectedPatient, refetch: refetchPatientDetail } =
     useQueuePatientDetail(selectedPatientId);
   const [isQueuePatientMode, setIsQueuePatientMode] = useState(true);
@@ -74,6 +88,7 @@ const MedicalExaminationPage = () => {
   useEffect(() => {
     if (recordDetail && selectedMedicalRecord) {
       form.setValues({
+        diagnosisText: recordDetail.diagnosisText || "",
         appointmentDate: new Date(),
         doctor: userInfo?.userId ?? "",
         department: department?.id ?? "",
@@ -87,12 +102,13 @@ const MedicalExaminationPage = () => {
         weightKg: recordDetail.weightKg,
         bmi: recordDetail.bmi,
         spo2: recordDetail.spo2,
+        summary: recordDetail.summary || "",
       });
 
       setServiceRows(
         recordDetail.orders?.map((order, index) => ({
           id: index + 1,
-          serviceId: order.id, // hoặc dùng order.serviceId nếu có
+          serviceId: order.id,
           quantity: 1,
         })) ?? []
       );
@@ -114,6 +130,8 @@ const MedicalExaminationPage = () => {
       weightKg: 0,
       bmi: 0,
       spo2: 0,
+      summary: "",
+      diagnosisText: "",
     },
     validate: {
       temperature: vitalSignValidators.temperature,
@@ -124,6 +142,10 @@ const MedicalExaminationPage = () => {
       heightCm: vitalSignValidators.heightCm,
       weightKg: vitalSignValidators.weightKg,
       bmi: vitalSignValidators.bmi,
+      diagnosisText: (value: string) =>
+        value.trim() === "" ? "Chẩn đoán không được để trống" : null,
+      summary: (value: string) =>
+        value.trim() === "" ? "Tóm tắt không được để trống" : null,
     },
   });
   interface ServiceRow {
@@ -254,7 +276,7 @@ const MedicalExaminationPage = () => {
   const handleSelectMedicalRecord = async (record: MedicalRecord) => {
     form.reset();
     setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
-    setActiveTab("info");
+    setActiveTab("detail");
     setSelectedPatientId(null);
     setSelectedMedicalRecord(record);
     setIsQueuePatientMode(false);
@@ -364,7 +386,7 @@ const MedicalExaminationPage = () => {
 
     try {
       await updatePatientStatus(selectedPatient.id, "CALLING");
-      toast.success("📣 Đã gọi bệnh nhân");
+      // toast.success("📣 Đã gọi bệnh nhân");
       await refetchPatientDetail();
       updateFilters({
         roomNumber: department?.roomNumber,
@@ -372,9 +394,7 @@ const MedicalExaminationPage = () => {
         registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
       setSelectedPatientId(null);
-    } catch {
-      toast.error("❌ Gọi bệnh nhân thất bại");
-    }
+    } catch {}
   };
   const handleSwitchListReset = () => {
     setSelectedMedicalRecord(null);
@@ -383,6 +403,41 @@ const MedicalExaminationPage = () => {
     setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
     setActiveTab("info");
   };
+
+  const handleEndExamination = async () => {
+    if (!selectedMedicalRecord || !recordDetail) return;
+
+    try {
+      const payload = {
+        medicalRecordId: selectedMedicalRecord.id,
+        diagnosisText: form.values.diagnosisText,
+        summary: summary,
+        temperature: form.values.temperature,
+        respiratoryRate: form.values.respiratoryRate,
+        bloodPressure: form.values.bloodPressure,
+        heartRate: form.values.heartRate,
+        heightCm: form.values.heightCm,
+        weightKg: form.values.weightKg,
+        bmi: form.values.bmi,
+        spo2: form.values.spo2,
+        notes: form.values.notes,
+      };
+
+      const result = await updateMedicalRecord(payload);
+      if (!result) return;
+
+      // TODO: Sau khi cập nhật -> gọi API cập nhật trạng thái sang RESULT_COMPLETED
+      toast.success("✅ Đã kết thúc khám và cập nhật hồ sơ");
+
+      // Xóa lựa chọn
+      setSelectedMedicalRecord(null);
+      form.reset();
+      setSummary("");
+    } catch (error) {
+      toast.error("❌ Kết thúc khám thất bại");
+    }
+  };
+
   return (
     <>
       {department && (
@@ -418,6 +473,10 @@ const MedicalExaminationPage = () => {
             setCurrentPage={setCurrentPage}
             department={department}
             updateFilters={updateFilters}
+            onTabChange={(tab) => {
+              setActiveListTab(tab);
+              setActiveTab(tab === "waiting" ? "info" : "detail");
+            }}
           />
         </Grid.Col>
 
@@ -425,61 +484,77 @@ const MedicalExaminationPage = () => {
           <Paper p="md" shadow="xs" withBorder radius={0}>
             <Flex justify="space-between" align="center" mb="sm">
               <Flex gap="xs">
-                <Button
-                  size="sm"
-                  variant={activeTab === "info" ? "filled" : "outline"}
-                  onClick={() => setActiveTab("info")}
-                >
-                  Thông tin khám
-                </Button>
-                <Button
-                  size="sm"
-                  variant={activeTab === "service" ? "filled" : "outline"}
-                  onClick={() => setActiveTab("service")}
-                >
-                  Kê dịch vụ
-                </Button>
-                <Button
-                  size="sm"
-                  variant={activeTab === "history" ? "filled" : "outline"}
-                  onClick={() => setActiveTab("history")}
-                >
-                  Lịch sử khám
-                </Button>
+                {activeListTab === "waiting" ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant={activeTab === "info" ? "filled" : "outline"}
+                      onClick={() => setActiveTab("info")}
+                    >
+                      Thông tin khám
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activeTab === "service" ? "filled" : "outline"}
+                      onClick={() => setActiveTab("service")}
+                    >
+                      Kê dịch vụ
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activeTab === "history" ? "filled" : "outline"}
+                      onClick={() => setActiveTab("history")}
+                    >
+                      Lịch sử khám
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant={activeTab === "detail" ? "filled" : "outline"}
+                    onClick={() => setActiveTab("detail")}
+                  >
+                    Chi tiết
+                  </Button>
+                )}
               </Flex>
 
-              <Button
-                variant="light"
-                color="red"
-                size="sm"
-                onClick={() => setEndExamModalOpened(true)}
-                disabled={
-                  !selectedPatient ||
-                  selectedPatient.status !== "AWAITING_RESULT"
-                }
-              >
-                Kết thúc khám
-              </Button>
+              {activeListTab === "inprogress" && (
+                <Button
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  disabled={
+                    !selectedMedicalRecord ||
+                    selectedMedicalRecord.status !== "TESTING_COMPLETED"
+                  }
+                  onClick={handleEndExamination}
+                >
+                  Kết thúc khám
+                </Button>
+              )}
             </Flex>
-
-            <Title order={4} mb="sm" c="blue.9" size="h5">
-              1. Thông tin người đăng ký
-            </Title>
-            <PatientInfoPanel
-              key={
-                isQueuePatientMode
-                  ? `queue-${selectedPatient?.id ?? "empty"}`
-                  : `record-${selectedMedicalRecord?.id ?? "empty"}`
-              }
-              patient={isQueuePatientMode ? selectedPatient : null}
-              medicalRecord={recordDetail}
-              onConfirm={handleConfirmExamination}
-              onCancelQueue={handleCancelQueue}
-              onCallPatient={handleCallPatient}
-            />
-
+            {activeListTab === "waiting" && (
+              <>
+                <Title order={4} mb="sm" c="blue.9" size="h5">
+                  1. Thông tin người đăng ký
+                </Title>
+                <PatientInfoPanel
+                  key={
+                    isQueuePatientMode
+                      ? `queue-${selectedPatient?.id ?? "empty"}`
+                      : `record-${selectedMedicalRecord?.id ?? "empty"}`
+                  }
+                  patient={isQueuePatientMode ? selectedPatient : null}
+                  //medicalRecord={recordDetail}
+                  onConfirm={handleConfirmExamination}
+                  onCancelQueue={handleCancelQueue}
+                  onCallPatient={handleCallPatient}
+                />
+              </>
+            )}
             <form>
-              {activeTab === "info" && (
+              {activeListTab === "waiting" && activeTab === "info" && (
                 <>
                   <Title order={4} mb="sm" c="blue.9" size="h5" mt="md">
                     2. Thông tin khám bệnh
@@ -495,7 +570,7 @@ const MedicalExaminationPage = () => {
                 </>
               )}
 
-              {activeTab === "service" && (
+              {activeListTab === "waiting" && activeTab === "service" && (
                 <>
                   <Title order={4} mb="sm" c="blue.9" size="h5" mt="md">
                     3. Kê dịch vụ
@@ -520,18 +595,47 @@ const MedicalExaminationPage = () => {
                 </>
               )}
 
-              {activeTab === "history" && selectedPatient && (
-                <>
-                  <Title order={4} mb="sm" c="blue.9" size="h5" mt="md">
-                    Lịch sử khám bệnh
-                  </Title>
+              {activeListTab === "waiting" &&
+                activeTab === "history" &&
+                selectedPatient && (
+                  <>
+                    <Title order={4} mb="sm" c="blue.9" size="h5" mt="md">
+                      Lịch sử khám bệnh
+                    </Title>
+                    <MedicalHistoryPanel
+                      patientId={selectedPatient.patientId}
+                    />
+                  </>
+                )}
 
-                  <MedicalHistoryPanel patientId={selectedPatient.patientId} />
+              {activeListTab === "inprogress" && activeTab === "detail" && (
+                <>
+                  <ScrollArea h={400}>
+                    {selectedMedicalRecord ? (
+                      recordDetail ? (
+                        <PatientDetailSection
+                          detail={recordDetail}
+                          form={form}
+                          summaryValue={summary}
+                          onSummaryChange={setSummary}
+                        />
+                      ) : (
+                        <Text c="dimmed" fs="italic" mt="sm">
+                          Đang tải chi tiết hồ sơ...
+                        </Text>
+                      )
+                    ) : (
+                      <Text c="dimmed" fs="italic" mt="sm">
+                        Vui lòng chọn bệnh nhân từ danh sách "Đang khám" để xem
+                        chi tiết hồ sơ.
+                      </Text>
+                    )}
+                  </ScrollArea>
                 </>
               )}
 
               <Flex mt="md" gap="sm">
-                {activeTab !== "history" && (
+                {activeListTab === "waiting" && activeTab !== "history" && (
                   <Flex mt="md" gap="sm">
                     <Button
                       type="button"
@@ -548,28 +652,6 @@ const MedicalExaminationPage = () => {
           </Paper>
         </Grid.Col>
       </Grid>
-      {selectedPatient && selectedPatient.id && (
-        <EndExaminationModal
-          opened={endExamModalOpened}
-          onClose={() => setEndExamModalOpened(false)}
-          form={form}
-          medicalRecordId={selectedPatient.id}
-          patientId={selectedPatient.id}
-          doctorName={doctorName}
-          doctorId={userInfo?.userId ?? ""}
-          roomNumber={department?.roomNumber ?? ""}
-          departmentName={department?.name ?? ""}
-          departmentId={department?.id ?? ""}
-          onDone={() => {
-            setSelectedPatientId(null);
-            updateFilters({
-              roomNumber: department?.roomNumber,
-              registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
-              registeredTimeTo: dayjs().format("YYYY-MM-DD"),
-            });
-          }}
-        />
-      )}
     </>
   );
 };

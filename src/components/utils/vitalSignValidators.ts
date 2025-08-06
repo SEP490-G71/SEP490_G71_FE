@@ -1,10 +1,10 @@
 export const vitalSignValidators = {
   temperature: (value: number) =>
-    value < 35 || value > 42 ? "Nhiệt độ phải trong khoảng 35°C - 42°C" : null,
+    value < 30 || value > 45 ? "Nhiệt độ phải trong khoảng 30°C - 45°C" : null,
 
   respiratoryRate: (value: number) =>
-    value < 8 || value > 30
-      ? "Nhịp thở phải trong khoảng 8 - 30 lần/phút"
+    value < 5 || value > 60
+      ? "Nhịp thở phải trong khoảng 5 - 60 lần/phút"
       : null,
 
   bloodPressure: (value: string) => {
@@ -15,23 +15,19 @@ export const vitalSignValidators = {
   },
 
   heartRate: (value: number) =>
-    value < 40 || value > 180
-      ? "Mạch phải trong khoảng 40 - 180 lần/phút"
+    value < 20 || value > 200
+      ? "Mạch phải trong khoảng 20 - 200 lần/phút"
       : null,
 
   spo2: (value: number) =>
-    value < 70 || value > 100 ? "SpO2 phải trong khoảng 70 - 100%" : null,
+    value < 50 || value > 100 ? "SpO2 phải trong khoảng 50 - 100%" : null,
 
   heightCm: (value: number) =>
-    value < 50 || value > 250
-      ? "Chiều cao phải trong khoảng 50 - 250 cm"
-      : null,
+    value < 30 ? "Chiều cao phải lớn hơn hoặc bằng 30 cm" : null,
 
   weightKg: (value: number) =>
-    value < 15 || value > 120
-      ? "Cân nặng phải trong khoảng 15 - 120 kg"
-      : null,
+    value < 1 ? "Cân nặng phải lớn hơn hoặc bằng 1 kg" : null,
 
   bmi: (value: number) =>
-    value < 10 || value > 60 ? "BMI phải trong khoảng 10 - 60" : null,
+    value < 5 || value > 80 ? "BMI phải trong khoảng 5 - 80" : null,
 };

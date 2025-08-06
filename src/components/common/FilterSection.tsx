@@ -1,6 +1,6 @@
 import { Grid, TextInput, Select, Button, Group, Loader } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type FilterField<T = any> = {
   key: keyof T | string;
@@ -21,6 +21,7 @@ interface Props<T = any> {
   onSearch: (filters: T) => void;
   onReset: () => void;
   initialValues: T;
+  resetTrigger?: T;
 }
 
 const FilterPanel = <T extends Record<string, any>>({
@@ -28,9 +29,16 @@ const FilterPanel = <T extends Record<string, any>>({
   onSearch,
   onReset,
   initialValues,
+  resetTrigger,
 }: Props<T>) => {
   const [filters, setFilters] = useState<T>(initialValues);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (resetTrigger) {
+      setFilters(initialValues);
+    }
+  }, [resetTrigger]);
 
   const handleChange = (key: keyof T, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
