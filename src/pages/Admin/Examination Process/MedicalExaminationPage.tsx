@@ -32,6 +32,7 @@ import { QueuePatient } from "../../../types/Queue-patient/QueuePatient";
 import dayjs from "dayjs";
 import PatientDetailSection from "../../../components/medical-examination/PatientDetailModal";
 import useUpdateMedicalRecord from "../../../hooks/medicalRecord/useUpdateMedicalRecord";
+import finishMedicalRecord from "../../../hooks/medicalRecord/finishMedicalRecord";
 const MedicalExaminationPage = () => {
   const { userInfo } = useUserInfo();
   const { department } = useMyDepartment();
@@ -88,7 +89,8 @@ const MedicalExaminationPage = () => {
   useEffect(() => {
     if (recordDetail && selectedMedicalRecord) {
       form.setValues({
-        diagnosisText: recordDetail.diagnosisText || "",
+        diagnosisText:
+          recordDetail.diagnosisText?.trim() || "Chưa có chẩn đoán",
         appointmentDate: new Date(),
         doctor: userInfo?.userId ?? "",
         department: department?.id ?? "",
@@ -102,9 +104,8 @@ const MedicalExaminationPage = () => {
         weightKg: recordDetail.weightKg,
         bmi: recordDetail.bmi,
         spo2: recordDetail.spo2,
-        summary: recordDetail.summary || "",
       });
-
+      setSummary(recordDetail.summary || "");
       setServiceRows(
         recordDetail.orders?.map((order, index) => ({
           id: index + 1,
@@ -130,7 +131,7 @@ const MedicalExaminationPage = () => {
       weightKg: 0,
       bmi: 0,
       spo2: 0,
-      summary: "",
+
       diagnosisText: "",
     },
     validate: {
@@ -144,8 +145,6 @@ const MedicalExaminationPage = () => {
       bmi: vitalSignValidators.bmi,
       diagnosisText: (value: string) =>
         value.trim() === "" ? "Chẩn đoán không được để trống" : null,
-      summary: (value: string) =>
-        value.trim() === "" ? "Tóm tắt không được để trống" : null,
     },
   });
   interface ServiceRow {
@@ -405,36 +404,51 @@ const MedicalExaminationPage = () => {
   };
 
   const handleEndExamination = async () => {
-    if (!selectedMedicalRecord || !recordDetail) return;
+    if (!selectedMedicalRecord) return;
 
     try {
-      const payload = {
-        medicalRecordId: selectedMedicalRecord.id,
-        diagnosisText: form.values.diagnosisText,
-        summary: summary,
-        temperature: form.values.temperature,
-        respiratoryRate: form.values.respiratoryRate,
-        bloodPressure: form.values.bloodPressure,
-        heartRate: form.values.heartRate,
-        heightCm: form.values.heightCm,
-        weightKg: form.values.weightKg,
-        bmi: form.values.bmi,
-        spo2: form.values.spo2,
-        notes: form.values.notes,
-      };
+      await finishMedicalRecord(selectedMedicalRecord.id);
 
-      const result = await updateMedicalRecord(payload);
-      if (!result) return;
-
-      // TODO: Sau khi cập nhật -> gọi API cập nhật trạng thái sang RESULT_COMPLETED
-      toast.success("✅ Đã kết thúc khám và cập nhật hồ sơ");
-
-      // Xóa lựa chọn
+      toast.success("✅ Đã kết thúc khám");
       setSelectedMedicalRecord(null);
       form.reset();
       setSummary("");
     } catch (error) {
-      toast.error("❌ Kết thúc khám thất bại");
+      // toast đã xử lý trong hàm gọi
+    }
+  };
+
+  const handleSaveSummaryOnly = async () => {
+    if (!selectedMedicalRecord || !recordDetail) return;
+
+    if (!form.values.diagnosisText || form.values.diagnosisText.trim() === "") {
+      toast.error("❌ Chẩn đoán không được để trống.");
+      return;
+    }
+
+    if (!summary || summary.trim() === "") {
+      toast.error("❌ Tóm tắt không được để trống.");
+      return;
+    }
+
+    const payload = {
+      medicalRecordId: selectedMedicalRecord.id,
+      diagnosisText: form.values.diagnosisText,
+      summary: summary.trim(),
+      temperature: recordDetail.temperature,
+      respiratoryRate: recordDetail.respiratoryRate,
+      bloodPressure: recordDetail.bloodPressure,
+      heartRate: recordDetail.heartRate,
+      heightCm: recordDetail.heightCm,
+      weightKg: recordDetail.weightKg,
+      bmi: recordDetail.bmi,
+      spo2: recordDetail.spo2,
+      notes: form.values.notes,
+    };
+
+    const result = await updateMedicalRecord(payload);
+    if (result) {
+      toast.success("✅ Đã lưu tổng kết và chẩn đoán");
     }
   };
 
@@ -526,7 +540,10 @@ const MedicalExaminationPage = () => {
                   size="sm"
                   disabled={
                     !selectedMedicalRecord ||
-                    selectedMedicalRecord.status !== "TESTING_COMPLETED"
+                    summary.trim() === "" ||
+                    !recordDetail?.orders?.every(
+                      (o) => o.status === "COMPLETED"
+                    )
                   }
                   onClick={handleEndExamination}
                 >
@@ -618,6 +635,7 @@ const MedicalExaminationPage = () => {
                           form={form}
                           summaryValue={summary}
                           onSummaryChange={setSummary}
+                          onSave={handleSaveSummaryOnly}
                         />
                       ) : (
                         <Text c="dimmed" fs="italic" mt="sm">

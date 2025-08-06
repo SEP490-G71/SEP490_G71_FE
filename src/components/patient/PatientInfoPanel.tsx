@@ -9,7 +9,7 @@ interface Props {
   onCallPatient?: () => void;
   onCancelQueue?: () => void;
   onConfirm?: () => void;
-  mode?: "billing" | "examination";
+  mode?: "billing" | "examination" | "clinical";
 }
 
 const PatientInfoPanel = ({
@@ -100,7 +100,7 @@ const PatientInfoPanel = ({
           </Text>
         </Grid.Col>
 
-        {patient && mode !== "billing" && (
+        {patient && mode === "examination" && (
           <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
             <PatientActionButtons
               patient={patient}

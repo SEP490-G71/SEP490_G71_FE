@@ -1,10 +1,10 @@
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 
-const updatePatientStatus = async (patientId: string, status: string) => {
+const updatePatientStatus = async (queueId: string, status: string) => {
   try {
     const response = await axiosInstance.put(
-      `/queue-patients/status/${patientId}`,
+      `/queue-patients/status/${queueId}`,
       { status }
     );
 

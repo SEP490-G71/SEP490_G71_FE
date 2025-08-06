@@ -1,4 +1,4 @@
-import { Divider, Grid, Stack, Text, Textarea } from "@mantine/core";
+import { Button, Divider, Grid, Stack, Text, Textarea } from "@mantine/core";
 import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 import dayjs from "dayjs";
 import { UseFormReturnType } from "@mantine/form";
@@ -8,6 +8,7 @@ interface Props {
   form: UseFormReturnType<any>;
   summaryValue: string;
   onSummaryChange: (value: string) => void;
+  onSave?: () => void;
 }
 
 const PatientDetailSection = ({
@@ -15,9 +16,14 @@ const PatientDetailSection = ({
   form,
   summaryValue,
   onSummaryChange,
+  onSave,
 }: Props) => {
   const visit = detail.visit;
+  const allOrdersCompleted = detail.orders?.every(
+    (order) => order.status === "COMPLETED"
+  );
 
+  const recordCompleted = detail.status === "COMPLETED";
   const renderGridItem = (label: string, value: any) => (
     <Grid.Col span={{ base: 12, sm: 6 }}>
       <Text>
@@ -163,6 +169,19 @@ const PatientDetailSection = ({
         autosize
         minRows={2}
       />
+
+      {/* Nút Lưu */}
+      <Stack align="flex-end">
+        <Button
+          color="red"
+          onClick={onSave}
+          disabled={!allOrdersCompleted || recordCompleted}
+          style={{ alignSelf: "flex-end", width: "fit-content" }}
+        >
+          Lưu Tổng kết
+        </Button>
+      </Stack>
+
       <Divider label="" labelPosition="center" my="xs" />
     </Stack>
   );
