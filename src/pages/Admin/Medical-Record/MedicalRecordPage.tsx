@@ -72,8 +72,6 @@ export const MedicalRecordPage = () => {
   useEffect(() => {
     fetchAllMedicalRecords(page - 1, pageSize);
   }, [page, pageSize, filters]);
-    fetchAllMedicalRecords(page - 1, pageSize, filters);
-  }, [page, pageSize, filters]);
 
   const handleSearch = () => {
     setFilters({
