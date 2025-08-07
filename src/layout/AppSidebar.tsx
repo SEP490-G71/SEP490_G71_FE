@@ -131,6 +131,11 @@ const navItemsByRole: Record<string, NavItem[]> = {
       path: "/admin/register-medical-examination",
     },
     {
+      name: "Lịch khám online",
+      icon: <FaUserPlus />,
+      path: "/admin/register-online",
+    },
+    {
       name: "Xem hàng chờ",
       icon: <FaClock />,
       path: "/admin/view-medical-records",

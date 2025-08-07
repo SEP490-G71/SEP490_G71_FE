@@ -141,16 +141,17 @@ export default function RegisterMedicalExaminationPage() {
       onlinePageSize
     );
 
-    const mapped = res.content.map((p) => ({
-      ...p,
-      registeredTime: (p as any).registeredAt,
-    }));
+    const mapped = res.content
+      .filter((p) => p.isConfirmed === true)
+      .map((p) => ({
+        ...p,
+        registeredTime: (p as any).registeredAt,
+      }));
 
     setOnlinePatients(mapped);
     setTotalOnlinePatients(res.totalElements);
   };
 
-  // Gọi tự động khi các dependency thay đổi
   useEffect(() => {
     loadOnlinePatients();
   }, [submittedOnlineFilters, onlinePage, onlinePageSize]);
@@ -171,17 +172,7 @@ export default function RegisterMedicalExaminationPage() {
       align: "left",
       render: (row) => (row.gender === "MALE" ? "Nam" : "Nữ"),
     },
-    // {
-    //   key: "status",
-    //   label: "Trạng trái",
-    //   align: "left",
-    //   render: (row) =>
-    //     row.status === "ACTIVE"
-    //       ? "Chưa đến"
-    //       : row.status === "INACTIVE"
-    //       ? "Đã đến"
-    //       : row.status ?? "-",
-    // },
+
     {
       key: "updateStatus",
       label: "Trạng thái",

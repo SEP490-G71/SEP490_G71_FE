@@ -190,6 +190,19 @@ layer(base);
   }
 }
 
+@font-face {
+  font-family: "Digital7Mono";
+  src: url("/fonts/digital-7 (mono).ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@layer utilities {
+  .font-digital {
+    font-family: "Digital7Mono", monospace;
+  }
+}
+
 @utility menu-item {
   @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
 }

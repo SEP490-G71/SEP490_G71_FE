@@ -65,7 +65,7 @@ export const AppointmentForm = () => {
   return (
     <section className="py-16 px-4 max-w-5xl mx-auto text-center">
       <Title order={2} className="text-blue-900 mb-2">
-        Đặt lịch khám bệnh
+        Đăng ký khám bệnh
       </Title>
       <div className="h-1 w-24 bg-blue-500 mx-auto mb-4" />
       <Text className="text-gray-600 mb-12">
