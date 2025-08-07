@@ -2,55 +2,71 @@ import { useEffect, useState } from "react";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import { Button, TextInput } from "@mantine/core";
-import { LuSearch } from "react-icons/lu";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import useMedicalServiceStatistic from "../../../hooks/Statistics/MedicalServiceStatistics/useMedicalServiceStatistic";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
+import { DatePickerInput } from "@mantine/dates";
+import dayjs from "dayjs";
 
 const MedicalServiceStatisticsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
 
-  const { statistics, summary, loading, fetchStatistics, exportStatistics } =
-    useMedicalServiceStatistic();
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
+  const [serviceCodeQuery, setServiceCodeQuery] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
+
+  const [submittedFilters, setSubmittedFilters] = useState<{
+    serviceCode?: string;
+    name?: string;
+    fromDate?: string;
+    toDate?: string;
+  }>({});
+
+  const {
+    statistics,
+    summary,
+    totalItems,
+    loading,
+    fetchStatistics,
+    exportStatistics,
+  } = useMedicalServiceStatistic();
 
   const { setting } = useSettingAdminService();
+
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
       setPageSize(setting.paginationSizeList[0]);
     }
   }, [setting]);
+
   useEffect(() => {
-    fetchStatistics(page - 1, pageSize);
-  }, [page, pageSize]);
+    fetchStatistics(page - 1, pageSize, submittedFilters);
+  }, [page, pageSize, submittedFilters]);
 
   const handleSearch = () => {
-    setSubmittedQuery(searchQuery.trim().toLowerCase());
+    setSubmittedFilters({
+      serviceCode: serviceCodeQuery.trim() || undefined,
+      name: nameQuery.trim().toLowerCase() || undefined,
+      fromDate: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
+      toDate: toDate ? dayjs(toDate).format("YYYY-MM-DD") : undefined,
+    });
     setPage(1);
   };
 
   const handleReload = () => {
-    setSearchQuery("");
-    setSubmittedQuery("");
+    setServiceCodeQuery("");
+    setNameQuery("");
+    setFromDate(null);
+    setToDate(null);
+    setSubmittedFilters({});
     setPage(1);
   };
 
   const handleExport = () => {
-    exportStatistics();
+    exportStatistics(submittedFilters);
   };
-
-  const filteredData = statistics.filter(
-    (item) =>
-      item.name.toLowerCase().includes(submittedQuery) ||
-      item.serviceCode.toLowerCase().includes(submittedQuery)
-  );
-
-  const paginatedData = filteredData.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
 
   const columns = [
     createColumn({ key: "serviceCode", label: "Mã dịch vụ" }),
@@ -159,28 +175,78 @@ const MedicalServiceStatisticsPage = () => {
       </div>
 
       {/* Tìm kiếm + Tải lại */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4 w-full">
-        <div className="col-span-3">
-          <FloatingLabelWrapper label="Tìm kiếm dịch vụ">
-            <TextInput
-              placeholder="Nhập mã hoặc tên dịch vụ"
-              leftSection={<LuSearch size={16} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 mb-4 w-full items-end">
+        {/* Từ ngày */}
+        <div className="col-span-1 lg:col-span-2">
+          <FloatingLabelWrapper label="Từ ngày">
+            <DatePickerInput
+              placeholder="Chọn ngày"
+              value={fromDate}
+              onChange={(val) => setFromDate(val as Date | null)}
+              valueFormat="DD/MM/YYYY"
+              clearable
               className="w-full"
             />
           </FloatingLabelWrapper>
         </div>
 
-        <div className="flex items-end space-x-4">
-          <Button variant="light" color="gray" onClick={handleReload} fullWidth>
+        {/* Đến ngày */}
+        <div className="col-span-1 lg:col-span-2">
+          <FloatingLabelWrapper label="Đến ngày">
+            <DatePickerInput
+              placeholder="Chọn ngày"
+              value={toDate}
+              onChange={(val) => setToDate(val as Date | null)}
+              valueFormat="DD/MM/YYYY"
+              clearable
+              className="w-full"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Tên dịch vụ */}
+        <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+          <FloatingLabelWrapper label="Tìm theo tên dịch vụ">
+            <TextInput
+              placeholder="Nhập tên dịch vụ (VD: Xét nghiệm máu)"
+              value={nameQuery}
+              onChange={(e) => setNameQuery(e.currentTarget.value)}
+              className="w-full"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Mã dịch vụ */}
+        <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+          <FloatingLabelWrapper label="Tìm theo mã dịch vụ">
+            <TextInput
+              placeholder="Nhập mã dịch vụ (VD: MS000001)"
+              value={serviceCodeQuery}
+              onChange={(e) => setServiceCodeQuery(e.currentTarget.value)}
+              className="w-full"
+            />
+          </FloatingLabelWrapper>
+        </div>
+
+        {/* Nút Tải lại */}
+        <div className="col-span-1 sm:col-span-1 lg:col-span-1">
+          <Button
+            variant="light"
+            color="gray"
+            onClick={handleReload}
+            className="w-full h-[36px] text-sm"
+          >
             Tải lại
           </Button>
+        </div>
+
+        {/* Nút Tìm kiếm */}
+        <div className="col-span-1 sm:col-span-1 lg:col-span-1">
           <Button
             variant="filled"
             color="blue"
             onClick={handleSearch}
-            fullWidth
+            className="w-full h-[36px] text-sm"
           >
             Tìm kiếm
           </Button>
@@ -188,11 +254,11 @@ const MedicalServiceStatisticsPage = () => {
       </div>
 
       <CustomTable
-        data={paginatedData}
+        data={statistics}
         columns={columns}
         page={page}
         pageSize={pageSize}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         onPageChange={(newPage) => setPage(newPage)}
         onPageSizeChange={(newSize) => {
           setPageSize(newSize);
