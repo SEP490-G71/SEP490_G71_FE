@@ -17,6 +17,7 @@ interface AssignStaffModalProps {
   onClose: () => void;
   departmentId: string;
   onAssigned: () => void;
+  departmentType?: string | null;
 }
 
 interface AssignStaff {
@@ -28,6 +29,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   onClose,
   departmentId,
   onAssigned,
+  departmentType,
 }) => {
   const { staffs, loading, fetchUnassignedStaffs } = useUnassignedStaffs();
   const { assignStaffs, loading: assigning } = useAssignStaffsToDepartment();
@@ -40,7 +42,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
     setSearch("");
     setIsResetting(true);
     try {
-      await fetchUnassignedStaffs("");
+      await fetchUnassignedStaffs("", departmentType ?? undefined);
     } finally {
       setIsResetting(false);
     }
@@ -68,7 +70,7 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
   };
 
   const handleSearch = () => {
-    fetchUnassignedStaffs(search);
+    fetchUnassignedStaffs(search, departmentType ?? undefined);
   };
 
   const [isInitialLoading, setIsInitialLoading] = useState(false);
@@ -88,7 +90,14 @@ const AssignStaffModal: React.FC<AssignStaffModalProps> = ({
       setSearch("");
     }
   }, [opened]);
-
+  useEffect(() => {
+    if (opened && departmentType) {
+      setIsInitialLoading(true);
+      fetchUnassignedStaffs("", departmentType).finally(() => {
+        setIsInitialLoading(false);
+      });
+    }
+  }, [opened, departmentType]);
   return (
     <Modal
       opened={opened}
