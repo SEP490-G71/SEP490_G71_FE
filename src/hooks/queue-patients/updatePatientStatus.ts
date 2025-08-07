@@ -11,7 +11,12 @@ const updatePatientStatus = async (queueId: string, status: string) => {
     toast.success("✅ Cập nhật trạng thái bệnh nhân thành công");
     return response.data.result;
   } catch (error: any) {
-    console.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân:", error);
+    console.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân:", {
+      message: error?.message,
+      responseData: error?.response?.data,
+      status: error?.response?.status,
+      fullError: error,
+    });
 
     const errorMessage =
       error?.response?.data?.message ||

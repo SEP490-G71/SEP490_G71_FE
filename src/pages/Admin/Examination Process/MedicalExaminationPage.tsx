@@ -299,7 +299,7 @@ const MedicalExaminationPage = () => {
       patientId: selectedPatient.patientId,
       staffId: form.values.doctor,
       visitId: selectedPatient.id,
-      diagnosisText: form.values.symptoms || "Chẩn đoán: chưa nhập",
+      diagnosisText: form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
       temperature: form.values.temperature,
       respiratoryRate: form.values.respiratoryRate,
       bloodPressure: form.values.bloodPressure,
@@ -627,7 +627,7 @@ const MedicalExaminationPage = () => {
 
               {activeListTab === "inprogress" && activeTab === "detail" && (
                 <>
-                  <ScrollArea h={400}>
+                  <ScrollArea h={600}>
                     {selectedMedicalRecord ? (
                       recordDetail ? (
                         <PatientDetailSection
