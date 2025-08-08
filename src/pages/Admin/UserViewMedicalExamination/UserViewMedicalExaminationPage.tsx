@@ -23,7 +23,6 @@ const statusColor = (status: string): string => {
   }
 };
 
-// ✅ Đã sửa để tránh warning TS6133 - không cần `status`
 const statusTextColor = (): string => "#000";
 
 const statusLabel = (status: string): string => {
@@ -44,20 +43,43 @@ const statusLabel = (status: string): string => {
 };
 
 const columns: Column<QueuePatientsResponse & { index: number }>[] = [
-  { key: "index", label: "STT", render: (row) => row.index + 1, align: "left" },
-  { key: "fullName", label: "Họ và tên", align: "left" },
-  { key: "queueOrder", label: "Thứ tự khám" },
+  {
+    key: "index",
+    label: "STT",
+    render: (row) => (
+      <span className="font-digital text-base font-medium">
+        {`${row.index + 1}`}
+      </span>
+    ),
+    align: "left",
+  },
+  {
+    key: "fullName",
+    label: "Họ và tên",
+    align: "left",
+    render: (row) => (
+      <span className="font-digital text-base">{row.fullName}</span>
+    ),
+  },
+  {
+    key: "queueOrder",
+    label: "Thứ tự khám",
+    render: (row) => (
+      <span className="font-digital text-base">{`${row.queueOrder}`}</span>
+    ),
+  },
   {
     key: "status",
     label: "Trạng thái",
     render: (row) => (
       <span
+        className="font-digital"
         style={{
           fontWeight: 600,
           padding: "4px 10px",
           borderRadius: "6px",
           backgroundColor: statusColor(row.status),
-          color: statusTextColor(), // ✅ Sửa ở đây: bỏ truyền `row.status`
+          color: statusTextColor(),
           display: "inline-block",
         }}
       >

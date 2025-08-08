@@ -54,6 +54,7 @@ import { SpecializationsPages } from "./pages/Admin/Specializations/Specializati
 import EditProfilePage from "./pages/Admin/Profile/EditProfilePage";
 import MedicalServicePage from "./pages/Admin/MedicalService/MedicalServicePage";
 import { ChangePasswordForm } from "./components/header/ChangePasswordForm";
+import ViewRegisterOnlinePage from "./pages/Admin/ViewRegisterOnline/ViewRegisterOnline";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -121,6 +122,10 @@ export default function App() {
             <Route
               path="/admin/medical-templates"
               element={<MedicalTemplatesPage />}
+            />
+            <Route
+              path="/admin/register-online"
+              element={<ViewRegisterOnlinePage />}
             />
 
             <Route path="/admin/settings" element={<SettingAdminPage />} />
