@@ -128,13 +128,14 @@ const ExaminationSectionForm = ({
           {...form.getInputProps("spo2")}
         />
       </Grid.Col>
-
       <Grid.Col span={6}>
         <Textarea
-          label="Triệu chứng"
+          label="Chẩn đoán"
+          placeholder="Nhập chẩn đoán"
           minRows={2}
           autosize
-          {...form.getInputProps("symptoms")}
+          required
+          {...form.getInputProps("diagnosisText")}
         />
       </Grid.Col>
       <Grid.Col span={6}>

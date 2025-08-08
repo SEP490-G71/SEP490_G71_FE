@@ -18,6 +18,7 @@ import StaffListTable from "./StaffListTable";
 import DepartmentFormFields from "./DepartmentFormFields";
 import useDepartmentStaffs from "../../../hooks/department-Staffs/useDepartmentStaffs";
 import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
+import useUnassignedStaffs from "../../../hooks/department-Staffs/useUnassignedStaffs";
 
 interface CreateEditDepartmentModalProps {
   opened: boolean;
@@ -25,6 +26,7 @@ interface CreateEditDepartmentModalProps {
   initialData?: DepartmentResponse | null;
   isViewMode?: boolean;
   onSubmit?: () => void;
+  departmentType?: string | null;
 }
 
 const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
@@ -33,6 +35,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   initialData,
   isViewMode = false,
   onSubmit,
+  departmentType,
 }) => {
   const [assignModalOpened, setAssignModalOpened] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
@@ -45,6 +48,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
   const { removeStaff, loading: removingStaff } =
     useRemoveStaffFromDepartment();
 
+  const { fetchUnassignedStaffs } = useUnassignedStaffs();
   const {
     data: departmentData,
     loading: loadingStaffs,
@@ -107,7 +111,11 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
       fetchAndSet();
     }
   }, [opened, initialData]);
-
+  useEffect(() => {
+    if (departmentType) {
+      fetchUnassignedStaffs(departmentType); // 👈 Tự động fetch khi type thay đổi
+    }
+  }, [departmentType]);
   const handleRemoveStaff = (staffId: string) => {
     setStaffToRemove(staffId);
     setConfirmDeleteModal(true);
@@ -270,6 +278,7 @@ const CreateEditDepartmentModal: React.FC<CreateEditDepartmentModalProps> = ({
           opened={assignModalOpened}
           onClose={() => setAssignModalOpened(false)}
           departmentId={initialData.id}
+          departmentType={departmentType}
           onAssigned={refetchDepartmentStaffs}
         />
       )}

@@ -64,35 +64,36 @@ const PatientStatisticsPage = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-bold">
           Sinh nhật khách hàng trong tháng {new Date().getMonth() + 1}
         </h1>
-        <Button
-          leftSection={
-            <img
-              src="/images/icons8-excel-48.png"
-              alt="Excel"
-              className="w-6 h-6 object-contain"
-            />
-          }
-          onClick={handleExportExcel}
-          variant="default"
-          style={{
-            backgroundColor: "#bbf7d0",
-            color: "#15803d",
-            border: "1px solid #15803d",
-            fontWeight: 600,
-          }}
-        >
-          Xuất Excel
-        </Button>
-      </div>
 
-      <div className="flex justify-end mb-4 w-full">
-        <Button color="teal" onClick={handleSendMail}>
-          Gửi email sinh nhật
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            leftSection={
+              <img
+                src="/images/icons8-excel-48.png"
+                alt="Excel"
+                className="w-6 h-6 object-contain"
+              />
+            }
+            onClick={handleExportExcel}
+            variant="default"
+            style={{
+              backgroundColor: "#bbf7d0",
+              color: "#15803d",
+              border: "1px solid #15803d",
+              fontWeight: 600,
+            }}
+          >
+            Xuất Excel
+          </Button>
+
+          <Button color="teal" onClick={handleSendMail}>
+            Gửi email sinh nhật
+          </Button>
+        </div>
       </div>
 
       <CustomTable

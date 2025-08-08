@@ -7,27 +7,21 @@ const useUnassignedStaffs = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  
-  const fetchUnassignedStaffs = async (search: string = "") => {
-    setLoading(true);
-    setError(null);
-    try {
-      
-      const res = await axiosInstance.get("/staffs/unassigned", {
-        params: { search }, 
-      });
-      if (res.data?.result) {
-        setStaffs(res.data.result);
-      } else {
-        setStaffs([]);
-      }
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách nhân viên chưa gán:", err);
-      setError("Không thể tải danh sách nhân viên chưa gán.");
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchUnassignedStaffs = async (search = "", type = "") => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await axiosInstance.get("/staffs/unassigned", {
+      params: { search, type },
+    });
+    setStaffs(res.data?.result ?? []);
+  } catch (err) {
+    console.error("Lỗi khi lấy danh sách nhân viên chưa gán:", err);
+    setError("Không thể tải danh sách nhân viên chưa gán.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return {
     staffs,
@@ -36,6 +30,5 @@ const useUnassignedStaffs = () => {
     fetchUnassignedStaffs,
   };
 };
-
 
 export default useUnassignedStaffs;

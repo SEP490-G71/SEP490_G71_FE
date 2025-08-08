@@ -1,5 +1,4 @@
-import axios from "axios";
-
+import axiosInstance from "../../services/axiosInstance";
 export const usePreviewMedicalRecord = () => {
   const previewMedicalRecord = async (recordId: string): Promise<string | null> => {
     if (!recordId) {
@@ -8,7 +7,7 @@ export const usePreviewMedicalRecord = () => {
     }
 
     try {
-      const response = await axios.get(`/medical-records/${recordId}/preview`,
+      const response = await axiosInstance.get(`/medical-records/${recordId}/preview`,
         {
           responseType: "blob",
         }
