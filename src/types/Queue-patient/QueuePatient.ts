@@ -18,6 +18,7 @@ export interface QueuePatient {
   roomNumber: string;
   specialization: string;
   status: Status;
+  isPriority:boolean;
 }
 
 export interface SearchQueueParams {

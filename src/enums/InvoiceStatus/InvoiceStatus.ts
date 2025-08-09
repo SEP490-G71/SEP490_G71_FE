@@ -11,3 +11,10 @@ export const InvoiceStatusMap: Record<keyof typeof InvoiceStatus, string> = {
   PAID: "Đã thanh toán",
   CANCELLED: "Đã hủy",
 };
+
+export const InvoiceStatusColor: Record<keyof typeof InvoiceStatus, string> = {
+  UNPAID: "#dc2626",    
+  PENDING: "#d97706",     
+  PAID: "#16a34a",        
+  CANCELLED: "#6b7280",   
+};

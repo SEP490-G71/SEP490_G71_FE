@@ -15,3 +15,12 @@ export const MedicalRecordStatusMap: Record<MedicalRecordStatus, string> = {
   [MedicalRecordStatus.COMPLETED]: "Đã hoàn tất kết quả",
   
 };
+
+
+export const MedicalRecordStatusColor: Record<MedicalRecordStatus, string> = {
+  [MedicalRecordStatus.WAITING_FOR_PAYMENT]: "orange",
+  [MedicalRecordStatus.TESTING]: "blue",
+  [MedicalRecordStatus.TESTING_COMPLETED]: "green",
+  [MedicalRecordStatus.WAITING_FOR_RESULT]: "yellow",
+  [MedicalRecordStatus.COMPLETED]: "teal",
+};
