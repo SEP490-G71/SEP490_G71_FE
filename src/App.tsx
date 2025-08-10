@@ -58,6 +58,8 @@ import ViewRegisterOnlinePage from "./pages/Admin/ViewRegisterOnline/ViewRegiste
 import PatientPortalPage from "./pages/Patient/PatientPortalPage";
 import ExaminationHistoryPage from "./pages/Patient/Examinations/ExaminationHistoryPage";
 import InvoiceHistoryPage from "./pages/Patient/Invoices/InvoiceHistoryPage";
+import StaffFeedbackPage from "./pages/Admin/FeedBack/StaffFeedBack/StaffFeedBackPage";
+import ServiceFeedbackPage from "./pages/Admin/FeedBack/ServiceFeedBack/ServiceFeedbackPage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -113,6 +115,14 @@ export default function App() {
             <Route
               path="/admin/statistic-patient"
               element={<PatientStatisticsPage />}
+            />
+            <Route
+              path="/admin/statistic-staffFeedBack"
+              element={<StaffFeedbackPage />}
+            />
+            <Route
+              path="/admin/statistic-ServiceFeedBack"
+              element={<ServiceFeedbackPage />}
             />
             <Route
               path="/admin/work-schedule-staff"

@@ -1,4 +1,3 @@
-// PatientPortalHeader.tsx
 import { useState } from "react";
 import {
   Menu as Burger,
@@ -34,7 +33,7 @@ export const PatientPortalHeader = ({ username, loadingUser }: Props) => {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/home"; // hoặc navigate("/home/login")
+    window.location.href = "/home";
   };
 
   return (
