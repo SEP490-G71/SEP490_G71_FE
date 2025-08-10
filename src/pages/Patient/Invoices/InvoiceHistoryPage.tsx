@@ -1,15 +1,6 @@
-// src/pages/patient/InvoiceHistoryPage.tsx
 import { useEffect, useState, useCallback } from "react";
 import { useOutletContext } from "react-router";
-import {
-  Button,
-  Input,
-  Select,
-  Alert,
-  Loader,
-  Card,
-  Title,
-} from "@mantine/core";
+import { Button, Input, Alert, Loader, Card, Title } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import { LuEye, LuDownload } from "react-icons/lu";
@@ -59,7 +50,6 @@ const InvoiceHistoryPage = () => {
 
   const fetchInvoicesWithFilters = useCallback(
     (
-      status: string,
       invoiceCode: string,
       fromDate: Date | null,
       toDate: Date | null,
@@ -69,7 +59,7 @@ const InvoiceHistoryPage = () => {
       if (!patientId) return;
       fetchInvoices(
         {
-          status: status || undefined,
+          status: InvoiceStatus.PAID,
           patientId,
           invoiceCode: invoiceCode || undefined,
           fromDate: fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : undefined,
@@ -84,7 +74,6 @@ const InvoiceHistoryPage = () => {
 
   const applyCurrentFilters = useCallback(() => {
     fetchInvoicesWithFilters(
-      filterStatus,
       filterCode,
       filterFromDate,
       filterToDate,
@@ -106,7 +95,6 @@ const InvoiceHistoryPage = () => {
     setFilterCode(newFilterCode);
     setPage(1);
     fetchInvoicesWithFilters(
-      filterStatus,
       newFilterCode,
       filterFromDate,
       filterToDate,
@@ -129,7 +117,7 @@ const InvoiceHistoryPage = () => {
     setFilterFromDate(null);
     setFilterToDate(null);
     setPage(1);
-    fetchInvoicesWithFilters("", "", null, null, 0, pageSize);
+    fetchInvoicesWithFilters("", null, null, 0, pageSize);
   }, [pageSize, fetchInvoicesWithFilters]);
 
   useEffect(() => {
@@ -248,7 +236,6 @@ const InvoiceHistoryPage = () => {
             Lịch sử hóa đơn thanh toán
           </Title>
 
-          {/* Filters - giống layout 12 cột của ExaminationHistoryPage */}
           <div className="grid grid-cols-12 gap-4 my-4">
             {/* Mã hóa đơn */}
             <div className="col-span-12 md:col-span-3">
@@ -263,29 +250,9 @@ const InvoiceHistoryPage = () => {
                 />
               </FloatingLabelWrapper>
             </div>
-            {/* Trạng thái */}
-            <div className="col-span-12 md:col-span-3">
-              <FloatingLabelWrapper label="Trạng thái">
-                <Select
-                  placeholder="Nhập trạng thái"
-                  value={filterStatus}
-                  onChange={(val) => setFilterStatus(val || "")}
-                  data={[
-                    { value: "", label: "Tất cả" },
-                    ...Object.keys(InvoiceStatus).map((k) => ({
-                      value: k,
-                      label: InvoiceStatusMap[k as keyof typeof InvoiceStatus],
-                    })),
-                  ]}
-                  className="w-full"
-                  styles={{ input: { height: 35, zIndex: 1 } }}
-                  clearable
-                />
-              </FloatingLabelWrapper>
-            </div>
 
             {/* Từ ngày */}
-            <div className="col-span-12 md:col-span-2">
+            <div className="col-span-12 md:col-span-3">
               <FloatingLabelWrapper label="Từ ngày">
                 <DatePickerInput
                   placeholder="Từ ngày"
@@ -301,7 +268,7 @@ const InvoiceHistoryPage = () => {
             </div>
 
             {/* Đến ngày */}
-            <div className="col-span-12 md:col-span-2">
+            <div className="col-span-12 md:col-span-3">
               <FloatingLabelWrapper label="Đến ngày">
                 <DatePickerInput
                   placeholder="Đến ngày"
@@ -317,7 +284,7 @@ const InvoiceHistoryPage = () => {
             </div>
 
             {/* Nút */}
-            <div className="col-span-12 md:col-span-2 flex items-center gap-2 md:pt-[22px]">
+            <div className="col-span-12 md:col-span-3 flex items-center gap-2 md:pt-[22px]">
               <Button
                 variant="light"
                 color="gray"
@@ -348,7 +315,6 @@ const InvoiceHistoryPage = () => {
             heightVh={90}
           />
 
-          {/* Bảng */}
           <CustomTable
             data={invoices}
             columns={columns}

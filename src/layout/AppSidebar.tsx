@@ -65,6 +65,17 @@ const navItemsByRole: Record<string, NavItem[]> = {
       ],
     },
     {
+      name: "Phản hồi",
+      icon: <TbReportAnalytics />,
+      subItems: [
+        { name: "Phản hồi nhân viên", path: "/admin/statistic-staffFeedBack" },
+        {
+          name: "Phản hồi dịch vụ",
+          path: "/admin/statistic-ServiceFeedBack",
+        },
+      ],
+    },
+    {
       name: "Cấu hình hệ thống",
       icon: <IoMdSettings />,
       subItems: [
