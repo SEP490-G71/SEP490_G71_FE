@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { useAppointmentForm } from "../../hooks/LandingPagesUser/useAppointmentForm";
-import {
-  Button,
-  TextInput,
-  Textarea,
-  Select,
-  Grid,
-  Title,
-  Text,
-} from "@mantine/core";
+import { Button, TextInput, Select, Grid, Title } from "@mantine/core";
 import { DateInput, DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
 
@@ -67,11 +59,6 @@ export const AppointmentForm = () => {
       <Title order={2} className="text-blue-900 mb-2">
         Đăng ký khám bệnh
       </Title>
-      <div className="h-1 w-24 bg-blue-500 mx-auto mb-4" />
-      <Text className="text-gray-600 mb-12">
-        Vui lòng điền thông tin bên dưới để đặt lịch hẹn với bác sĩ của chúng
-        tôi. Chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.
-      </Text>
 
       <form className="space-y-6 text-left" onSubmit={handleSubmit}>
         <Grid gutter="md">
@@ -172,17 +159,6 @@ export const AppointmentForm = () => {
               dropdownType="modal"
               required
               className="w-full"
-            />
-          </Grid.Col>
-
-          <Grid.Col span={12}>
-            <Textarea
-              label="Ghi chú (tuỳ chọn)"
-              placeholder="Bạn muốn gửi lời nhắn gì?"
-              value={form.message}
-              onChange={(e) => handleChange("message", e.currentTarget.value)}
-              autosize
-              minRows={3}
             />
           </Grid.Col>
         </Grid>

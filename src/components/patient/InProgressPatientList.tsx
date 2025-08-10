@@ -1,9 +1,12 @@
-import { Paper } from "@mantine/core";
+import { Badge, Paper } from "@mantine/core";
 import { Column } from "../../types/table";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
 import { MedicalRecordRoomFilter } from "../../hooks/medicalRecord/useMedicalRecordByRoom";
-import { MedicalRecordStatusMap } from "../../enums/MedicalRecord/MedicalRecordStatus";
+import {
+  MedicalRecordStatusColor,
+  MedicalRecordStatusMap,
+} from "../../enums/MedicalRecord/MedicalRecordStatus";
 
 interface Props {
   records: MedicalRecord[];
@@ -34,7 +37,11 @@ const InProgressPatientList = ({
     {
       key: "status",
       label: "Trạng thái",
-      render: (r) => MedicalRecordStatusMap[r.status] ?? r.status,
+      render: (r) => (
+        <Badge color={MedicalRecordStatusColor[r.status]} variant="light">
+          {MedicalRecordStatusMap[r.status] ?? r.status}
+        </Badge>
+      ),
     },
     { key: "medicalRecordCode", label: "Mã bệnh án" },
     { key: "patientName", label: "Họ tên" },

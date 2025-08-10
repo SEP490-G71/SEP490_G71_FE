@@ -55,6 +55,9 @@ import EditProfilePage from "./pages/Admin/Profile/EditProfilePage";
 import MedicalServicePage from "./pages/Admin/MedicalService/MedicalServicePage";
 import { ChangePasswordForm } from "./components/header/ChangePasswordForm";
 import ViewRegisterOnlinePage from "./pages/Admin/ViewRegisterOnline/ViewRegisterOnline";
+import PatientPortalPage from "./pages/Patient/PatientPortalPage";
+import ExaminationHistoryPage from "./pages/Patient/Examinations/ExaminationHistoryPage";
+import InvoiceHistoryPage from "./pages/Patient/Invoices/InvoiceHistoryPage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -179,7 +182,15 @@ export default function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/home/login" element={<SignInClient />} />
-
+          <Route path="/patient" element={<PatientPortalPage />}>
+            <Route
+              path="examinationHistory"
+              element={<ExaminationHistoryPage />}
+            />
+            <Route path="invoiceHistory" element={<InvoiceHistoryPage />} />
+            {/* Optional fallback nếu route con không khớp */}
+            <Route path="*" element={<NotFound />} />
+          </Route>
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -245,13 +245,7 @@ const PatientPanel = ({
     }
   }, [activeTab, department?.roomNumber, hasFetchedInprogress]);
 
-  const filteredPatients = useMemo(() => {
-    return patients.filter(
-      (p) =>
-        //  p.status !== Status.CANCELED &&
-        p.status !== Status.DONE
-    );
-  }, [patients]);
+  const filteredPatients = useMemo(() => patients, [patients]);
 
   return (
     <Paper p="md" shadow="xs" withBorder radius={0}>

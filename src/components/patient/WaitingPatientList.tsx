@@ -136,6 +136,23 @@ const WaitingPatientList = ({
           );
         },
       },
+      {
+        key: "isPriority",
+        label: "Ưu tiên",
+        render: (row) => (
+          <div style={{ textAlign: "center" }}>
+            <span
+              style={{
+                color: row.isPriority ? "green" : "gray",
+                fontSize: "16px",
+              }}
+            >
+              {row.isPriority ? "✔" : "✖"}
+            </span>
+          </div>
+        ),
+      },
+
       { key: "patientCode", label: "Mã BN" },
       { key: "fullName", label: "Họ tên" },
       {

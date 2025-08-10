@@ -20,5 +20,6 @@ export const mapDetailToQueuePatient = (
   specialization: detail.visit?.specialization?.name ?? "",
   status: detail.visit?.status ?? "WAITING",
   registeredTime: detail.visit?.registeredTime ?? "",
+  isPriority: Boolean(detail.visit?.isPriority), 
   ...override,
 });

@@ -12,7 +12,7 @@ interface CreateEditModalProps {
   opened: boolean;
   onClose: () => void;
   initialData?: MedicalService | null;
-  onSubmit: (formData: CreateMedicalServiceRequest) => void;
+  onSubmit: (formData: CreateMedicalServiceRequest) => Promise<boolean>;
   isViewMode?: boolean;
 }
 
@@ -24,10 +24,6 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
   isViewMode = false,
 }) => {
   const [departments, setDepartments] = useState<Department[]>([]);
-  //Bắn log để debug
-  // if (initialData) {
-  //   console.log("initialData", initialData);
-  // }
 
   const getAllDepartments = async () => {
     try {
@@ -97,9 +93,11 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     getAllDepartments();
   }, [initialData, opened]);
 
-  const handleSubmit = (values: typeof form.values) => {
-    onSubmit(values);
-    onClose();
+  const handleSubmit = async (values: typeof form.values) => {
+    const success = await onSubmit(values);
+    if (success) {
+      onClose(); // ✅ chỉ đóng modal khi lưu thành công
+    }
   };
 
   return (
@@ -114,6 +112,8 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
           <div className="mt-2 border-b border-gray-300"></div>
         </div>
       }
+      closeOnClickOutside={false}
+      closeOnEscape={false}
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <TextInput
@@ -135,19 +135,9 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
         <Select
           label="Phòng ban"
           placeholder="Phòng ban"
-          {...form.getInputProps("departmentName")}
-          data={departments.map((department) => ({
-            value: department.id,
-            label: department.name,
-          }))}
-          value={form.values.departmentId}
-          onChange={(value) => {
-            if (value !== null) {
-              form.setFieldValue("departmentId", value);
-            }
-          }}
+          data={departments.map((d) => ({ value: d.id, label: d.name }))}
+          {...form.getInputProps("departmentId")}
           required
-          error={form.errors.departmentId}
           mt="sm"
           disabled={isViewMode}
         />

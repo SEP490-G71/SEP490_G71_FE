@@ -297,25 +297,6 @@ const BillingPage = () => {
             <Button variant="light" size="md">
               Ghi thông tin hóa đơn
             </Button>
-            <Button
-              variant="outline"
-              size="md"
-              color="red"
-              onClick={handleSavePendingInvoice}
-              disabled={
-                selectedInvoiceInfo?.status === "PAID" ||
-                !editableInvoiceDetail.confirmedBy
-              }
-              title={
-                selectedInvoiceInfo?.status === "PAID"
-                  ? "Hóa đơn đã thanh toán"
-                  : !editableInvoiceDetail.confirmedBy
-                  ? "Chưa xác nhận người thu"
-                  : ""
-              }
-            >
-              Thanh toán
-            </Button>
           </Group>
 
           <PatientInfoPanel patient={selectedPatient} mode="billing" />
@@ -324,7 +305,7 @@ const BillingPage = () => {
             <Textarea
               label="Ghi chú"
               autosize
-              minRows={4}
+              minRows={3}
               maxRows={6}
               size="sm"
               value={note}
@@ -367,6 +348,27 @@ const BillingPage = () => {
             handleOpenModal={() => setViewModalOpened(true)}
             setEditableInvoiceDetail={setEditableInvoiceDetail}
           />
+          <Box mt="md" style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outline"
+              size="md"
+              color="red"
+              onClick={handleSavePendingInvoice}
+              disabled={
+                selectedInvoiceInfo?.status === "PAID" ||
+                !editableInvoiceDetail.confirmedBy
+              }
+              title={
+                selectedInvoiceInfo?.status === "PAID"
+                  ? "Hóa đơn đã thanh toán"
+                  : !editableInvoiceDetail.confirmedBy
+                  ? "Chưa xác nhận người thu"
+                  : ""
+              }
+            >
+              Thanh toán
+            </Button>
+          </Box>
         </Paper>
       </Grid.Col>
 

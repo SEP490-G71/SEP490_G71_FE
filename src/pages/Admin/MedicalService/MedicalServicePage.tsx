@@ -14,6 +14,7 @@ import {
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import PageMeta from "../../../components/common/PageMeta";
+import { useMedicalServiceUpdate } from "../../../hooks/medical-service/useMedicalServiceUpdate";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -51,7 +52,7 @@ const MedicalServicePage = () => {
   const [, setServiceNameOptions] = useState<
     { label: string; value: string }[]
   >([]);
-
+  const { updateMedicalService } = useMedicalServiceUpdate();
   const { setting } = useSettingAdminService();
 
   useEffect(() => {
@@ -129,24 +130,11 @@ const MedicalServicePage = () => {
   };
 
   const handleSubmit = async (formData: CreateMedicalServiceRequest) => {
-    try {
-      if (selectedService) {
-        await axiosInstance.put(
-          `/medical-services/${selectedService.id}`,
-          formData
-        );
-        toast.success("Updated successfully");
-      } else {
-        await axiosInstance.post(`/medical-services`, formData);
-        toast.success("Created successfully");
-      }
+    const success = await updateMedicalService(formData, selectedService?.id);
+    if (success) {
       fetchAllMedicalServices(page - 1, pageSize);
-    } catch (error) {
-      console.error("Error saving medical service", error);
-      toast.error("An error occurred");
-    } finally {
-      setModalOpened(false);
     }
+    return success;
   };
 
   const handleSearch = () => {
@@ -174,15 +162,6 @@ const MedicalServicePage = () => {
       label: "Tên Dịch Vụ",
       align: "left",
     }),
-    // createColumn<MedicalService>({
-    //   key: "description",
-    //   label: "Mô tả",
-    //   render: (row) => {
-    //     const desc = row.description || "";
-    //     const short = desc.length > 40 ? desc.slice(0, 40) + "..." : desc;
-    //     return <span title={desc}>{short}</span>;
-    //   },
-    // }),
     createColumn<MedicalService>({
       key: "department",
       label: "Tên phòng",
