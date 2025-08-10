@@ -23,8 +23,17 @@ export const AppointmentForm = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const minBookingDate = dayjs().add(2, "day").startOf("day").toDate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (
+      !form.registeredAt ||
+      dayjs(form.registeredAt).isBefore(minBookingDate)
+    ) {
+      return;
+    }
 
     const formattedData = {
       firstName: form.firstName,
@@ -149,16 +158,22 @@ export const AppointmentForm = () => {
               label="Thời gian đặt lịch"
               placeholder="Chọn thời gian"
               value={form.registeredAt ? new Date(form.registeredAt) : null}
-              onChange={(date) =>
+              onChange={(date) => {
+                // NOTE: chặn chọn thời điểm nhỏ hơn T+2 ngày
+                if (date && dayjs(date).isBefore(minBookingDate)) {
+                  return;
+                }
                 handleChange(
                   "registeredAt",
                   date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : ""
-                )
-              }
+                );
+              }}
               valueFormat="DD/MM/YYYY HH:mm"
               dropdownType="modal"
               required
               className="w-full"
+              minDate={minBookingDate}
+              excludeDate={(d) => dayjs(d).isBefore(minBookingDate, "day")}
             />
           </Grid.Col>
         </Grid>

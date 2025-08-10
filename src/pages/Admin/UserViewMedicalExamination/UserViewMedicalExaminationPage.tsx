@@ -14,6 +14,8 @@ const statusColor = (status: string): string => {
       return "#FFB74D";
     case "IN_PROGRESS":
       return "#64B5F6";
+    case "AWAITING_RESULT":
+      return "#E0B0FF";
     case "DONE":
       return "#81C784";
     case "CANCELED":
@@ -33,6 +35,8 @@ const statusLabel = (status: string): string => {
       return "📢 Đang gọi";
     case "IN_PROGRESS":
       return "🧪 Đang khám";
+    case "AWAITING_RESULT":
+      return "⏳ Chờ kết quả";
     case "DONE":
       return "✔️ Đã khám";
     case "CANCELED":
@@ -48,7 +52,7 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     label: "STT",
     render: (row) => (
       <span className="font-digital text-base font-medium">
-        {`${row.index + 1}`}
+        {row.index + 1}
       </span>
     ),
     align: "left",
@@ -57,15 +61,13 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     key: "fullName",
     label: "Họ và tên",
     align: "left",
-    render: (row) => (
-      <span className="font-digital text-base">{row.fullName}</span>
-    ),
+    render: (row) => <span className="text-base">{row.fullName}</span>,
   },
   {
     key: "queueOrder",
     label: "Thứ tự khám",
     render: (row) => (
-      <span className="font-digital text-base">{`${row.queueOrder}`}</span>
+      <span className="font-digital text-base">{row.queueOrder}</span>
     ),
   },
   {
@@ -73,7 +75,6 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     label: "Trạng thái",
     render: (row) => (
       <span
-        className="font-digital"
         style={{
           fontWeight: 600,
           padding: "4px 10px",
@@ -120,6 +121,7 @@ const UserViewMedicalExaminationPage: React.FC = () => {
           if (status === "WAITING") return 0;
           if (status === "CALLING") return 1;
           if (status === "IN_PROGRESS") return 2;
+          if (status === "AWAITING_RESULT") return 3;
           if (status === "DONE") return 99;
           if (status === "CANCELED") return 100;
           return 50;
