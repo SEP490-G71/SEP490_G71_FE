@@ -1,5 +1,4 @@
-// src/hooks/invoice/payment/invoicePaymentApi.ts
-
+import { toast } from "react-toastify";
 import axiosInstance from "../../../services/axiosInstance";
 import { InvoiceDetail } from "../../../types/Invoice/invoice";
 
@@ -9,7 +8,6 @@ export interface MarkInvoicePendingRequest {
   paymentType: string;
 }
 
-// Gọi API để chuyển trạng thái hóa đơn sang "PENDING"
 export const markInvoicePending = async (
   invoiceDetail: InvoiceDetail,
   editableInvoiceDetail: {
@@ -29,12 +27,15 @@ export const markInvoicePending = async (
       paymentType: editableInvoiceDetail.paymentType,
     };
 
-    // ✅ Dùng đúng đường dẫn API thật bạn đã confirm
     await axiosInstance.post("/invoices/pay", payload);
 
     await fetchInvoiceDetail(invoiceDetail.invoiceId);
   } catch (error: any) {
-    console.error("❌ markInvoicePending error:", error);
-    throw error;
+    console.error("Lỗi khi thanh toán:", error);
+    const message =
+           error?.response?.data?.message ||
+           error?.message ||
+           "Không thể thanh toán.";
+         toast.error(message);
   }
 };

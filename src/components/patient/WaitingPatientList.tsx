@@ -20,6 +20,7 @@ interface Props {
   loading: boolean;
   setCurrentPage: (p: number) => void;
   setPageSize: (s: number) => void;
+  onStatusChanged?: (id: string, status: Status) => void;
 }
 
 const WaitingPatientList = ({
@@ -32,12 +33,20 @@ const WaitingPatientList = ({
   loading,
   setCurrentPage,
   setPageSize,
+  onStatusChanged,
 }: Props) => {
   const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
   const [localStatuses, setLocalStatuses] = useState<Record<string, Status>>(
     {}
   );
-
+  const handleStatusChange = async (patientId: string, newStatus: Status) => {
+    try {
+      await updatePatientStatus(patientId, newStatus);
+      setLocalStatuses((prev) => ({ ...prev, [patientId]: newStatus }));
+      setEditingStatusId(null);
+      onStatusChanged?.(patientId, newStatus);
+    } catch {}
+  };
   const getAllowedNextStatuses = (row: QueuePatient): Status[] => {
     const current = localStatuses[row.id] ?? row.status;
 
@@ -47,9 +56,9 @@ const WaitingPatientList = ({
       case Status.CALLING:
         return [Status.IN_PROGRESS, Status.CANCELED];
       case Status.IN_PROGRESS:
-        return [Status.AWAITING_RESULT];
+        return [];
       case Status.AWAITING_RESULT:
-        return [Status.DONE];
+        return [];
       case Status.CANCELED: {
         const hasWaiting = patients.some(
           (p) =>
@@ -83,14 +92,14 @@ const WaitingPatientList = ({
     return options;
   };
 
-  const handleStatusChange = async (patientId: string, newStatus: Status) => {
-    try {
-      await updatePatientStatus(patientId, newStatus);
+  // const handleStatusChange = async (patientId: string, newStatus: Status) => {
+  //   try {
+  //     await updatePatientStatus(patientId, newStatus);
 
-      setLocalStatuses((prev) => ({ ...prev, [patientId]: newStatus }));
-      setEditingStatusId(null);
-    } catch {}
-  };
+  //     setLocalStatuses((prev) => ({ ...prev, [patientId]: newStatus }));
+  //     setEditingStatusId(null);
+  //   } catch {}
+  // };
 
   const columns: Column<QueuePatient>[] = useMemo(
     () => [

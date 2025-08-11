@@ -20,7 +20,10 @@ import { useUserInfo } from "../../../hooks/auth/useUserInfo";
 import useStaffs from "../../../hooks/staffs-service/useStaffs";
 import useQueuePatientService from "../../../hooks/queue-patients/useSearchQueuePatients";
 
-import { InvoiceStatus } from "../../../enums/InvoiceStatus/InvoiceStatus";
+import {
+  InvoiceStatus,
+  InvoiceStatusMap,
+} from "../../../enums/InvoiceStatus/InvoiceStatus";
 import { PaymentType } from "../../../enums/Payment/PaymentType";
 
 import { ServiceRow } from "../../../types/serviceRow";
@@ -185,14 +188,22 @@ const BillingPage = () => {
     }
 
     try {
+      const wasLastItemOnPage = invoices.length === 1 && page > 1;
+
       await markInvoicePending(
         invoiceDetail,
         editableInvoiceDetail,
         fetchInvoiceDetail
       );
+
       toast.success("Hóa đơn đã được thanh toán");
-      fetchInvoices({ status: InvoiceStatus.UNPAID }, page - 1, pageSize);
       setSelectedInvoiceInfo(null);
+
+      if (wasLastItemOnPage) {
+        setPage((p) => Math.max(1, p - 1));
+      } else {
+        await fetchInvoices(currentFilters.current, page - 1, pageSize);
+      }
     } catch (error: any) {
       const messageMap: Record<string, string> = {
         MISSING_PAYMENT_TYPE: "Vui lòng chọn hình thức thanh toán",
@@ -200,7 +211,6 @@ const BillingPage = () => {
         MISSING_REQUIRED_FIELDS:
           "Thiếu thông tin cần thiết để thanh toán hóa đơn",
       };
-
       toast.error(
         messageMap[error?.message] || error?.message || "Đã có lỗi xảy ra"
       );
@@ -214,11 +224,12 @@ const BillingPage = () => {
       label: "Trạng thái",
       placeholder: "Chọn trạng thái",
       wrapper: FloatingLabelWrapper,
-      options: Object.entries(InvoiceStatus).map(([value, label]) => ({
+      options: Object.entries(InvoiceStatus).map(([value]) => ({
         value,
-        label: label as string,
+        label: InvoiceStatusMap[value as keyof typeof InvoiceStatus],
       })),
     },
+
     {
       key: "patientName",
       type: "text",

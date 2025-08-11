@@ -19,36 +19,36 @@ const useQueuePatientService = (
     size: 10,
   });
 
-  const fetchQueuePatients = async (params = queryParams) => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get("/queue-patients/search", {
-        params: {
-          ...params.filters,
-          page: params.page,
-          size: params.size,
-        },
-      });
+const fetchQueuePatients = async (params = queryParams) => {
+  setLoading(true);
+  try {
+    const res = await axiosInstance.get("/queue-patients/search", {
+      params: {
+        ...params.filters,
+        page: params.page,
+        size: params.size,
+      },
+    });
 
-      const data = res.data.result;
-      setPatients(data.content ?? []);
-      setTotalItems(data.totalElements ?? 0);
-    } catch (error: any) {
-      console.error(" Lỗi khi lấy danh sách bệnh nhân:", error);
+    const data = res.data.result;
+    setPatients(data.content ?? []);
+    setTotalItems(data.totalElements ?? 0);
+  } catch (error: any) {
+    console.error("Lỗi khi lấy danh sách bệnh nhân:", error);
 
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        (Array.isArray(error?.response?.data?.errors) &&
-          error?.response?.data?.errors[0]) ||
-        error?.message ||
-        "Không thể tải danh sách bệnh nhân.";
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      (Array.isArray(error?.response?.data?.errors) && error?.response?.data?.errors[0]) ||
+      error?.message ||
+      "Không thể tải danh sách bệnh nhân.";
 
-      toast.error(` ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (!queryParams.filters?.roomNumber) return;

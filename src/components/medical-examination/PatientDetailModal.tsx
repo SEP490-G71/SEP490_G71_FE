@@ -1,4 +1,12 @@
-import { Button, Divider, Grid, Stack, Text, Textarea } from "@mantine/core";
+import {
+  Button,
+  Divider,
+  Grid,
+  Group,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 import dayjs from "dayjs";
 import { UseFormReturnType } from "@mantine/form";
@@ -172,17 +180,23 @@ const PatientDetailSection = ({
 
       {/* Nút Lưu */}
       <Stack align="flex-end">
-        <Button
-          color="red"
-          onClick={onSave}
-          disabled={!allOrdersCompleted || recordCompleted}
-          style={{ alignSelf: "flex-end", width: "fit-content" }}
-        >
-          Lưu Tổng kết
-        </Button>
+        <Group justify="flex-end" gap="sm">
+          <Button
+            variant="outline"
+            // onClick={onAddService}
+            disabled={recordCompleted}
+          >
+            Thêm dịch vụ
+          </Button>
+          <Button
+            color="red"
+            onClick={onSave}
+            disabled={!allOrdersCompleted || recordCompleted}
+          >
+            Lưu Tổng kết
+          </Button>
+        </Group>
       </Stack>
-
-      <Divider label="" labelPosition="center" my="xs" />
     </Stack>
   );
 };

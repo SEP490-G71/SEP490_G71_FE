@@ -2,7 +2,6 @@ import { Badge, Paper } from "@mantine/core";
 import { Column } from "../../types/table";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
-import { MedicalRecordRoomFilter } from "../../hooks/medicalRecord/useMedicalRecordByRoom";
 import {
   MedicalRecordStatusColor,
   MedicalRecordStatusMap,
@@ -11,23 +10,22 @@ import {
 interface Props {
   records: MedicalRecord[];
   loading: boolean;
-  pagination: {
-    pageNumber: number;
-    pageSize: number;
-    totalElements: number;
-  };
-  fetchMedicalRecords: (filters: MedicalRecordRoomFilter) => void;
+  currentPage: number;
+  pageSize: number;
+  totalElements: number;
+
   selectedId: string | null;
   onSelect: (record: MedicalRecord) => void;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
-  roomNumber: string | number;
 }
 
 const InProgressPatientList = ({
   records,
   loading,
-  pagination,
+  currentPage,
+  pageSize,
+  totalElements,
   selectedId,
   onSelect,
   setCurrentPage,
@@ -60,12 +58,12 @@ const InProgressPatientList = ({
       <CustomTable<MedicalRecord>
         data={records}
         columns={columns}
-        page={pagination.pageNumber + 1}
-        pageSize={pagination.pageSize}
-        totalItems={pagination.totalElements}
+        page={currentPage + 1}
+        pageSize={pageSize}
+        totalItems={totalElements}
         loading={loading}
         onPageChange={(p) => setCurrentPage(p - 1)}
-        onPageSizeChange={setPageSize}
+        onPageSizeChange={(s) => setPageSize(s)}
         onRowClick={onSelect}
         getRowStyle={(r) => ({
           backgroundColor: selectedId === r.id ? "#cce5ff" : undefined,
