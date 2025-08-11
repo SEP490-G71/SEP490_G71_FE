@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Divider, Group, Paper, Text } from "@mantine/core";
 import dayjs from "dayjs";
-
 import FilterPanel, { FilterField } from "../common/FilterSection";
 import WaitingPatientList from "./WaitingPatientList";
 import InProgressPatientList from "./InProgressPatientList";
 import { Status, StatusLabel } from "../../enums/Queue-Patient/Status";
 import { MedicalRecordStatus } from "../../enums/MedicalRecord/MedicalRecordStatus";
 import useMedicalRecordByRoom from "../../hooks/medicalRecord/useMedicalRecordByRoom";
-
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import { DepartmentResponse } from "../../types/Admin/Department/DepartmentTypeResponse";
@@ -31,6 +29,7 @@ interface PatientPanelProps {
   updateFilters: (filters: any) => void;
   onSwitchListReset: () => void;
   onTabChange?: (tab: "waiting" | "inprogress") => void;
+  onQueueStatusChanged?: (id: string, status: Status) => void;
 }
 
 const PatientPanel = ({
@@ -49,6 +48,7 @@ const PatientPanel = ({
   updateFilters,
   onSwitchListReset,
   onTabChange,
+  onQueueStatusChanged,
 }: PatientPanelProps) => {
   const [activeTab, setActiveTab] = useState<"waiting" | "inprogress">(
     "waiting"
@@ -69,6 +69,36 @@ const PatientPanel = ({
     fromDate: today,
     toDate: today,
   });
+
+  const inprogressBase = useMemo(
+    () => ({
+      roomNumber: department?.roomNumber ?? "",
+      fromDate: dayjs(sharedDateFilters.fromDate).format("YYYY-MM-DD"),
+      toDate: dayjs(sharedDateFilters.toDate).format("YYYY-MM-DD"),
+      status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
+    }),
+    [department?.roomNumber, sharedDateFilters]
+  );
+
+  const handleInprogressPageChange = useCallback(
+    (page: number) =>
+      fetchMedicalRecordsByRoom({
+        ...inprogressBase,
+        page,
+        size: pagination.pageSize,
+      }),
+    [fetchMedicalRecordsByRoom, inprogressBase, pagination.pageSize]
+  );
+
+  const handleInprogressPageSizeChange = useCallback(
+    (size: number) =>
+      fetchMedicalRecordsByRoom({
+        ...inprogressBase,
+        page: 0,
+        size,
+      }),
+    [fetchMedicalRecordsByRoom, inprogressBase]
+  );
 
   const allowedStatuses: Status[] = [
     Status.WAITING,
@@ -174,7 +204,6 @@ const PatientPanel = ({
 
   const handleSearch = (filters: any) => {
     const { name, phone, fromDate, toDate, ...rest } = filters;
-
     setSharedDateFilters({
       fromDate: fromDate ?? today,
       toDate: toDate ?? today,
@@ -203,10 +232,7 @@ const PatientPanel = ({
   };
 
   const handleReset = () => {
-    setSharedDateFilters({
-      fromDate: today,
-      toDate: today,
-    });
+    setSharedDateFilters({ fromDate: today, toDate: today });
     setResetTrigger(Date.now());
     updateFilters({
       name: "",
@@ -257,9 +283,7 @@ const PatientPanel = ({
           onSearch={handleSearch}
           onReset={handleReset}
         />
-
         <Divider mt="md" mb={15} />
-
         <Group justify="center" mb="md">
           <Text
             fw={activeTab === "waiting" ? 700 : 400}
@@ -301,27 +325,19 @@ const PatientPanel = ({
             loading={loading}
             setPageSize={setPageSize}
             setCurrentPage={setCurrentPage}
+            onStatusChanged={onQueueStatusChanged}
           />
         ) : (
           <InProgressPatientList
             records={records}
             loading={medicalLoading}
-            pagination={pagination}
-            fetchMedicalRecords={() =>
-              fetchMedicalRecordsByRoom({
-                roomNumber: department?.roomNumber ?? "",
-                page: pagination.pageNumber,
-                size: pagination.pageSize,
-                fromDate: todayStr,
-                toDate: todayStr,
-                status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
-              })
-            }
+            currentPage={pagination.pageNumber}
+            pageSize={pagination.pageSize}
+            totalElements={pagination.totalElements}
             selectedId={selectedMedicalRecord?.id ?? null}
             onSelect={onSelectMedicalRecord}
-            setCurrentPage={setCurrentPage}
-            setPageSize={setPageSize}
-            roomNumber={department?.roomNumber ?? ""}
+            setCurrentPage={handleInprogressPageChange}
+            setPageSize={handleInprogressPageSizeChange}
           />
         )}
       </div>

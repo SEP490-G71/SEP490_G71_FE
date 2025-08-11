@@ -1,8 +1,9 @@
-import { Button, NumberInput, Select, Table, ScrollArea } from "@mantine/core";
+import { Button, NumberInput, Table, ScrollArea } from "@mantine/core";
 import { FaTrash } from "react-icons/fa6";
 import { MedicalService } from "../../types/Admin/MedicalService/MedicalService";
 import { ServiceRow } from "../../types/serviceRow";
 import { InvoiceDetail } from "../../types/Invoice/invoice";
+import ServiceSelectTable from "./ServiceSelectTable";
 
 interface Props {
   serviceRows: ServiceRow[];
@@ -45,20 +46,38 @@ const calculateTotal = (row: ServiceRow) => {
   const taxed = discounted * ((100 + vat) / 100);
   return Math.round(taxed);
 };
-
 const ServiceTable = ({
   serviceRows,
   setServiceRows,
   medicalServices,
-  serviceOptions,
+  // serviceOptions,
   editable = true,
   showDepartment = false,
-  nonDefaultServiceOptions,
+  // nonDefaultServiceOptions,
   invoiceDetail,
   allowSelectDefaultServices,
 }: Props) => {
   const getServiceDetail = (id: string | null) =>
     medicalServices.find((s) => s.id === id);
+  const allServiceRows = medicalServices.map((s) => ({
+    value: s.id,
+    serviceCode: s.serviceCode,
+    name: s.name,
+    roomNumber: s.department?.roomNumber || "",
+    departmentName: s.department?.name || "",
+    specializationName: s.department?.specialization?.name || "",
+  }));
+
+  const nonDefaultServiceRows = medicalServices
+    .filter((s) => !s.defaultService)
+    .map((s) => ({
+      value: s.id,
+      serviceCode: s.serviceCode,
+      name: s.name,
+      roomNumber: s.department?.roomNumber || "",
+      departmentName: s.department?.name || "",
+      specializationName: s.department?.specialization?.name || "",
+    }));
 
   const getNextId = (): number =>
     serviceRows.length > 0 ? Math.max(...serviceRows.map((r) => r.id)) + 1 : 1;
@@ -117,12 +136,10 @@ const ServiceTable = ({
   };
 
   const renderRow = (row: ServiceRow, index: number) => {
-    const optionsToUse =
-      allowSelectDefaultServices || index === 0
-        ? serviceOptions
-        : nonDefaultServiceOptions;
-
-    const filteredOptions = optionsToUse ?? [];
+    // const optionsToUse =
+    //   allowSelectDefaultServices || index === 0
+    //     ? serviceOptions
+    //     : nonDefaultServiceOptions;
 
     return (
       <tr
@@ -138,22 +155,17 @@ const ServiceTable = ({
         <td style={{ ...cellStyle, ...align.center, width: 120 }}>
           {row.serviceCode || "---"}
         </td>
-        <td
-          style={{ ...cellStyle, ...align.left, minWidth: 220 }}
-          title={row.name}
-        >
+        <td style={{ ...cellStyle, ...align.left, minWidth: 320 }}>
           {editable ? (
-            <Select
-              data={filteredOptions}
-              searchable
+            <ServiceSelectTable
               value={row.serviceId}
-              onChange={(value) => handleSelectService(index, value ?? null)}
-              placeholder="Chọn dịch vụ"
+              onChange={(v) => handleSelectService(index, v)}
+              options={
+                allowSelectDefaultServices || index === 0
+                  ? allServiceRows
+                  : nonDefaultServiceRows
+              }
               size="xs"
-              variant="unstyled"
-              styles={{
-                input: { paddingLeft: 0, fontSize: "14px", fontWeight: 500 },
-              }}
             />
           ) : (
             row.name || "---"

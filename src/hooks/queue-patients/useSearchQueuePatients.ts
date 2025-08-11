@@ -33,13 +33,14 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
       setPatients(data.content ?? []);
       setTotalItems(data.totalElements ?? 0);
 
-      // if (!data.content || data.content.length === 0) {
-      //   toast.info("Không có bệnh nhân nào phù hợp.");
-      // }
-    } catch (err) {
+      } catch (err: any) {
       console.error("Lỗi khi lấy danh sách bệnh nhân:", err);
-      toast.error("Không thể tải danh sách bệnh nhân.");
-    } finally {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Không thể tải danh sách bệnh nhân.";
+      toast.error(message);
+    }finally {
       setLoading(false);
     }
   };

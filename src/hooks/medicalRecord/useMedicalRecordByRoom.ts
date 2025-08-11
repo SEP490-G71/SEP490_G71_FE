@@ -39,7 +39,7 @@ const useMedicalRecordByRoom = () => {
       const {
         roomNumber,
         page = 0,
-        size = 50,
+        size = 10,
         ...searchParams
       } = filters;
 
@@ -64,7 +64,7 @@ const useMedicalRecordByRoom = () => {
       setRecords(result.content);
       setPagination({
         pageNumber: result.pageNumber ?? 0,
-        pageSize: result.pageSize ?? 50,
+        pageSize: result.pageSize ?? 10,
         totalElements: result.totalElements ?? 0,
         totalPages: result.totalPages ?? 1,
         last: result.last ?? true,

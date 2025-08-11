@@ -165,8 +165,20 @@ const MedicalServicePage = () => {
     createColumn<MedicalService>({
       key: "department",
       label: "Tên phòng",
-      render: (row) => row.department.name,
       align: "left",
+      render: (row) =>
+        row.department ? (
+          <div className="flex flex-col">
+            <span className="font-medium">{row.department.name}</span>
+            {row.department.roomNumber ? (
+              <span className="text-xs text-gray-500">
+                Phòng {row.department.roomNumber}
+              </span>
+            ) : null}
+          </div>
+        ) : (
+          <span className="text-gray-500">—</span>
+        ),
     }),
     createColumn<MedicalService>({
       key: "defaultService",
