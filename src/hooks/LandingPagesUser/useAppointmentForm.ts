@@ -6,11 +6,11 @@ export interface AppointmentFormRequest {
   firstName: string;
   middleName: string;
   lastName: string;
-  dob: string; // yyyy-MM-dd
+  dob: string;
   gender: "MALE" | "FEMALE" | "OTHER";
   email: string;
   phoneNumber: string;
-  registeredAt: string; // ISO datetime
+  registeredAt: string;
   message?: string;
 }
 
@@ -20,15 +20,16 @@ export const useAppointmentForm = () => {
   const submitAppointment = async (form: AppointmentFormRequest) => {
     setLoading(true);
     try {
-      await axiosInstance.post("/registered-online", form, {
-        headers: {
-          "X-Tenant-ID": "test",
-        },
-      });
+      await axiosInstance.post("/registered-online", form);
+
       toast.success("Đặt lịch khám thành công!");
       return true;
-    } catch (error) {
-      toast.error("Lỗi khi đặt lịch khám");
+    } catch (error: any) {
+      const beMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Lỗi khi đặt lịch khám";
+      toast.error(beMessage);
       return false;
     } finally {
       setLoading(false);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
 
 interface PatientOption {
   label: string;
@@ -13,7 +14,7 @@ export const useSearchPatients = (searchTerm: string) => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
-      const cleanedSearchTerm = searchTerm.trim().replace(/\s+/g, " "); 
+      const cleanedSearchTerm = searchTerm.trim().replace(/\s+/g, " ");
 
       if (!cleanedSearchTerm) {
         setOptions([]);
@@ -35,7 +36,11 @@ export const useSearchPatients = (searchTerm: string) => {
         }));
 
         setOptions(mapped);
-      } catch {
+      } catch (err: any) {
+        const errorMessage =
+          err?.response?.data?.message ||
+          "Không thể tìm kiếm bệnh nhân. Vui lòng thử lại.";
+        toast.error(errorMessage);
         setOptions([]);
       } finally {
         setLoading(false);
@@ -47,4 +52,3 @@ export const useSearchPatients = (searchTerm: string) => {
 
   return { options, loading };
 };
-

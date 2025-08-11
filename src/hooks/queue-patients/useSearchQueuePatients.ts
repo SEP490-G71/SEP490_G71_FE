@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
@@ -7,7 +6,9 @@ import {
   SearchQueueParams,
 } from "../../types/Queue-patient/QueuePatient";
 
-const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {}) => {
+const useQueuePatientService = (
+  initialFilters: Partial<SearchQueueParams> = {}
+) => {
   const [patients, setPatients] = useState<QueuePatient[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -18,32 +19,36 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
     size: 10,
   });
 
-  const fetchQueuePatients = async (params = queryParams) => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get("/queue-patients/search", {
-        params: {
-          ...params.filters,
-          page: params.page,
-          size: params.size,
-        },
-      });
+const fetchQueuePatients = async (params = queryParams) => {
+  setLoading(true);
+  try {
+    const res = await axiosInstance.get("/queue-patients/search", {
+      params: {
+        ...params.filters,
+        page: params.page,
+        size: params.size,
+      },
+    });
 
-      const data = res.data.result;
-      setPatients(data.content ?? []);
-      setTotalItems(data.totalElements ?? 0);
+    const data = res.data.result;
+    setPatients(data.content ?? []);
+    setTotalItems(data.totalElements ?? 0);
+  } catch (error: any) {
+    console.error("Lỗi khi lấy danh sách bệnh nhân:", error);
 
-      } catch (err: any) {
-      console.error("Lỗi khi lấy danh sách bệnh nhân:", err);
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Không thể tải danh sách bệnh nhân.";
-      toast.error(message);
-    }finally {
-      setLoading(false);
-    }
-  };
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      (Array.isArray(error?.response?.data?.errors) && error?.response?.data?.errors[0]) ||
+      error?.message ||
+      "Không thể tải danh sách bệnh nhân.";
+
+    toast.error(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (!queryParams.filters?.roomNumber) return;
@@ -54,7 +59,6 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
 
     return () => clearTimeout(timeout);
   }, [queryParams]);
-
 
   const updateFilters = (newFilters: Partial<SearchQueueParams>) => {
     setQueryParams((prev) => ({

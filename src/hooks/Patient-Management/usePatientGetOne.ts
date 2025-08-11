@@ -2,6 +2,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { Patient } from "../../types/Admin/Patient-Management/PatientManagement";
+import { toast } from "react-toastify";
 
 const usePatientDetail = () => {
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -17,8 +18,11 @@ const usePatientDetail = () => {
       } else {
         setPatient(null);
       }
-    } catch (err) {
-      console.error("❌ Lỗi khi lấy thông tin bệnh nhân:", err);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || " Lỗi khi lấy thông tin bệnh nhân.";
+      toast.error(errorMessage);
+      console.error(" Lỗi khi lấy thông tin bệnh nhân:", error);
       setPatient(null);
     } finally {
       setLoading(false);

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export interface StaffOption {
   value: string;
@@ -21,8 +23,9 @@ const useStaffSearch = () => {
         label: `${staff.fullName} (${staff.staffCode})`,
       }));
       setOptions(mapped);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Search staff error", error);
+      toast.error(getErrorMessage(error, "Lỗi khi tìm kiếm nhân viên"));
     } finally {
       setLoading(false);
     }

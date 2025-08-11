@@ -5,6 +5,7 @@ import {
   CreateSpecializationRequest,
 } from "../../types/Admin/Specializations/Specializations";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export const useSpecializations = () => {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -27,8 +28,10 @@ export const useSpecializations = () => {
 
       setSpecializations(content);
       setTotalItems(total);
-    } catch (err) {
-      toast.error("Không thể tải danh sách chuyên ngành");
+    } catch (error: any) {
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách chuyên ngành")
+      );
     } finally {
       setLoading(false);
     }
@@ -38,8 +41,10 @@ export const useSpecializations = () => {
     try {
       const res = await axiosInstance.get(`/specializations/${id}`);
       return res.data.result as Specialization;
-    } catch {
-      toast.error("Không thể lấy chi tiết chuyên ngành");
+    } catch (error: any) {
+      toast.error(
+        getErrorMessage(error, "Không thể lấy chi tiết chuyên ngành")
+      );
       return null;
     }
   };
@@ -56,8 +61,8 @@ export const useSpecializations = () => {
       await axiosInstance.delete(`/specializations/${id}`);
       toast.success("Xoá chuyên ngành thành công");
       await fetchAllSpecializations(filters);
-    } catch {
-      toast.error("Không thể xoá chuyên ngành");
+    } catch (error: any) {
+      toast.error(getErrorMessage(error, "Không thể xoá chuyên ngành"));
     }
   };
 
@@ -82,7 +87,7 @@ export const useSpecializations = () => {
       await fetchAllSpecializations(filters);
       return true;
     } catch (error: any) {
-      toast.error("Lỗi khi lưu dữ liệu");
+      toast.error(getErrorMessage(error, "Lỗi khi lưu dữ liệu"));
       return false;
     }
   };

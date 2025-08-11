@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
-import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { RoleType } from "../../enums/Role/RoleType";
+import { useNavigate } from "react-router";
 
 export const useSignIn = () => {
   const [loading, setLoading] = useState(false);
@@ -14,36 +14,35 @@ export const useSignIn = () => {
     CASHIER: "/admin/medical-examination/billing",
     RECEPTIONIST: "/admin/register-medical-examination",
     TECHNICIAN: "/admin/medical-examination/clinical",
-    // PATIENT: "/admin/medical-records",
     PATIENT: "/patient/examinationHistory",
     user: "/admin/medical-examination",
   };
 
-  const signIn = async (username: string, password: string) => {
+  const signIn = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     setLoading(true);
     try {
+      // 1) Login
       const res = await axiosInstance.post("/auth/login", {
         username,
         password,
       });
 
-      //  Lấy token từ kết quả
+      // 2) Lấy token
       const token = res.data?.result?.token || res.data?.token;
-      if (!token) {
-        throw new Error("Không nhận được token");
-      }
-
-      //  Lưu token vào localStorage
+      if (!token) throw new Error("Không nhận được token");
       localStorage.setItem("token", token);
 
+      // 3) Lấy thông tin user
       const infoRes = await axiosInstance.get("/accounts/myInfo");
       if (infoRes.data?.code !== 1000 || !infoRes.data?.result) {
         throw new Error("Không thể lấy thông tin người dùng");
       }
 
       const roles: string[] = infoRes.data.result.roles || [];
-
-      const priorityOrder: string[] = [
+      const priorityOrder = [
         "ADMIN",
         "DOCTOR",
         "CASHIER",
@@ -52,19 +51,17 @@ export const useSignIn = () => {
         "PATIENT",
         "user",
       ];
-
-      //  Lấy role đầu tiên xuất hiện trong danh sách ưu tiên
       const redirectRole =
         priorityOrder.find((r) => roles.includes(r)) || "user";
-
-      //  Lấy route tương ứng với role
       const redirectPath = roleRedirectMap[redirectRole];
 
       toast.success("Đăng nhập thành công!");
-      navigate(redirectPath); //  SỬA 4: Điều hướng đến route tương ứng với vai trò chính
+      navigate(redirectPath);
+      return true;
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Đăng nhập thất bại");
-      throw err;
+      const msg = err?.response?.data?.message || "Đăng nhập thất bại";
+      toast.error(msg);
+      return false;
     } finally {
       setLoading(false);
     }

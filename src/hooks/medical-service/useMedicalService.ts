@@ -8,6 +8,14 @@ const useMedicalService = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const getErrorMessage = (error: any, defaultMsg: string) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      defaultMsg
+    );
+  };
+
   const fetchAllMedicalServices = async (
     page: number = 0,
     size: number = 5,
@@ -33,20 +41,25 @@ const useMedicalService = () => {
       setMedicalServices(res.data.result.content);
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
-      console.error("Failed to fetch medical services:", error);
+      console.error("Lỗi khi tải danh sách dịch vụ y tế:", error);
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách dịch vụ y tế.")
+      );
     } finally {
       setLoading(false);
     }
   };
 
-    const fetchAllMedicalServicesNoPagination = async () => {
+  const fetchAllMedicalServicesNoPagination = async () => {
     setLoading(true);
     try {
       const res = await axiosInstance.get("/medical-services/all");
       setMedicalServices(res.data.result ?? []);
     } catch (error) {
-      console.error("Failed to fetch all medical services (no pagination):", error);
-      toast.error("Không thể tải danh sách dịch vụ (tất cả).");
+      console.error("Lỗi khi tải tất cả dịch vụ y tế:", error);
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách dịch vụ (tất cả).")
+      );
     } finally {
       setLoading(false);
     }
@@ -57,7 +70,10 @@ const useMedicalService = () => {
       const res = await axiosInstance.get(`/medical-services/${id}`);
       return res.data.result as MedicalService;
     } catch (error) {
-      console.error("Failed to fetch medical service by id:", error);
+      console.error("Lỗi khi tải thông tin dịch vụ y tế:", error);
+      toast.error(
+        getErrorMessage(error, "Không thể tải thông tin dịch vụ y tế.")
+      );
       return null;
     }
   };
@@ -70,8 +86,8 @@ const useMedicalService = () => {
         fetchAllMedicalServices();
       }
     } catch (error) {
-      console.error("Failed to fetch medical service by id:", error);
-      return null;
+      console.error("Lỗi khi xoá dịch vụ y tế:", error);
+      toast.error(getErrorMessage(error, "Không thể xoá dịch vụ y tế."));
     }
   };
 

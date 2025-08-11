@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
 
 interface PatientOption {
   label: string;
@@ -23,13 +24,17 @@ const usePatientSearch = () => {
   const [options, setOptions] = useState<PatientOption[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const getErrorMessage = (error: any, defaultMsg: string) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      defaultMsg
+    );
+  };
+
   // Hàm gọi API tìm kiếm
   const fetchPatients = async (searchTerm: string) => {
     const cleanedSearchTerm = searchTerm.trim();
-    // if (!cleanedSearchTerm) {
-    //   setOptions([]);
-    //   return;
-    // }
 
     setLoading(true);
     try {
@@ -45,8 +50,9 @@ const usePatientSearch = () => {
       }));
 
       setOptions(mapped);
-    } catch {
+    } catch (error) {
       setOptions([]);
+      toast.error(getErrorMessage(error, "Không thể tìm kiếm bệnh nhân."));
     } finally {
       setLoading(false);
     }

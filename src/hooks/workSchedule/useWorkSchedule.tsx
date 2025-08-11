@@ -2,6 +2,7 @@ import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { WorkSchedule } from "../../types/Admin/WorkSchedule/WorkSchedule";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export const useWorkSchedule = () => {
   const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
@@ -32,7 +33,7 @@ export const useWorkSchedule = () => {
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
       console.error("Failed to fetch work schedules:", error);
-      toast.error("Lỗi tải dữ liệu lịch làm việc");
+      toast.error(getErrorMessage(error, "Lỗi tải dữ liệu lịch làm việc"));
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,12 @@ export const useWorkSchedule = () => {
       return Array.isArray(result) ? result : [];
     } catch (err) {
       console.error("Failed to fetch external schedule:", err);
-      toast.error("Không thể lấy chi tiết lịch làm việc nhân viên (external)");
+      toast.error(
+        getErrorMessage(
+          err,
+          "Không thể lấy chi tiết lịch làm việc nhân viên (external)"
+        )
+      );
       return [];
     }
   };
@@ -56,7 +62,7 @@ export const useWorkSchedule = () => {
       toast.success("Xoá ca làm việc thành công");
     } catch (error) {
       console.error("Failed to delete work schedule detail", error);
-      toast.error("Xoá ca làm việc thất bại");
+      toast.error(getErrorMessage(error, "Xoá ca làm việc thất bại"));
     }
   };
 

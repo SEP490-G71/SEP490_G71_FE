@@ -104,7 +104,7 @@ export const PatientPortalHeader = ({ username, loadingUser }: Props) => {
 
                   <Menu.Item
                     leftSection={<User2 className="w-4 h-4" />}
-                    onClick={() => navigate("/patient/profile")}
+                    onClick={() => navigate("/edit-profile")}
                   >
                     Thông tin cá nhân
                   </Menu.Item>

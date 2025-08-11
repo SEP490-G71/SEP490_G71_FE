@@ -38,8 +38,10 @@ export const usePatientManagement = () => {
       const total = result.totalElements || result.length || 0;
       setTotalItems(total);
       return total;
-    } catch (err) {
-      toast.error("Failed to fetch patients");
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || "Không thể tải danh sách bệnh nhân.";
+      toast.error(errorMessage);
       return 0;
     } finally {
       setLoading(false);
@@ -50,8 +52,10 @@ export const usePatientManagement = () => {
     try {
       const res = await axiosInstance.get(`/patients/${id}`);
       return res.data.result;
-    } catch (err) {
-      toast.error("Failed to fetch patient");
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || "Không thể tải thông tin bệnh nhân.";
+      toast.error(errorMessage);
       return null;
     }
   };
@@ -61,8 +65,10 @@ export const usePatientManagement = () => {
       await axiosInstance.delete(`/patients/${id}`);
       toast.success("Deleted successfully");
       await fetchAllPatients();
-    } catch (err) {
-      toast.error("Failed to delete patient");
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || "Không thể xóa bệnh nhân.";
+      toast.error(errorMessage);
     }
   };
 
