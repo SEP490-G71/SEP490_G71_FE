@@ -1,24 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import Button from "../ui/button/Button";
 import { useSignIn } from "../../hooks/auth/useSignIn";
+import { Link } from "react-router";
+import Button from "../ui/button/Button";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, loading } = useSignIn();
 
-  const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault();
-    try {
-      await signIn(email, password);
-    } catch (err: any) {
-      alert(err.message);
-    }
+  // 🔧 Sửa: handle submit ở FORM, preventDefault ở đây
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await signIn(username, password); // hook đã tự bắn toast + điều hướng
   };
 
   return (
@@ -32,6 +29,7 @@ export default function SignInForm() {
           Trang chủ
         </Link>
       </div>
+
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8 text-center">
@@ -39,21 +37,25 @@ export default function SignInForm() {
               Đăng Nhập
             </h1>
           </div>
-          <form>
+
+          {/* 🔧 Sửa: gắn onSubmit cho form */}
+          <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
                 <Label>
-                  Tên đăng nhập <span className="text-error-500">*</span>{" "}
+                  Tên đăng nhập <span className="text-error-500">*</span>
                 </Label>
                 <Input
-                  placeholder="info@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
                 />
               </div>
+
               <div>
                 <Label>
-                  Mật khẩu <span className="text-error-500">*</span>{" "}
+                  Mật khẩu <span className="text-error-500">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -61,6 +63,7 @@ export default function SignInForm() {
                     placeholder="Nhập mật khẩu"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -74,6 +77,7 @@ export default function SignInForm() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <Link
                   to="/reset-password"
@@ -82,12 +86,14 @@ export default function SignInForm() {
                   Quên Mật Khẩu
                 </Link>
               </div>
+
               <div>
+                {/* 🔧 Sửa: type="submit", KHÔNG dùng onClick */}
                 <Button
                   className="w-full"
                   size="sm"
+                  type="submit"
                   disabled={loading}
-                  onClick={handleSubmit}
                 >
                   {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </Button>

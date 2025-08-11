@@ -9,20 +9,21 @@ export const useMedicalServiceUpdate = () => {
   ) => {
     try {
       if (selectedServiceId) {
-        await axiosInstance.put(`/medical-services/${selectedServiceId}`, formData);
-        toast.success("Updated successfully");
+        await axiosInstance.put(
+          `/medical-services/${selectedServiceId}`,
+          formData
+        );
+        toast.success("Cập nhật dịch vụ y tế thành công");
       } else {
         await axiosInstance.post(`/medical-services`, formData);
-        toast.success("Created successfully");
+        toast.success("Tạo mới dịch vụ y tế thành công");
       }
 
-      console.log("🔍 Form Data gửi đi:", formData);
+      console.log("Form Data gửi đi:", formData);
       return true;
     } catch (error: any) {
       const errorMessage =
-        error?.response?.data?.message 
-        "An error occurred while saving";
-
+        error?.response?.data?.message || "Đã xảy ra lỗi khi lưu dịch vụ y tế";
       toast.error(errorMessage);
       return false;
     }

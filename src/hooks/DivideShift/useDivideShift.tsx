@@ -11,6 +11,14 @@ export const useDivideShift = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const getErrorMessage = (error: any) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      "Có lỗi xảy ra. Vui lòng thử lại."
+    );
+  };
+
   const fetchAllShifts = async (filters?: {
     name?: string;
     page?: number;
@@ -32,6 +40,7 @@ export const useDivideShift = () => {
       setTotalItems(total);
     } catch (error) {
       console.error("Failed to fetch shifts:", error);
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -43,6 +52,7 @@ export const useDivideShift = () => {
       return res.data.result as DivideShift;
     } catch (error) {
       console.error("Failed to fetch shift:", error);
+      toast.error(getErrorMessage(error));
       return null;
     }
   };
@@ -54,6 +64,7 @@ export const useDivideShift = () => {
       fetchAllShifts();
     } catch (error) {
       console.error("Failed to delete shift:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -73,7 +84,7 @@ export const useDivideShift = () => {
       return true;
     } catch (err) {
       console.error("Error submitting shift:", err);
-      toast.error("Lỗi khi lưu ca làm");
+      toast.error(getErrorMessage(err));
       return false;
     }
   };

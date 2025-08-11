@@ -26,9 +26,11 @@ export const useExportBirthdayPatientsExcel = () => {
       window.URL.revokeObjectURL(url);
 
       toast.success("🎉 Xuất file Excel thành công!");
-    } catch (error) {
-      toast.error("❗ Không thể xuất file Excel");
-      console.error(error);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || "❗ Không thể xuất file Excel";
+      toast.error(errorMessage);
+      console.error("Lỗi khi xuất file Excel:", error);
     }
   };
 

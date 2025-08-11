@@ -220,12 +220,10 @@ export default function RegisterMedicalExaminationPage() {
         const statusMap: Record<string, { label: string; color: string }> = {
           WAITING: { label: "Chờ khám", color: "gray" },
           IN_PROGRESS: { label: "Đang khám", color: "blue" },
+          AWAITING_RESULT: { label: "Chờ kết quả", color: "purple" },
           DONE: { label: "Hoàn thành", color: "green" },
-          CANCELED: { label: "Đã hủy", color: "red" },
-          ACTIVE: { label: "Hoạt động", color: "green" },
-          INACTIVE: { label: "Không hoạt động", color: "gray" },
-          PENDING: { label: "Đang xử lý", color: "orange" },
-          FAILED: { label: "Thất bại", color: "red" },
+          CANCELED: { label: "Đã qua lượt", color: "red" },
+          CALLING: { label: "Đang gọi", color: "yellow" },
         };
 
         const status = row.status ?? "";
@@ -566,10 +564,8 @@ export default function RegisterMedicalExaminationPage() {
                         { value: "IN_PROGRESS", label: "Đang khám" },
                         { value: "DONE", label: "Hoàn thành" },
                         { value: "CANCELED", label: "Đã hủy" },
-                        { value: "ACTIVE", label: "Hoạt động" },
-                        { value: "INACTIVE", label: "Không hoạt động" },
-                        { value: "PENDING", label: "Đang xử lý" },
-                        { value: "FAILED", label: "Thất bại" },
+                        { value: "AWAITING_RESULT", label: "Chờ kết quả" },
+                        { value: "CALLING", label: "Đang gọi" },
                       ]}
                       value={searchFilters.status}
                       onChange={(value) =>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
 
 export interface MonthlyTarget {
   targetAmount: number;
@@ -66,8 +67,15 @@ export function useDashboard() {
     try {
       const res = await axiosInstance.get("/dashboards");
       setStats(res.data.result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch dashboard stats", error);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Có lỗi xảy ra khi tải dữ liệu Dashboard.";
+
+      toast.error(message);
     }
   };
 

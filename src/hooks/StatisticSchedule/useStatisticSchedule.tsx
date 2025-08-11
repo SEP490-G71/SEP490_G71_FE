@@ -2,6 +2,7 @@ import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { ScheduleStatisticItem } from "../../types/Admin/StatisticSchedule/StatisticSchedule";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export const useStatisticSchedule = () => {
   const [statistics, setStatistics] = useState<ScheduleStatisticItem[]>([]);
@@ -50,8 +51,10 @@ export const useStatisticSchedule = () => {
         totalStaffs: result.totalStaffs,
         attendanceRate: result.attendanceRate,
       });
-    } catch (error) {
-      toast.error("Không thể tải dữ liệu thống kê lịch làm việc");
+    } catch (error: any) {
+      toast.error(
+        getErrorMessage(error, "Không thể tải dữ liệu thống kê lịch làm việc")
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -83,8 +86,8 @@ export const useStatisticSchedule = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
-      toast.error("Export Excel thất bại");
+    } catch (error: any) {
+      toast.error(getErrorMessage(error, "Export Excel thất bại"));
       console.error("Export error", error);
     }
   };

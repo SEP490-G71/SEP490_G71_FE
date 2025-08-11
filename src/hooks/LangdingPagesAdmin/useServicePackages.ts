@@ -7,6 +7,14 @@ const useServicePackages = () => {
   const [servicePackages, setServicePackages] = useState<ServicePackage[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const getErrorMessage = (error: any) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      "Không thể tải danh sách gói dịch vụ."
+    );
+  };
+
   const fetchServicePackages = async () => {
     setLoading(true);
     try {
@@ -19,7 +27,7 @@ const useServicePackages = () => {
       }
     } catch (error) {
       console.error("Lỗi khi tải danh sách gói dịch vụ:", error);
-      toast.error("Không thể tải danh sách gói dịch vụ.");
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

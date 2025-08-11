@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
 
@@ -22,9 +23,9 @@ export const useScheduleApi = () => {
         payload
       );
       toast.success("Cập nhật lịch làm việc thành công");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating schedule", error);
-      toast.error("Lỗi khi cập nhật lịch làm việc");
+      toast.error(getErrorMessage(error, "Lỗi khi cập nhật lịch làm việc"));
       throw error;
     }
   };
@@ -40,9 +41,9 @@ export const useScheduleApi = () => {
         payload
       );
       toast.success("Xoá lịch làm việc thành công");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting schedule", error);
-      toast.error("Lỗi khi xoá lịch làm việc");
+      toast.error(getErrorMessage(error, "Lỗi khi xoá lịch làm việc"));
       throw error;
     }
   };

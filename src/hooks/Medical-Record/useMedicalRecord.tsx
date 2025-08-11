@@ -8,6 +8,14 @@ const useMedicalRecord = () => {
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const getErrorMessage = (error: any, defaultMsg: string) => {
+    return (
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      defaultMsg
+    );
+  };
+
   const fetchAllMedicalRecords = async (
     page: number = 0,
     size: number = 5,
@@ -36,7 +44,9 @@ const useMedicalRecord = () => {
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
       console.error("Failed to fetch medical records", error);
-      toast.error("Lỗi khi tải danh sách hồ sơ bệnh án");
+      toast.error(
+        getErrorMessage(error, "Lỗi khi tải danh sách hồ sơ bệnh án")
+      );
     } finally {
       setLoading(false);
     }
@@ -52,7 +62,7 @@ const useMedicalRecord = () => {
       window.open(url, "_blank");
     } catch (error) {
       console.error("Preview lỗi", error);
-      toast.error("Không thể xem trước hồ sơ bệnh án");
+      toast.error(getErrorMessage(error, "Không thể xem trước hồ sơ bệnh án"));
     }
   };
 
@@ -73,7 +83,7 @@ const useMedicalRecord = () => {
       link.remove();
     } catch (error) {
       console.error("Download lỗi", error);
-      toast.error("Không thể tải hồ sơ bệnh án");
+      toast.error(getErrorMessage(error, "Không thể tải hồ sơ bệnh án"));
     }
   };
 
