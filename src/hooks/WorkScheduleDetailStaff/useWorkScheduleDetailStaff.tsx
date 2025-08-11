@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { WorkScheduleDetail } from "../../types/Admin/WorkSchedule/WorkSchedule";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export const useWorkScheduleDetailStaff = () => {
   const [schedules, setSchedules] = useState<WorkScheduleDetail[]>([]);
@@ -23,7 +24,7 @@ export const useWorkScheduleDetailStaff = () => {
       const result = resSchedule?.data?.result ?? [];
       setSchedules(result);
     } catch (error) {
-      toast.error("Không thể tải lịch làm việc");
+      toast.error(getErrorMessage(error, "Không thể tải lịch làm việc"));
       console.error(error);
     } finally {
       setLoading(false);
@@ -35,9 +36,9 @@ export const useWorkScheduleDetailStaff = () => {
       await axiosInstance.post(`/work-schedules/check-in/${workScheduleId}`);
       toast.success("Chấm công thành công");
       fetchWorkScheduleDetail(); // cập nhật lại danh sách ca
-    } catch (err) {
-      toast.error("Chấm công thất bại");
-      console.error(err);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Chấm công thất bại"));
+      console.error(error);
     }
   };
 

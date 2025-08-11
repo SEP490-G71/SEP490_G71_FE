@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export interface ShiftOption {
   value: string;
@@ -21,9 +22,9 @@ export const useShifts = () => {
         label: shift.name,
       }));
       setShifts(formatted);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch shifts", error);
-      toast.error("Không thể tải danh sách ca trực");
+      toast.error(getErrorMessage(error, "Không thể tải danh sách ca trực"));
     } finally {
       setLoading(false);
     }

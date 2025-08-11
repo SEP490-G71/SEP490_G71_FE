@@ -2,6 +2,7 @@ import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { Role } from "../../types/Admin/Role/RolePage";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 const useRoleService = () => {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -32,7 +33,8 @@ const useRoleService = () => {
       setRoles(res.data.result.content);
       setTotalItems(res.data.result.totalElements);
     } catch (error) {
-      console.error("Failed to fetch roles:", error);
+      console.error("Lỗi fetch roles:", error);
+      toast.error(getErrorMessage(error, "Không thể tải danh sách vai trò"));
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,8 @@ const useRoleService = () => {
       setRoles(filtered);
       setTotalItems(filtered.length);
     } catch (error) {
-      console.error("Failed to fetch roles (excluding PATIENT):", error);
+      console.error("Lỗi fetch roles except PATIENT:", error);
+      toast.error(getErrorMessage(error, "Không thể tải danh sách vai trò"));
     } finally {
       setLoading(false);
     }
@@ -70,7 +73,8 @@ const useRoleService = () => {
       const res = await axiosInstance.get(`/roles/${id}`);
       return res.data.result as Role;
     } catch (error) {
-      console.error("Failed to fetch role by id:", error);
+      console.error("Lỗi fetch role by id:", error);
+      toast.error(getErrorMessage(error, "Không thể tải thông tin vai trò"));
       return null;
     }
   };
@@ -83,8 +87,8 @@ const useRoleService = () => {
         fetchAllRoles();
       }
     } catch (error) {
-      console.error("Failed to delete role by id:", error);
-      toast.error("Failed to delete role");
+      console.error("Lỗi delete role by id:", error);
+      toast.error(getErrorMessage(error, "Xoá vai trò thất bại"));
     }
   };
 

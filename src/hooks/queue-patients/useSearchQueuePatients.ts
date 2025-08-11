@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
@@ -7,7 +6,9 @@ import {
   SearchQueueParams,
 } from "../../types/Queue-patient/QueuePatient";
 
-const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {}) => {
+const useQueuePatientService = (
+  initialFilters: Partial<SearchQueueParams> = {}
+) => {
   const [patients, setPatients] = useState<QueuePatient[]>([]);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -32,13 +33,18 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
       const data = res.data.result;
       setPatients(data.content ?? []);
       setTotalItems(data.totalElements ?? 0);
+    } catch (error: any) {
+      console.error(" Lỗi khi lấy danh sách bệnh nhân:", error);
 
-      // if (!data.content || data.content.length === 0) {
-      //   toast.info("Không có bệnh nhân nào phù hợp.");
-      // }
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách bệnh nhân:", err);
-      toast.error("Không thể tải danh sách bệnh nhân.");
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (Array.isArray(error?.response?.data?.errors) &&
+          error?.response?.data?.errors[0]) ||
+        error?.message ||
+        "Không thể tải danh sách bệnh nhân.";
+
+      toast.error(` ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -53,7 +59,6 @@ const useQueuePatientService = (initialFilters: Partial<SearchQueueParams> = {})
 
     return () => clearTimeout(timeout);
   }, [queryParams]);
-
 
   const updateFilters = (newFilters: Partial<SearchQueueParams>) => {
     setQueryParams((prev) => ({

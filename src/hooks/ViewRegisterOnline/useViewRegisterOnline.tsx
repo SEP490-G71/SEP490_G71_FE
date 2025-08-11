@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export interface OnlineRegisteredPatient {
   id: string;
@@ -46,8 +47,10 @@ export const useViewRegisterOnline = () => {
         content: result.content || [],
         totalElements: result.totalElements || 0,
       };
-    } catch (error) {
-      toast.error("Không thể tải danh sách bệnh nhân online");
+    } catch (error: any) {
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách bệnh nhân online")
+      );
       console.error(error);
       return { content: [], totalElements: 0 };
     } finally {
@@ -61,8 +64,8 @@ export const useViewRegisterOnline = () => {
         isConfirmed,
       });
       toast.success("Cập nhật trạng thái thành công");
-    } catch (error) {
-      toast.error("Cập nhật trạng thái thất bại");
+    } catch (error: any) {
+      toast.error(getErrorMessage(error, "Cập nhật trạng thái thất bại"));
       console.error(error);
     }
   };

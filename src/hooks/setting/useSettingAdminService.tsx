@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstance from "../../services/axiosInstance";
 import { SettingAdmin } from "../../types/Admin/settings/settingAdmin";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 export const useSettingAdminService = () => {
   const [setting, setSetting] = useState<SettingAdmin | null>(null);
@@ -13,7 +14,8 @@ export const useSettingAdminService = () => {
       const res = await axiosInstance.get("/settings");
       setSetting(res.data.result);
     } catch (error) {
-      toast.error("Không thể tải thông tin setting");
+      console.error("Lỗi khi fetch setting:", error);
+      toast.error(getErrorMessage(error, "Không thể tải thông tin cài đặt"));
     } finally {
       setLoading(false);
     }
@@ -24,7 +26,8 @@ export const useSettingAdminService = () => {
       await axiosInstance.post("/settings", data);
       toast.success("Cập nhật thông tin thành công");
     } catch (error) {
-      toast.error("Cập nhật thông tin thất bại");
+      console.error("Lỗi khi update setting:", error);
+      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại"));
     }
   };
 

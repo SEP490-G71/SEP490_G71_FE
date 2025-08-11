@@ -17,8 +17,10 @@ export const useBirthdayPatients = () => {
       const result = res.data.result;
       setPatients(result.content || []);
       setTotalItems(result.totalElements || 0);
-    } catch (error) {
-      toast.error("Không thể tải danh sách bệnh nhân");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Không thể tải danh sách bệnh nhân"
+      );
     } finally {
       setLoading(false);
     }
@@ -37,8 +39,11 @@ export const useBirthdayPatients = () => {
       const result = res.data.result;
       setPatients(result.content || []);
       setTotalItems(result.totalElements || 0);
-    } catch (error) {
-      toast.error("Không thể tải danh sách sinh nhật tháng " + month);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          `Không thể tải danh sách bệnh nhân sinh nhật trong tháng ${month}`
+      );
     } finally {
       setLoading(false);
     }

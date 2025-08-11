@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 import axiosInstance from "../../services/axiosInstance";
 import { Patient } from "../../../src/types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
+import { getErrorMessage } from "../../components/utils/getErrorMessage";
 
 interface PatientFilters {
   patientCode?: string;
@@ -45,11 +46,9 @@ export const useRegisterMedicalExamination = () => {
       const createdPatient: Patient = res.data.result;
       toast.success("Tạo bệnh nhân thành công");
       return createdPatient;
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ Lỗi tạo bệnh nhân:", error);
-      const message =
-        error?.response?.data?.message || "Tạo bệnh nhân thất bại";
-      toast.error(message);
+      toast.error(getErrorMessage(error, "Tạo bệnh nhân thất bại"));
       return null;
     }
   };
@@ -74,8 +73,8 @@ export const useRegisterMedicalExamination = () => {
         totalElements: result.totalElements || 0,
       };
     } catch (error) {
-      console.error("❌ Lỗi khi fetch /patients:", error);
-      toast.error("Không thể tải danh sách bệnh nhân");
+      console.error(" Lỗi khi fetch /patients:", error);
+      toast.error(getErrorMessage(error, "Không thể tải danh sách bệnh nhân"));
       return { content: [], totalElements: 0 };
     }
   };
@@ -103,10 +102,9 @@ export const useRegisterMedicalExamination = () => {
       await axiosInstance.post("/queue-patients", payload);
       toast.success("Đăng ký khám thành công");
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      console.error("❌ Lỗi đăng ký khám:", err);
-      const message = err?.response?.data?.message || "Đăng ký khám thất bại";
-      toast.error(message);
+    } catch (error) {
+      console.error(" Lỗi đăng ký khám:", error);
+      toast.error(getErrorMessage(error, "Đăng ký khám thất bại"));
     }
   };
   const fetchTodayRegisteredPatients = async (
@@ -129,8 +127,10 @@ export const useRegisterMedicalExamination = () => {
         totalElements: result?.totalElements || 0,
       };
     } catch (error) {
-      console.error("❌ Lỗi khi fetch queue-patients/search:", error);
-      toast.error("Không thể tải danh sách đăng ký khám");
+      console.error(" Lỗi khi fetch queue-patients/search:", error);
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách đăng ký khám")
+      );
       return { content: [], totalElements: 0 };
     }
   };
@@ -148,8 +148,8 @@ export const useRegisterMedicalExamination = () => {
       });
       return response.data?.result || [];
     } catch (error) {
-      toast.error("Không thể tải danh sách phòng khám");
-      console.error("❌ Lỗi khi fetch departments:", error);
+      console.error(" Lỗi khi fetch departments:", error);
+      toast.error(getErrorMessage(error, "Không thể tải danh sách phòng khám"));
       return [];
     }
   };
@@ -179,8 +179,10 @@ export const useRegisterMedicalExamination = () => {
         totalElements: result?.totalElements || 0,
       };
     } catch (error) {
-      console.error("❌ Lỗi khi fetch registered-online:", error);
-      toast.error("Không thể tải danh sách đăng ký khám online");
+      console.error("Lỗi khi fetch registered-online:", error);
+      toast.error(
+        getErrorMessage(error, "Không thể tải danh sách đăng ký khám online")
+      );
       return { content: [], totalElements: 0 };
     }
   };

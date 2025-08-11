@@ -20,11 +20,8 @@ export const useAppointmentForm = () => {
   const submitAppointment = async (form: AppointmentFormRequest) => {
     setLoading(true);
     try {
-      await axiosInstance.post("/registered-online", form, {
-        headers: {
-          "X-Tenant-ID": "test",
-        },
-      });
+      await axiosInstance.post("/registered-online", form);
+
       toast.success("Đặt lịch khám thành công!");
       return true;
     } catch (error: any) {

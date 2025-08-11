@@ -8,10 +8,10 @@ const updatePatientStatus = async (queueId: string, status: string) => {
       { status }
     );
 
-    toast.success("✅ Cập nhật trạng thái bệnh nhân thành công");
+    toast.success(" Cập nhật trạng thái bệnh nhân thành công");
     return response.data.result;
   } catch (error: any) {
-    console.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân:", {
+    console.error(" Lỗi khi cập nhật trạng thái bệnh nhân:", {
       message: error?.message,
       responseData: error?.response?.data,
       status: error?.response?.status,
@@ -20,7 +20,7 @@ const updatePatientStatus = async (queueId: string, status: string) => {
 
     const errorMessage =
       error?.response?.data?.message ||
-      error?.response?.data?.title || // fallback nếu dùng .NET
+      error?.response?.data?.title ||
       "Không thể cập nhật trạng thái bệnh nhân.";
 
     toast.error(`❌ ${errorMessage}`);
