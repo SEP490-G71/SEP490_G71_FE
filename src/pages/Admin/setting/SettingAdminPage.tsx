@@ -43,7 +43,8 @@ export const SettingAdminPage: React.FC = () => {
       queueCloseTime: "",
       minBookingDaysBefore: "",
       minLeaveDaysBefore: "",
-      monthlyTargetRevenue: "", // NEW
+      monthlyTargetRevenue: "",
+      docShiftQuota: "",
     },
     validate: {
       hospitalName: (v) => (v ? null : "Thông tin bắt buộc"),
@@ -85,6 +86,7 @@ export const SettingAdminPage: React.FC = () => {
         minBookingDaysBefore: setting.minBookingDaysBefore?.toString() || "",
         minLeaveDaysBefore: setting.minLeaveDaysBefore?.toString() || "",
         monthlyTargetRevenue: setting.monthlyTargetRevenue?.toString() || "",
+        docShiftQuota: setting.docShiftQuota?.toString() || "",
         queueOpenTime: convertTime(setting.queueOpenTime),
         queueCloseTime: convertTime(setting.queueCloseTime),
       });
@@ -121,7 +123,8 @@ export const SettingAdminPage: React.FC = () => {
       latestCheckInMinutes: Number(values.latestCheckInMinutes),
       minBookingDaysBefore: Number(values.minBookingDaysBefore),
       minLeaveDaysBefore: Number(values.minLeaveDaysBefore),
-      monthlyTargetRevenue: Number(values.monthlyTargetRevenue), // NEW
+      monthlyTargetRevenue: Number(values.monthlyTargetRevenue),
+      docShiftQuota: Number(values.docShiftQuota),
       paginationSizeList: values.paginationSizeList.map(Number),
     });
   };
@@ -293,6 +296,20 @@ export const SettingAdminPage: React.FC = () => {
                   form.setFieldValue("monthlyTargetRevenue", raw);
                 }}
                 rightSection={<span style={{ fontWeight: 600 }}>VNĐ</span>}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, md: 12 }}>
+              <TextInput
+                label={
+                  <span>
+                    Chỉ tiêu ca trực bác sĩ/ngày{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
+                placeholder="10"
+                type="number"
+                {...form.getInputProps("docShiftQuota")}
               />
             </Grid.Col>
 

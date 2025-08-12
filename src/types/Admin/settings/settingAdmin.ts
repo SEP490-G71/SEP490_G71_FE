@@ -12,4 +12,5 @@ export interface SettingAdmin {
   minBookingDaysBefore: number;
   minLeaveDaysBefore: number;
   monthlyTargetRevenue: number;
+  docShiftQuota: number;
 }
