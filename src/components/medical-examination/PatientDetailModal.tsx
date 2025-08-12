@@ -3,13 +3,24 @@ import {
   Divider,
   Grid,
   Group,
+  ScrollArea,
   Stack,
+  Table,
   Text,
   Textarea,
 } from "@mantine/core";
 import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 import dayjs from "dayjs";
 import { UseFormReturnType } from "@mantine/form";
+import {
+  Status,
+  StatusColor,
+  StatusLabel,
+} from "../../enums/Queue-Patient/Status";
+import {
+  MedicalRecordStatusColor,
+  MedicalRecordStatusMap,
+} from "../../enums/MedicalRecord/MedicalRecordStatus";
 
 interface Props {
   detail: MedicalRecordDetail;
@@ -17,6 +28,7 @@ interface Props {
   summaryValue: string;
   onSummaryChange: (value: string) => void;
   onSave?: () => void;
+  onAddService?: () => void;
 }
 
 const PatientDetailSection = ({
@@ -25,12 +37,26 @@ const PatientDetailSection = ({
   summaryValue,
   onSummaryChange,
   onSave,
+  onAddService,
 }: Props) => {
   const visit = detail.visit;
   const allOrdersCompleted = detail.orders?.every(
     (order) => order.status === "COMPLETED"
   );
-
+  const DeptCell = ({
+    dept,
+  }: {
+    dept?: { name?: string; roomNumber?: string };
+  }) => (
+    <Stack gap={0} style={{ minWidth: 0 }}>
+      <Text fw={700} fz="sm" lineClamp={1} title={dept?.name ?? ""}>
+        {dept?.name ?? "—"}
+      </Text>
+      <Text fz="xs" c="dimmed">
+        {dept?.roomNumber ? `Phòng ${dept.roomNumber}` : "—"}
+      </Text>
+    </Stack>
+  );
   const recordCompleted = detail.status === "COMPLETED";
   const renderGridItem = (label: string, value: any) => (
     <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -65,7 +91,17 @@ const PatientDetailSection = ({
             {renderGridItem("Phòng", visit.roomNumber)}
             {renderGridItem("Chuyên khoa", visit.specialization?.name)}
 
-            {renderGridItem("Trạng thái", visit.status)}
+            {renderGridItem(
+              "Trạng thái",
+              <Text
+                span
+                fw={700}
+                fz="lg"
+                c={StatusColor[visit.status as Status] ?? "gray"}
+              >
+                {StatusLabel[visit.status as Status] ?? visit.status}
+              </Text>
+            )}
             {renderGridItem(
               "Thời gian check-in",
               dayjs(visit.checkinTime).format("DD/MM/YYYY")
@@ -89,6 +125,74 @@ const PatientDetailSection = ({
         {renderGridItem("BMI", detail.bmi)}
       </Grid>
 
+      <Divider label="Lịch sử chuyển phòng" labelPosition="center" my="xs" />
+
+      {Array.isArray(detail.roomTransfers) &&
+        detail.roomTransfers.length > 1 && (
+          <ScrollArea.Autosize
+            mah={260}
+            type="auto"
+            offsetScrollbars
+            scrollbarSize={8}
+          >
+            <Table
+              striped
+              highlightOnHover
+              withColumnBorders
+              verticalSpacing="xs"
+              stickyHeader
+            >
+              <Table.Thead style={{ fontSize: 12 }}>
+                <Table.Tr>
+                  <Table.Th style={{ width: 56, textAlign: "center" }}>
+                    STT
+                  </Table.Th>
+                  <Table.Th>TỪ PHÒNG → ĐẾN PHÒNG</Table.Th>
+                  <Table.Th>THỜI GIAN CHUYỂN</Table.Th>
+                  <Table.Th>LÝ DO</Table.Th>
+                  <Table.Th>NGƯỜI CHUYỂN</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+
+              <Table.Tbody>
+                {[...detail.roomTransfers]
+                  .sort(
+                    (a, b) =>
+                      new Date(a.transferTime).getTime() -
+                      new Date(b.transferTime).getTime()
+                  )
+                  .slice(1) // bỏ phần tử đầu
+                  .map((t, idx) => (
+                    <Table.Tr key={t.id}>
+                      <Table.Td style={{ textAlign: "center" }}>
+                        {idx + 1}
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Group gap="sm" wrap="nowrap" align="flex-start">
+                          <DeptCell dept={t.fromDepartment} />
+                          <Text fz="sm" c="gray">
+                            →
+                          </Text>
+                          <DeptCell dept={t.toDepartment} />
+                        </Group>
+                      </Table.Td>
+
+                      <Table.Td>
+                        {t.transferTime
+                          ? dayjs(t.transferTime).format("DD/MM/YYYY HH:mm")
+                          : "—"}
+                      </Table.Td>
+
+                      <Table.Td>{t.reason || "—"}</Table.Td>
+                      <Table.Td>{t.transferredBy?.fullName ?? "—"}</Table.Td>
+                    </Table.Tr>
+                  ))}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea.Autosize>
+        )}
+
       {/* Dịch vụ đã kê */}
       {detail.orders?.length > 0 && (
         <>
@@ -96,12 +200,19 @@ const PatientDetailSection = ({
           <Stack>
             {detail.orders.map((order, index) => (
               <Stack key={order.id} gap="xs">
-                <Text>
-                  <strong>
+                <Group gap="xs" align="center">
+                  <Text fw={600}>
                     {index + 1}. {order.serviceName}
-                  </strong>{" "}
-                  - ({order.status})
-                </Text>
+                  </Text>
+
+                  <Text
+                    fw={700}
+                    fz="lg"
+                    c={MedicalRecordStatusColor[order.status] ?? "gray"}
+                  >
+                    {MedicalRecordStatusMap[order.status] ?? order.status}
+                  </Text>
+                </Group>
 
                 {/* Nếu có kết quả thì hiển thị */}
                 {order.results && order.results.length > 0 && (
@@ -148,6 +259,7 @@ const PatientDetailSection = ({
       )}
 
       <Divider label="Tổng kết" labelPosition="center" my="xs" />
+
       <Text>
         <strong>Ghi chú:</strong>
       </Text>
@@ -181,13 +293,14 @@ const PatientDetailSection = ({
       {/* Nút Lưu */}
       <Stack align="flex-end">
         <Group justify="flex-end" gap="sm">
-          <Button
-            variant="outline"
-            // onClick={onAddService}
-            disabled={recordCompleted}
-          >
-            Thêm dịch vụ
-          </Button>
+          {detail.status === "TESTING_COMPLETED" && (
+            <>
+              <Button variant="outline" onClick={onAddService}>
+                Thêm dịch vụ
+              </Button>
+            </>
+          )}
+
           <Button
             color="red"
             onClick={onSave}

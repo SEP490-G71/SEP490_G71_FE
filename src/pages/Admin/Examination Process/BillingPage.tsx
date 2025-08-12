@@ -82,6 +82,7 @@ const BillingPage = () => {
   const [pageSize, setPageSize] = useState(5);
   const [note, setNote] = useState<string>("");
   const currentFilters = useRef(initialFilterValues);
+  const [paying, setPaying] = useState(false);
   const [editableInvoiceDetail, setEditableInvoiceDetail] = useState<{
     paymentType?: keyof typeof PaymentType;
     confirmedBy?: string;
@@ -188,6 +189,8 @@ const BillingPage = () => {
     }
 
     try {
+      setPaying(true);
+
       const wasLastItemOnPage = invoices.length === 1 && page > 1;
 
       await markInvoicePending(
@@ -197,8 +200,17 @@ const BillingPage = () => {
       );
 
       toast.success("Hóa đơn đã được thanh toán");
-      setSelectedInvoiceInfo(null);
 
+      // ✅ Reset toàn bộ panel bên phải ngay lập tức
+      setSelectedInvoiceInfo(null);
+      setSelectedPatient(null);
+      setEditableInvoiceDetail({});
+      setNote("");
+      setPreviewOpen(false);
+      setPreviewUrl(null);
+      setViewModalOpened(false);
+
+      // Điều chỉnh phân trang & reload list
       if (wasLastItemOnPage) {
         setPage((p) => Math.max(1, p - 1));
       } else {
@@ -214,6 +226,8 @@ const BillingPage = () => {
       toast.error(
         messageMap[error?.message] || error?.message || "Đã có lỗi xảy ra"
       );
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -305,81 +319,96 @@ const BillingPage = () => {
       <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
         <Paper shadow="xs" radius={0} p="md" withBorder>
           <Group justify="space-between" mb="sm">
-            <Button variant="light" size="md">
+            <Button variant="light" size="md" disabled={!selectedInvoiceInfo}>
               Ghi thông tin hóa đơn
             </Button>
           </Group>
 
-          <PatientInfoPanel patient={selectedPatient} mode="billing" />
+          {selectedInvoiceInfo ? (
+            <>
+              <PatientInfoPanel patient={selectedPatient} mode="billing" />
 
-          <Box mt="xl">
-            <Textarea
-              label="Ghi chú"
-              autosize
-              minRows={3}
-              maxRows={6}
-              size="sm"
-              value={note}
-              onChange={(event) => setNote(event.currentTarget.value)}
-              styles={{
-                label: {
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "2px",
-                },
-                input: {
-                  backgroundImage:
-                    "repeating-linear-gradient(to bottom, transparent, transparent 28px, #ccc 28px, #ccc 29px)",
-                  backgroundSize: "100% 29px",
-                  lineHeight: "28px",
-                  paddingTop: "6px",
-                  paddingBottom: "6px",
-                  border: "none",
-                  borderRadius: 0,
-                },
-              }}
-            />
-          </Box>
+              <Box mt="xl">
+                <Textarea
+                  label="Ghi chú"
+                  autosize
+                  minRows={3}
+                  maxRows={6}
+                  size="sm"
+                  value={note}
+                  onChange={(event) => setNote(event.currentTarget.value)}
+                  styles={{
+                    label: {
+                      fontSize: "16px",
+                      fontWeight: 600,
+                      marginBottom: "2px",
+                    },
+                    input: {
+                      backgroundImage:
+                        "repeating-linear-gradient(to bottom, transparent, transparent 28px, #ccc 28px, #ccc 29px)",
+                      backgroundSize: "100% 29px",
+                      lineHeight: "28px",
+                      paddingTop: "6px",
+                      paddingBottom: "6px",
+                      border: "none",
+                      borderRadius: 0,
+                    },
+                  }}
+                />
+              </Box>
 
-          <InvoiceDetailSection
-            invoiceDetail={invoiceDetail ?? undefined}
-            loadingDetail={loadingDetail}
-            editableInvoiceDetail={editableInvoiceDetail}
-            staffOptions={staffOptions}
-            paymentTypeOptions={paymentTypeOptions}
-            rowsFromInvoice={rowsFromInvoice}
-            selectedInvoiceInfo={selectedInvoiceInfo}
-            isDownloading={isDownloading}
-            handlePreview={handlePreview}
-            handleDownload={async (id) => {
-              setIsDownloading(true);
-              await downloadInvoice(id);
-              setIsDownloading(false);
-            }}
-            handleOpenModal={() => setViewModalOpened(true)}
-            setEditableInvoiceDetail={setEditableInvoiceDetail}
-          />
-          <Box mt="md" style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              variant="outline"
-              size="md"
-              color="red"
-              onClick={handleSavePendingInvoice}
-              disabled={
-                selectedInvoiceInfo?.status === "PAID" ||
-                !editableInvoiceDetail.confirmedBy
-              }
-              title={
-                selectedInvoiceInfo?.status === "PAID"
-                  ? "Hóa đơn đã thanh toán"
-                  : !editableInvoiceDetail.confirmedBy
-                  ? "Chưa xác nhận người thu"
-                  : ""
-              }
-            >
-              Thanh toán
-            </Button>
-          </Box>
+              <InvoiceDetailSection
+                invoiceDetail={invoiceDetail ?? undefined}
+                loadingDetail={loadingDetail}
+                editableInvoiceDetail={editableInvoiceDetail}
+                staffOptions={staffOptions}
+                paymentTypeOptions={paymentTypeOptions}
+                rowsFromInvoice={rowsFromInvoice}
+                selectedInvoiceInfo={selectedInvoiceInfo}
+                isDownloading={isDownloading}
+                handlePreview={handlePreview}
+                handleDownload={async (id) => {
+                  setIsDownloading(true);
+                  await downloadInvoice(id);
+                  setIsDownloading(false);
+                }}
+                handleOpenModal={() => setViewModalOpened(true)}
+                setEditableInvoiceDetail={setEditableInvoiceDetail}
+              />
+
+              <Box
+                mt="md"
+                style={{ display: "flex", justifyContent: "flex-end" }}
+              >
+                <Button
+                  variant="outline"
+                  size="md"
+                  color="red"
+                  onClick={handleSavePendingInvoice}
+                  disabled={
+                    paying ||
+                    selectedInvoiceInfo?.status === "PAID" ||
+                    !editableInvoiceDetail.confirmedBy
+                  }
+                  loading={paying}
+                  title={
+                    selectedInvoiceInfo?.status === "PAID"
+                      ? "Hóa đơn đã thanh toán"
+                      : !editableInvoiceDetail.confirmedBy
+                      ? "Chưa xác nhận người thu"
+                      : ""
+                  }
+                >
+                  Thanh toán
+                </Button>
+              </Box>
+            </>
+          ) : (
+            // Trạng thái mặc định khi chưa chọn hóa đơn
+            <Box mt="sm" style={{ color: "#667085", fontStyle: "italic" }}>
+              Vui lòng chọn một hóa đơn ở danh sách bên trái để xem chi tiết.
+            </Box>
+          )}
         </Paper>
       </Grid.Col>
 

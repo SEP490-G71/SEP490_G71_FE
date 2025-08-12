@@ -26,14 +26,14 @@ export const StatusLabel: Record<Status, string> = {
 };
 
 export const StatusColor: Record<Status, string> = {
-  [Status.ACTIVE]: "green",          // Hoạt động
-  [Status.INACTIVE]: "gray",         // Không hoạt động
-  [Status.WAITING]: "orange",        // Chờ khám
-  [Status.DONE]: "blue",             // Hoàn tất
-  [Status.CANCELED]: "red",          // Đã hủy
-  [Status.IN_PROGRESS]: "green",      // Đang thực hiện
-  [Status.PENDING]: "yellow",        // Đang chờ xử lý
-  [Status.FAILED]: "rose",           // Thất bại
-  [Status.CALLING]: "yellow",        // Đang gọi vào khám
-  [Status.AWAITING_RESULT]: "indigo",  // Chờ kết quả sau khám
+  [Status.ACTIVE]: "green",          
+  [Status.INACTIVE]: "gray",        
+  [Status.WAITING]: "orange",        
+  [Status.DONE]: "blue",             
+  [Status.CANCELED]: "red",          
+  [Status.IN_PROGRESS]: "green",      
+  [Status.PENDING]: "yellow",       
+  [Status.FAILED]: "rose",         
+  [Status.CALLING]: "yellow",        
+  [Status.AWAITING_RESULT]: "indigo",
 };
