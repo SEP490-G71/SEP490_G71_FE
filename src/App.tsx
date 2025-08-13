@@ -60,6 +60,8 @@ import ExaminationHistoryPage from "./pages/Patient/Examinations/ExaminationHist
 import InvoiceHistoryPage from "./pages/Patient/Invoices/InvoiceHistoryPage";
 import StaffFeedbackPage from "./pages/Admin/FeedBack/StaffFeedBack/StaffFeedBackPage";
 import ServiceFeedbackPage from "./pages/Admin/FeedBack/ServiceFeedBack/ServiceFeedbackPage";
+import SuperAdminSignIn from "./pages/AuthPages/SuperAdminSignIn";
+import SuperAdminDashboard from "./pages/Admin/SuperAdmin/SuperAdminDashboard";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -190,6 +192,7 @@ export default function App() {
 
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/superadmin/signin" element={<SuperAdminSignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/home/login" element={<SignInClient />} />
           <Route path="/patient" element={<PatientPortalPage />}>
@@ -203,6 +206,10 @@ export default function App() {
           </Route>
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
+          <Route
+            path="/superadmin/dashboard"
+            element={<SuperAdminDashboard />}
+          />
         </Routes>
       </Router>
       <ToastContainer

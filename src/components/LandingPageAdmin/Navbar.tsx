@@ -53,7 +53,7 @@ export const Navbar = () => {
         {/* Desktop Sign In */}
         <div className="hidden lg:flex items-center space-x-4">
           <Link
-            to="/signin"
+            to="/superadmin/signin"
             className="py-2 px-6 border border-blue-700 text-blue-900 hover:bg-blue-900/10 rounded-md shadow-sm transition-all duration-300 font-medium"
           >
             Đăng nhập
@@ -101,7 +101,7 @@ export const Navbar = () => {
             ))}
           </ul>
           <Link
-            to="/signin"
+            to="/superadmin/signin"
             className="mt-8 py-2 px-6 bg-white text-blue-600 hover:bg-blue-100 rounded-md transition-colors duration-300 font-medium"
             onClick={() => setMobileDrawerOpen(false)}
           >
