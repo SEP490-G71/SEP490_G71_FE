@@ -62,6 +62,7 @@ import StaffFeedbackPage from "./pages/Admin/FeedBack/StaffFeedBack/StaffFeedBac
 import ServiceFeedbackPage from "./pages/Admin/FeedBack/ServiceFeedBack/ServiceFeedbackPage";
 import SuperAdminSignIn from "./pages/AuthPages/SuperAdminSignIn";
 import SuperAdminDashboard from "./pages/Admin/SuperAdmin/SuperAdminDashboard";
+import { AireportPages } from "./pages/Admin/AiReport/AireportPages";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -130,6 +131,7 @@ export default function App() {
               path="/admin/work-schedule-staff"
               element={<WorkScheduleDetailStaff />}
             />
+            <Route path="/admin/ai-report" element={<AireportPages />} />
             <Route
               path="/admin/invoice-templates"
               element={<InvoiceTemplatesPage />}
