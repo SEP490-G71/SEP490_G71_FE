@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Paper, Select } from "@mantine/core";
 import { Column } from "../../types/table";
 import { QueuePatient } from "../../types/Queue-patient/QueuePatient";
@@ -10,6 +10,12 @@ import {
 } from "../../enums/Queue-Patient/Status";
 import CustomTable from "../common/CustomTable";
 import updatePatientStatus from "../../hooks/queue-patients/updatePatientStatus";
+const NON_EDITABLE_STATUSES: Status[] = [
+  Status.IN_PROGRESS,
+  Status.AWAITING_RESULT,
+  Status.DONE,
+];
+const isNonEditable = (s: Status) => NON_EDITABLE_STATUSES.includes(s);
 interface Props {
   patients: QueuePatient[];
   selectedPatient: QueuePatient | null;
@@ -59,6 +65,8 @@ const WaitingPatientList = ({
         return [];
       case Status.AWAITING_RESULT:
         return [];
+      case Status.DONE:
+        return [];
       case Status.CANCELED: {
         const hasWaiting = patients.some(
           (p) =>
@@ -92,15 +100,16 @@ const WaitingPatientList = ({
     return options;
   };
 
-  // const handleStatusChange = async (patientId: string, newStatus: Status) => {
-  //   try {
-  //     await updatePatientStatus(patientId, newStatus);
-
-  //     setLocalStatuses((prev) => ({ ...prev, [patientId]: newStatus }));
-  //     setEditingStatusId(null);
-  //   } catch {}
-  // };
-
+  useEffect(() => {
+    const next: Record<string, Status> = {};
+    patients.forEach((p) => {
+      next[p.id] = p.status;
+    });
+    setLocalStatuses(next);
+    if (editingStatusId && !patients.some((p) => p.id === editingStatusId)) {
+      setEditingStatusId(null);
+    }
+  }, [patients]);
   const columns: Column<QueuePatient>[] = useMemo(
     () => [
       { key: "queueOrder", label: "STT" },
@@ -111,23 +120,41 @@ const WaitingPatientList = ({
           const currentStatus = localStatuses[row.id] ?? row.status;
           const color = StatusColor[currentStatus] ?? "gray";
 
+          if (isNonEditable(currentStatus)) {
+            return (
+              <span
+                className={`text-sm font-medium px-2 py-1 rounded-full border bg-${color}-50 text-${color}-700 border-${color}-600`}
+                title="Trạng thái này không thể chỉnh"
+                style={{ cursor: "default" }}
+              >
+                {StatusLabel[currentStatus]}
+              </span>
+            );
+          }
+
           if (editingStatusId === row.id) {
             return (
-              <Select
-                size="xs"
-                data={getStatusOptions(row)}
-                value={currentStatus}
-                onChange={(value) => {
-                  if (value && value !== currentStatus) {
-                    handleStatusChange(row.id, value as Status);
-                  } else {
-                    setEditingStatusId(null);
-                  }
-                }}
-                onBlur={() => setEditingStatusId(null)}
-                autoFocus
-                clearable={false}
-              />
+              <div
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <Select
+                  size="xs"
+                  data={getStatusOptions(row)}
+                  value={currentStatus}
+                  onChange={(value) => {
+                    if (!value || value === currentStatus) {
+                      setEditingStatusId(null);
+                      return;
+                    }
+                    handleStatusChange(row.id, value as Status).finally(() => {
+                      setEditingStatusId(null);
+                    });
+                  }}
+                  clearable={false}
+                  autoFocus
+                />
+              </div>
             );
           }
 
@@ -145,6 +172,7 @@ const WaitingPatientList = ({
           );
         },
       },
+
       {
         key: "isPriority",
         label: "Ưu tiên",
@@ -193,7 +221,7 @@ const WaitingPatientList = ({
         loading={loading}
         onPageChange={(p) => setCurrentPage(p - 1)}
         onPageSizeChange={setPageSize}
-        onRowClick={onSelectPatient}
+        onRowClick={editingStatusId ? () => {} : onSelectPatient}
         getRowStyle={(row) => ({
           backgroundColor:
             selectedPatient?.id === row.id ? "#cce5ff" : undefined,

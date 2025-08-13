@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { toast } from "react-toastify";
+
 export interface UpdateMedicalRecordPayload {
   medicalRecordId: string;
   diagnosisText: string;
@@ -14,6 +15,8 @@ export interface UpdateMedicalRecordPayload {
   bmi: number;
   spo2: number;
   notes: string;
+  /** Đánh dấu kết thúc hồ sơ (tùy chọn) */
+  markFinal?: boolean;
 }
 
 export const useUpdateMedicalRecord = () => {
@@ -36,24 +39,25 @@ export const useUpdateMedicalRecord = () => {
         bmi,
         spo2,
         notes,
+        markFinal,
       } = payload;
 
-      const res = await axiosInstance.put(
-        `/medical-records/${medicalRecordId}`,
-        {
-          diagnosisText,
-          summary,
-          temperature,
-          respiratoryRate,
-          bloodPressure,
-          heartRate,
-          heightCm,
-          weightKg,
-          bmi,
-          spo2,
-          notes,
-        }
-      );
+      const body = {
+        diagnosisText,
+        summary,
+        temperature,
+        respiratoryRate,
+        bloodPressure,
+        heartRate,
+        heightCm,
+        weightKg,
+        bmi,
+        spo2,
+        notes,
+        ...(typeof markFinal !== "undefined" ? { markFinal } : {}),
+      };
+
+      const res = await axiosInstance.put(`/medical-records/${medicalRecordId}`, body);
       return res.data.result;
     } catch (error) {
       console.error("❌ Lỗi khi cập nhật hồ sơ khám:", error);

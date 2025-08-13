@@ -1,6 +1,15 @@
-import { Button, Flex, Grid, Paper, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Flex,
+  Grid,
+  Group,
+  Paper,
+  ScrollArea,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PatientPanel from "../../../components/patient/PatientPanel";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
 import useQueuePatientService from "../../../hooks/queue-patients/useSearchQueuePatients";
@@ -25,6 +34,10 @@ import dayjs from "dayjs";
 import PatientDetailSection from "../../../components/medical-examination/PatientDetailModal";
 import useUpdateMedicalRecord from "../../../hooks/medicalRecord/useUpdateMedicalRecord";
 import finishMedicalRecord from "../../../hooks/medicalRecord/finishMedicalRecord";
+import { useAddServicesAsNewInvoice } from "../../../hooks/medicalRecord/useAddNewInvoice";
+import AddServiceModal from "../../../components/medical-examination/AddServiceModal";
+import { useTransferRoom } from "../../../hooks/TransferRoom/useTransferRoom";
+import TransferRoomModal from "../../../components/medical-examination/TransferRoomModal";
 
 const MedicalExaminationPage = () => {
   const { userInfo } = useUserInfo();
@@ -34,7 +47,10 @@ const MedicalExaminationPage = () => {
   const [summary, setSummary] = useState("");
   const { updateMedicalRecord } = useUpdateMedicalRecord();
   const [doctorName, setDoctorName] = useState("Không rõ");
-
+  const { addServicesAsNewInvoice } = useAddServicesAsNewInvoice();
+  const [addServiceOpened, setAddServiceOpened] = useState(false);
+  const [transferOpened, setTransferOpened] = useState(false);
+  const { transferRoom } = useTransferRoom();
   const [activeTab, setActiveTab] = useState<
     "info" | "service" | "history" | "detail"
   >("info");
@@ -42,19 +58,40 @@ const MedicalExaminationPage = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
-  const [activeListTab, setActiveListTab] = useState<"waiting" | "inprogress">(
-    "waiting"
-  );
 
-  const [selectedMedicalRecord, setSelectedMedicalRecord] =
+  type ListTab = "waiting" | "inprogress" | "transfers";
+  const [activeListTab, setActiveListTab] = useState<ListTab>("waiting");
+
+  const [selectedMedicalRecordInprogress, setSelectedMedicalRecordInprogress] =
     useState<MedicalRecord | null>(null);
+  const [selectedMedicalRecordTransfer, setSelectedMedicalRecordTransfer] =
+    useState<MedicalRecord | null>(null);
+  const hasSelectionOnThisTab =
+    (activeListTab === "inprogress" && !!selectedMedicalRecordInprogress) ||
+    (activeListTab === "transfers" && !!selectedMedicalRecordTransfer);
+  const currentSelectedMedicalRecord = useMemo(
+    () =>
+      activeListTab === "inprogress"
+        ? selectedMedicalRecordInprogress
+        : activeListTab === "transfers"
+        ? selectedMedicalRecordTransfer
+        : null,
+    [
+      activeListTab,
+      selectedMedicalRecordInprogress,
+      selectedMedicalRecordTransfer,
+    ]
+  );
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
-    if (activeListTab === "inprogress") {
+    if (activeListTab === "inprogress" || activeListTab === "transfers") {
       setActiveTab("detail");
     } else if (activeListTab === "waiting") {
       setActiveTab("info");
     }
   }, [activeListTab]);
+
   const { patientDetail: selectedPatient, refetch: refetchPatientDetail } =
     useQueuePatientDetail(selectedPatientId);
 
@@ -79,12 +116,12 @@ const MedicalExaminationPage = () => {
         registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
         registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
-      // bỏ setSelectedPatientId(null);
     } catch {}
   };
 
   const isInProgress = selectedPatient?.status === "IN_PROGRESS";
   const [isQueuePatientMode, setIsQueuePatientMode] = useState(true);
+
   const {
     patients,
     totalItems,
@@ -101,14 +138,10 @@ const MedicalExaminationPage = () => {
     status: "",
   });
 
-  const {
-    recordDetail,
-
-    fetchMedicalRecordDetail,
-  } = useMedicalRecordDetail();
+  const { recordDetail, fetchMedicalRecordDetail } = useMedicalRecordDetail();
 
   useEffect(() => {
-    if (recordDetail && selectedMedicalRecord) {
+    if (recordDetail && currentSelectedMedicalRecord) {
       form.setValues({
         diagnosisText:
           recordDetail.diagnosisText?.trim() || "Chưa có chẩn đoán",
@@ -135,7 +168,7 @@ const MedicalExaminationPage = () => {
         })) ?? []
       );
     }
-  }, [recordDetail, selectedMedicalRecord]);
+  }, [recordDetail, currentSelectedMedicalRecord]);
 
   const form = useForm({
     initialValues: {
@@ -152,7 +185,6 @@ const MedicalExaminationPage = () => {
       weightKg: 0,
       bmi: 0,
       spo2: 0,
-
       diagnosisText: "",
     },
     validate: {
@@ -168,6 +200,7 @@ const MedicalExaminationPage = () => {
         value.trim() === "" ? "Chẩn đoán không được để trống" : null,
     },
   });
+
   interface ServiceRow {
     id: number;
     serviceId: string | null;
@@ -265,6 +298,7 @@ const MedicalExaminationPage = () => {
       });
     }
   }, [department?.roomNumber]);
+
   useEffect(() => {
     fetchAllMedicalServicesNoPagination();
   }, []);
@@ -276,7 +310,6 @@ const MedicalExaminationPage = () => {
         if (data) setDoctorName(data.fullName || "Không rõ");
       }
     };
-
     fetchDoctorName();
   }, [userInfo?.userId]);
 
@@ -287,28 +320,43 @@ const MedicalExaminationPage = () => {
     form.reset();
     setServiceRows([]);
     setActiveTab("info");
-    setSelectedMedicalRecord(null);
     setSelectedPatientId(p?.id ?? null);
+    setSelectedMedicalRecordInprogress(null);
+    setSelectedMedicalRecordTransfer(null);
     setIsQueuePatientMode(true);
   };
 
-  const handleSelectMedicalRecord = async (record: MedicalRecord) => {
+  const handleSelectMedicalRecordInprogress = async (record: MedicalRecord) => {
     form.reset();
-    // setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
     setServiceRows([]);
     setActiveTab("detail");
     setSelectedPatientId(null);
-    setSelectedMedicalRecord(record);
     setIsQueuePatientMode(false);
+
+    setSelectedMedicalRecordInprogress(record);
     await fetchMedicalRecordDetail(record.id);
   };
+
+  const handleSelectMedicalRecordTransfer = async (record: MedicalRecord) => {
+    form.reset();
+    setServiceRows([]);
+    setActiveTab("detail");
+    setSelectedPatientId(null);
+    setIsQueuePatientMode(false);
+
+    setSelectedMedicalRecordTransfer(record);
+    await fetchMedicalRecordDetail(record.id);
+  };
+
   const handleSave = async () => {
+    if (saving) return;
+
     const validation = form.validate();
     if (validation.hasErrors) {
       toast.error("Vui lòng kiểm tra lại thông tin nhập vào.");
       return;
     }
-    if (!selectedPatient || !form.values.doctor) {
+    if (!selectedPatientId || !selectedPatient || !form.values.doctor) {
       toast.error("Thiếu thông tin bệnh nhân hoặc bác sĩ");
       return;
     }
@@ -325,35 +373,47 @@ const MedicalExaminationPage = () => {
       return;
     }
 
-    const payload = {
-      patientId: selectedPatient.patientId,
-      staffId: form.values.doctor,
-      visitId: selectedPatient.id,
-      diagnosisText: form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
-      temperature: form.values.temperature,
-      respiratoryRate: form.values.respiratoryRate,
-      bloodPressure: form.values.bloodPressure,
-      heartRate: form.values.heartRate,
-      heightCm: form.values.heightCm,
-      weightKg: form.values.weightKg,
-      bmi: form.values.bmi,
-      spo2: form.values.spo2,
-      notes: form.values.notes,
-      services: servicesDto,
-    };
-
-    await submitExamination(payload);
     try {
+      setSaving(true);
+
+      const payload = {
+        patientId: selectedPatient.patientId,
+        staffId: form.values.doctor,
+        visitId: selectedPatient.id,
+        diagnosisText:
+          form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
+        temperature: form.values.temperature,
+        respiratoryRate: form.values.respiratoryRate,
+        bloodPressure: form.values.bloodPressure,
+        heartRate: form.values.heartRate,
+        heightCm: form.values.heightCm,
+        weightKg: form.values.weightKg,
+        bmi: form.values.bmi,
+        spo2: form.values.spo2,
+        notes: form.values.notes,
+        services: servicesDto,
+      };
+
+      await submitExamination(payload);
       await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
-      // toast.success("✅ Đã lưu khám và chuyển trạng thái sang chờ kết quả");
-      setSelectedPatientId(null);
+      await refetchPatientDetail(); // đảm bảo detail cập nhật
       updateFilters({
         roomNumber: department?.roomNumber,
         registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
         registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
-    } catch {
-      toast.error("❌ Lỗi khi cập nhật trạng thái bệnh nhân sau khi lưu");
+
+      // Reset UI để khóa nút
+      setSelectedPatientId(null);
+      form.reset();
+      setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
+      setActiveTab("info");
+
+      toast.success("✅ Đã lưu khám và chuyển sang chờ kết quả");
+    } catch (e) {
+      toast.error("❌ Lưu khám thất bại");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -400,8 +460,10 @@ const MedicalExaminationPage = () => {
       setSelectedPatientId(null);
     } catch {}
   };
+
   const handleSwitchListReset = () => {
-    setSelectedMedicalRecord(null);
+    setSelectedMedicalRecordInprogress(null);
+    setSelectedMedicalRecordTransfer(null);
     setSelectedPatientId(null);
     form.reset();
     setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
@@ -409,20 +471,33 @@ const MedicalExaminationPage = () => {
   };
 
   const handleEndExamination = async () => {
-    if (!selectedMedicalRecord) return;
+    if (!currentSelectedMedicalRecord) return;
+    if (!summary || summary.trim() === "") {
+      toast.error("❌ Tổng kết không được để trống.");
+      return;
+    }
+
+    if (recordDetail?.status !== "TESTING_COMPLETED") {
+      toast.error(
+        "❌ Chỉ được kết thúc khi trạng thái là 'Đã hoàn xét nghiệm'."
+      );
+      return;
+    }
 
     try {
-      await finishMedicalRecord(selectedMedicalRecord.id);
-
+      await finishMedicalRecord(currentSelectedMedicalRecord.id);
       toast.success("✅ Đã kết thúc khám");
-      setSelectedMedicalRecord(null);
+      setSelectedMedicalRecordInprogress(null);
+      setSelectedMedicalRecordTransfer(null);
       form.reset();
       setSummary("");
-    } catch (error) {}
+    } catch (error) {
+      toast.error("❌ Lỗi khi kết thúc khám");
+    }
   };
 
   const handleSaveSummaryOnly = async () => {
-    if (!selectedMedicalRecord || !recordDetail) return;
+    if (!currentSelectedMedicalRecord || !recordDetail) return;
 
     if (!form.values.diagnosisText || form.values.diagnosisText.trim() === "") {
       toast.error("❌ Chẩn đoán không được để trống.");
@@ -430,12 +505,12 @@ const MedicalExaminationPage = () => {
     }
 
     if (!summary || summary.trim() === "") {
-      toast.error("❌ Tóm tắt không được để trống.");
+      toast.error("❌ Tổng kết được để trống.");
       return;
     }
 
     const payload = {
-      medicalRecordId: selectedMedicalRecord.id,
+      medicalRecordId: currentSelectedMedicalRecord.id,
       diagnosisText: form.values.diagnosisText,
       summary: summary.trim(),
       temperature: recordDetail.temperature,
@@ -452,6 +527,52 @@ const MedicalExaminationPage = () => {
     const result = await updateMedicalRecord(payload);
     if (result) {
       toast.success("✅ Đã lưu tổng kết và chẩn đoán");
+    }
+  };
+
+  const handleAddServiceInDetail = () => {
+    if (!currentSelectedMedicalRecord) {
+      toast.error("❌ Chưa chọn hồ sơ khám");
+      return;
+    }
+    setAddServiceOpened(true);
+  };
+
+  const handleConfirmAddServices = async (
+    services: { serviceId: string; quantity: number }[],
+    note?: string
+  ) => {
+    if (!currentSelectedMedicalRecord) return;
+
+    if (services.length === 0) {
+      toast.error("❌ Chưa chọn dịch vụ hợp lệ.");
+      return;
+    }
+
+    try {
+      await addServicesAsNewInvoice(currentSelectedMedicalRecord.id, {
+        services,
+        note,
+      });
+      toast.success("✅ Đã thêm dịch vụ mới");
+      setAddServiceOpened(false);
+      await fetchMedicalRecordDetail(currentSelectedMedicalRecord.id);
+    } catch {
+      toast.error("❌ Thêm dịch vụ thất bại");
+    }
+  };
+
+  const handleConfirmTransfer = async (payload: {
+    toDepartmentNumber: string;
+    reason: string;
+  }) => {
+    if (!currentSelectedMedicalRecord) return;
+    try {
+      await transferRoom(currentSelectedMedicalRecord.id, payload);
+      setTransferOpened(false);
+      await fetchMedicalRecordDetail(currentSelectedMedicalRecord.id);
+    } catch {
+      // toast đã bắn trong hook
     }
   };
 
@@ -476,9 +597,14 @@ const MedicalExaminationPage = () => {
         <Grid.Col span={{ base: 12, md: 5 }} style={{ height: "100%" }}>
           <PatientPanel
             selectedQueuePatient={selectedPatient}
-            selectedMedicalRecord={selectedMedicalRecord}
+            selectedMedicalRecordInprogress={selectedMedicalRecordInprogress}
+            selectedMedicalRecordTransfer={selectedMedicalRecordTransfer}
+            // 2 callback riêng:
+            onSelectMedicalRecordInprogress={
+              handleSelectMedicalRecordInprogress
+            }
+            onSelectMedicalRecordTransfer={handleSelectMedicalRecordTransfer}
             onSelectQueuePatient={handleSelectQueuePatient}
-            onSelectMedicalRecord={handleSelectMedicalRecord}
             onSwitchListReset={handleSwitchListReset}
             patients={patients}
             totalElements={totalItems}
@@ -493,6 +619,9 @@ const MedicalExaminationPage = () => {
             onTabChange={(tab) => {
               setActiveListTab(tab);
               setActiveTab(tab === "waiting" ? "info" : "detail");
+              // (tuỳ chọn) clear selection khi đổi tab để không giữ highlight cũ
+              if (tab === "inprogress") setSelectedMedicalRecordTransfer(null);
+              if (tab === "transfers") setSelectedMedicalRecordInprogress(null);
             }}
             onQueueStatusChanged={handleQueueStatusChanged}
           />
@@ -537,24 +666,31 @@ const MedicalExaminationPage = () => {
                 )}
               </Flex>
 
-              {activeListTab === "inprogress" && (
-                <Button
-                  variant="light"
-                  color="red"
-                  size="sm"
-                  disabled={
-                    !selectedMedicalRecord ||
-                    summary.trim() === "" ||
-                    !recordDetail?.orders?.every(
-                      (o) => o.status === "COMPLETED"
-                    )
-                  }
-                  onClick={handleEndExamination}
-                >
-                  Kết thúc khám
-                </Button>
-              )}
+              {hasSelectionOnThisTab &&
+                recordDetail?.status === "TESTING_COMPLETED" && (
+                  <Group gap="sm">
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="sm"
+                      disabled={!currentSelectedMedicalRecord}
+                      onClick={handleEndExamination}
+                    >
+                      Kết thúc khám
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      color="blue"
+                      size="sm"
+                      onClick={() => setTransferOpened(true)}
+                    >
+                      Chuyển phòng
+                    </Button>
+                  </Group>
+                )}
             </Flex>
+
             {activeListTab === "waiting" && (
               <>
                 <Title order={4} mb="sm" c="blue.9" size="h5">
@@ -564,7 +700,7 @@ const MedicalExaminationPage = () => {
                   key={
                     isQueuePatientMode
                       ? `queue-${selectedPatient?.id ?? "empty"}`
-                      : `record-${selectedMedicalRecord?.id ?? "empty"}`
+                      : `record-${currentSelectedMedicalRecord?.id ?? "empty"}`
                   }
                   patient={isQueuePatientMode ? selectedPatient : null}
                   onConfirm={handleConfirmExamination}
@@ -573,20 +709,21 @@ const MedicalExaminationPage = () => {
                 />
               </>
             )}
+
             <form>
               {activeListTab === "waiting" && activeTab === "info" && (
                 <>
                   {!isInProgress && (
-                    <Text c="dimmed" mb="sm">
-                      Chỉ khi trạng thái là <b>Đang khám (IN_PROGRESS)</b> mới
-                      có thể nhập thông tin.
+                    <Text c="red.6" fw={500} mb="sm">
+                      Chỉ khi trạng thái là <b>Đang thực hiện</b> mới có thể
+                      nhập thông tin.
                     </Text>
                   )}
 
                   <div
                     style={{
-                      pointerEvents: isInProgress ? "auto" : "none",
-                      opacity: isInProgress ? 1 : 0.8,
+                      pointerEvents: isInProgress && !saving ? "auto" : "none",
+                      opacity: isInProgress && !saving ? 1 : 0.8,
                     }}
                   >
                     <ExaminationSectionForm
@@ -607,15 +744,15 @@ const MedicalExaminationPage = () => {
                     3. Kê dịch vụ
                   </Title>
                   {!isInProgress && (
-                    <Text c="dimmed" mb="sm">
-                      Chỉ khi trạng thái là <b>Đang khám (IN_PROGRESS)</b> mới
-                      có thể kê dịch vụ.
+                    <Text c="red.6" fw={500} mb="sm">
+                      Chỉ khi trạng thái là <b>Đang thực hiện</b> mới có thể
+                      nhập thông tin.
                     </Text>
                   )}
                   <div
                     style={{
-                      pointerEvents: isInProgress ? "auto" : "none",
-                      opacity: isInProgress ? 1 : 0.6,
+                      pointerEvents: isInProgress && !saving ? "auto" : "none",
+                      opacity: isInProgress && !saving ? 1 : 0.6,
                     }}
                   >
                     <ServiceTable
@@ -625,7 +762,7 @@ const MedicalExaminationPage = () => {
                       serviceOptions={serviceOptions}
                       nonDefaultServiceOptions={nonDefaultServiceOptions}
                       defaultServiceIds={defaultServiceIds}
-                      editable={isInProgress}
+                      editable={isInProgress && !saving}
                       showDepartment={true}
                       allowSelectDefaultServices={true}
                     />
@@ -645,31 +782,41 @@ const MedicalExaminationPage = () => {
                     />
                   </>
                 )}
-
-              {activeListTab === "inprogress" && activeTab === "detail" && (
-                <>
-                  {selectedMedicalRecord ? (
-                    recordDetail ? (
-                      <PatientDetailSection
-                        detail={recordDetail}
-                        form={form}
-                        summaryValue={summary}
-                        onSummaryChange={setSummary}
-                        onSave={handleSaveSummaryOnly}
-                      />
+              {(activeListTab === "inprogress" ||
+                activeListTab === "transfers") &&
+                activeTab === "detail" && (
+                  <ScrollArea.Autosize
+                    mah={700}
+                    scrollbarSize={8}
+                    offsetScrollbars
+                    type="auto"
+                  >
+                    {currentSelectedMedicalRecord ? (
+                      recordDetail ? (
+                        <PatientDetailSection
+                          detail={recordDetail}
+                          form={form}
+                          summaryValue={summary}
+                          onSummaryChange={setSummary}
+                          onSave={handleSaveSummaryOnly}
+                          onAddService={handleAddServiceInDetail}
+                        />
+                      ) : (
+                        <Text c="dimmed" fs="italic" mt="sm">
+                          Đang tải chi tiết hồ sơ...
+                        </Text>
+                      )
                     ) : (
                       <Text c="dimmed" fs="italic" mt="sm">
-                        Đang tải chi tiết hồ sơ...
+                        Vui lòng chọn bệnh nhân từ danh sách "
+                        {activeListTab === "inprogress"
+                          ? "Đang khám"
+                          : "Chuyển vào"}
+                        " để xem chi tiết hồ sơ.
                       </Text>
-                    )
-                  ) : (
-                    <Text c="dimmed" fs="italic" mt="sm">
-                      Vui lòng chọn bệnh nhân từ danh sách "Đang khám" để xem
-                      chi tiết hồ sơ.
-                    </Text>
-                  )}
-                </>
-              )}
+                    )}
+                  </ScrollArea.Autosize>
+                )}
 
               <Flex mt="md" gap="sm">
                 {activeListTab === "waiting" && activeTab !== "history" && (
@@ -678,7 +825,12 @@ const MedicalExaminationPage = () => {
                       type="button"
                       leftSection={<IconDeviceFloppy size={16} />}
                       onClick={handleSave}
-                      disabled={selectedPatient?.status !== "IN_PROGRESS"}
+                      disabled={
+                        saving ||
+                        !selectedPatientId ||
+                        selectedPatient?.status !== "IN_PROGRESS"
+                      }
+                      loading={saving}
                     >
                       Lưu
                     </Button>
@@ -689,6 +841,23 @@ const MedicalExaminationPage = () => {
           </Paper>
         </Grid.Col>
       </Grid>
+
+      <AddServiceModal
+        opened={addServiceOpened}
+        onClose={() => setAddServiceOpened(false)}
+        onConfirm={handleConfirmAddServices}
+        medicalServices={medicalServices}
+        serviceOptions={serviceOptions}
+        nonDefaultServiceOptions={nonDefaultServiceOptions}
+        defaultServiceIds={defaultServiceIds}
+        allowSelectDefaultServices={true}
+      />
+
+      <TransferRoomModal
+        opened={transferOpened}
+        onClose={() => setTransferOpened(false)}
+        onConfirm={handleConfirmTransfer}
+      />
     </>
   );
 };

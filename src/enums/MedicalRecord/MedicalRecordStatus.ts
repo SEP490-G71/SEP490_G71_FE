@@ -20,7 +20,7 @@ export const MedicalRecordStatusMap: Record<MedicalRecordStatus, string> = {
 export const MedicalRecordStatusColor: Record<MedicalRecordStatus, string> = {
   [MedicalRecordStatus.WAITING_FOR_PAYMENT]: "orange",
   [MedicalRecordStatus.TESTING]: "blue",
-  [MedicalRecordStatus.TESTING_COMPLETED]: "green",
+  [MedicalRecordStatus.TESTING_COMPLETED]: "green.6",
   [MedicalRecordStatus.WAITING_FOR_RESULT]: "yellow",
-  [MedicalRecordStatus.COMPLETED]: "teal",
+  [MedicalRecordStatus.COMPLETED]: "#bb65f4ff",
 };
