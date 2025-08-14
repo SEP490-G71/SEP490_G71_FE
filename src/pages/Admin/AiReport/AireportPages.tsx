@@ -24,32 +24,41 @@ import dayjs from "dayjs";
 import axiosInstance from "../../../services/axiosInstance";
 
 import { Chart } from "react-chartjs-2";
-import type { ChartData, ChartOptions } from "chart.js";
+// import type { ChartData, ChartOptions } from "chart.js";
+// import {
+//   Chart as ChartJS,
+//   CategoryScale,
+//   LinearScale,
+//   BarElement,
+//   LineElement,
+//   PointElement,
+//   Title as ChartTitle,
+//   Tooltip as ChartTooltip,
+//   Legend,
+// } from "chart.js";
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title as ChartTitle,
-  Tooltip as ChartTooltip,
-  Legend,
+  registerables,
+  type ChartData,
+  type ChartOptions,
 } from "chart.js";
+
+// ✅ đăng ký tất cả thành phần cần thiết (controller, scale, element, plugin…)
+ChartJS.register(...registerables);
 import { IconCheck, IconCopy, IconCircleDot } from "@tabler/icons-react";
 import CustomTable from "../../../components/common/CustomTable";
 import { toast } from "react-toastify";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  ChartTitle,
-  ChartTooltip,
-  Legend
-);
+// ChartJS.register(
+//   CategoryScale,
+//   LinearScale,
+//   BarElement,
+//   LineElement,
+//   PointElement,
+//   ChartTitle,
+//   ChartTooltip,
+//   Legend
+// );
 
 interface InvoiceDailyRow {
   date: string;
