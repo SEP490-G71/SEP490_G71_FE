@@ -39,9 +39,14 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/signin";
+    const status = error?.response?.status;
+    const url = error?.config?.url || "";
+
+    if (status === 401) {
+      if (!/\/auth\/login\b/.test(url)) {
+        localStorage.removeItem("token");
+        window.location.replace("/signin");
+      }
     }
 
     return Promise.reject(error);

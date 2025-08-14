@@ -20,7 +20,7 @@ export default function UserDropdown() {
 
   function handleSignOut() {
     localStorage.removeItem("token");
-    navigate("/signin");
+    navigate("/home/login");
   }
 
   const isAdmin = userInfo?.roles.includes(RoleType.ADMIN);

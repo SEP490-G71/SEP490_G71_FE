@@ -4,34 +4,31 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
-import { useSignIn } from "../../hooks/auth/useSignIn";
+import { useSignInSuperAdmin } from "../../hooks/auth/useSignInSuperAdmin";
 
-export default function SignInClient() {
+export default function SuperAdminSignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { signIn, loading } = useSignIn();
+  const { signInSuperAdmin, loading } = useSignInSuperAdmin();
 
-  const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault();
-    try {
-      await signIn(email, password);
-    } catch (err: any) {
-      alert(err.message);
-    }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await signInSuperAdmin(username, password);
   };
 
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
         <Link
-          to="/home"
+          to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
           Trang chủ
         </Link>
       </div>
+
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8 text-center">
@@ -39,21 +36,24 @@ export default function SignInClient() {
               Đăng Nhập
             </h1>
           </div>
-          <form>
+
+          <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
                 <Label>
-                  Tên đăng nhập <span className="text-error-500">*</span>{" "}
+                  Tên đăng nhập <span className="text-error-500">*</span>
                 </Label>
                 <Input
-                  placeholder="Tên đăng nhập"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tên đăng nhập"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
                 />
               </div>
+
               <div>
                 <Label>
-                  Mật khẩu <span className="text-error-500">*</span>{" "}
+                  Mật khẩu <span className="text-error-500">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -61,6 +61,7 @@ export default function SignInClient() {
                     placeholder="Nhập mật khẩu"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -74,38 +75,28 @@ export default function SignInClient() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
                 <Link
-                  to="/reset-password"
+                  to="/superadmin/reset-password"
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Quên Mật Khẩu
                 </Link>
               </div>
+
               <div>
                 <Button
                   className="w-full"
                   size="sm"
+                  type="submit"
                   disabled={loading}
-                  onClick={handleSubmit}
                 >
                   {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </Button>
               </div>
             </div>
           </form>
-
-          {/* <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-              Bạn chưa có tài khoản?{" "}
-              <Link
-                to="/signup"
-                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-              >
-                Đăng ký
-              </Link>
-            </p>
-          </div> */}
         </div>
       </div>
     </div>
