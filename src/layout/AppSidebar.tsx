@@ -22,7 +22,14 @@ type NavItem = {
 
 const navItemsByRole: Record<string, NavItem[]> = {
   ADMIN: [
-    { icon: <GridIcon />, name: "Thống kê", path: "/admin/dashboard" },
+    {
+      name: "Thống kê",
+      icon: <GridIcon />,
+      subItems: [
+        { name: "Tổng quan thống kê ", path: "/admin/dashboard" },
+        { name: "Ai report", path: "/admin/ai-report" },
+      ],
+    },
     {
       name: "Thông tin chung",
       icon: <IconCalendarEvent />,
