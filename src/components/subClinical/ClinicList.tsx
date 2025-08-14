@@ -1,8 +1,12 @@
-import { MedicalRecordStatusMap } from "../../enums/MedicalRecord/MedicalRecordStatus";
+import {
+  MedicalRecordStatusColor,
+  MedicalRecordStatusMap,
+} from "../../enums/MedicalRecord/MedicalRecordStatus";
 import { MedicalRecord } from "../../types/MedicalRecord/MedicalRecord";
 import CustomTable from "../common/CustomTable";
 import { Column } from "../../types/table";
 import dayjs from "dayjs";
+import { Badge } from "@mantine/core";
 
 interface ClinicListProps {
   records: MedicalRecord[];
@@ -36,7 +40,11 @@ const ClinicList = ({
     {
       key: "status",
       label: "Trạng thái",
-      render: (row) => MedicalRecordStatusMap[row.status] || row.status,
+      render: (r) => (
+        <Badge color={MedicalRecordStatusColor[r.status]} variant="light">
+          {MedicalRecordStatusMap[r.status] ?? r.status}
+        </Badge>
+      ),
     },
     {
       key: "medicalRecordCode",

@@ -3,6 +3,13 @@ import { toast } from "react-toastify";
 import axiosInstance from "../../services/axiosInstance";
 import { getErrorMessage } from "../../components/utils/getErrorMessage";
 import { RawRoomTransfer, RoomTransferFilters, RoomTransferRow } from "../../types/RoomTranfer/RoomTransfer";
+import { MedicalRecordStatus } from "../../enums/MedicalRecord/MedicalRecordStatus";
+const toMedicalRecordStatus = (s: unknown): MedicalRecordStatus => {
+  const v = typeof s === "string" ? s : "";
+  return (Object.values(MedicalRecordStatus) as string[]).includes(v)
+    ? (v as MedicalRecordStatus)
+    : MedicalRecordStatus.WAITING_FOR_RESULT; 
+};
 
 const mapToRow = (x: RawRoomTransfer): RoomTransferRow => ({
   id: x.id,
@@ -11,7 +18,7 @@ const mapToRow = (x: RawRoomTransfer): RoomTransferRow => ({
   medicalRecordCode: x.medicalRecord?.medicalRecordCode ?? "",
   patientName: x.medicalRecord?.patientName ?? "",
   recordDoctorName: x.medicalRecord?.doctorName ?? "",
-  recordStatus: x.medicalRecord?.status ?? "",
+   recordStatus: toMedicalRecordStatus(x.medicalRecord?.status),
   recordCreatedAt: x.medicalRecord?.createdAt ?? "",
 
   fromDepartmentId: x.fromDepartment?.id ?? "",

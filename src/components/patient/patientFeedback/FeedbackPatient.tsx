@@ -394,7 +394,6 @@ const FeedbackPatient = ({
           satisfactionLevel: levelKey,
           comment: (current.comment ?? "").trim(),
         });
-        toast.success("Gửi góp ý nhân viên thành công!");
       }
 
       await fetchStaffByRecordId(mrId);
@@ -559,7 +558,9 @@ const FeedbackPatient = ({
                     }}
                   >
                     <div style={{ minWidth: 220 }}>
-                      <Text fw={500}>{row.name}</Text>
+                      <Text fw={500} c="green">
+                        {row.name}
+                      </Text>
                       <Text size="xs" c="dimmed">
                         {[row.staffCode, row.role].filter(Boolean).join(" • ")}
                       </Text>
@@ -669,7 +670,9 @@ const FeedbackPatient = ({
                     }}
                   >
                     <div style={{ minWidth: 220 }}>
-                      <Text fw={500}>{row.name}</Text>
+                      <Text fw={500} c="green">
+                        {row.name}
+                      </Text>
                     </div>
                     <Text size="xs" c="dimmed">
                       {open ? "Thu gọn" : "Mở"}

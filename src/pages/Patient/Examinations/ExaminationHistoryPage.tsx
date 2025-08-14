@@ -23,6 +23,7 @@ import FeedbackPatient from "../../../components/patient/patientFeedback/Feedbac
 import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
 import { useSubmitFeedback } from "../../../hooks/feedBack/StaffFeedBack/useSubmitFeedback";
 import { toast } from "react-toastify";
+import { useSubmitMedicalServiceFeedback } from "../../../hooks/feedBack/ServiceFeedBack/useSubmitMedicalServiceFeedback";
 
 type OutletCtx = {
   patient: {
@@ -96,6 +97,8 @@ const ExaminationHistoryPage = () => {
       setModalOpened(true);
     }
   };
+
+  const { submitServiceFeedback } = useSubmitMedicalServiceFeedback();
   const handleSearch = () => {
     setFilters({
       medicalRecordCode: filterInput.medicalRecordCode.trim(),
@@ -215,10 +218,17 @@ const ExaminationHistoryPage = () => {
         return;
       }
 
-      // Service feedback (chưa có endpoint bạn đưa)
-      // TODO: thay bằng API thật khi bạn có endpoint
-      console.log("Service feedback payload:", payload);
-      toast.info("Đã nhận góp ý dịch vụ (chưa cấu hình endpoint).");
+      if (payload?.medicalServiceId) {
+        await submitServiceFeedback({
+          medicalServiceId: payload.medicalServiceId,
+          patientId: payload.patientId,
+          medicalRecordId: payload.medicalRecordId,
+          satisfactionLevel: payload.satisfactionLevel,
+          comment: payload.comment ?? "",
+        });
+
+        return;
+      }
     } catch (e: any) {
       toast.error(e?.message || "Gửi góp ý thất bại!");
     }

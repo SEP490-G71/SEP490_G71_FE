@@ -1,3 +1,5 @@
+import { MedicalRecordStatus } from "../../enums/MedicalRecord/MedicalRecordStatus";
+
 export interface RawRoomTransfer {
   id: string;
   medicalRecord: {
@@ -43,7 +45,7 @@ export interface RoomTransferRow {
   medicalRecordCode: string;
   patientName: string;
   recordDoctorName: string;
-  recordStatus: string;
+  recordStatus: MedicalRecordStatus;
   recordCreatedAt: string;
 
   fromDepartmentId: string;

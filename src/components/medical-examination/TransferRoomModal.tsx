@@ -19,7 +19,7 @@ type Department = {
   name: string;
   description?: string;
   roomNumber: string;
-  type: string; // CONSULTATION / ...
+  type: string;
   specialization?: { id: string; name: string } | null;
 };
 
@@ -27,7 +27,7 @@ interface Props {
   opened: boolean;
   onClose: () => void;
   onConfirm: (payload: {
-    toDepartmentNumber: string;
+    toDepartmentId: string;
     reason: string;
   }) => Promise<void> | void;
 }
@@ -119,7 +119,7 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
   const handleConfirm = async () => {
     if (!selected) return;
     await onConfirm({
-      toDepartmentNumber: selected.id,
+      toDepartmentId: selected.id,
       reason: reason.trim() || "Chuyển phòng",
     });
   };
