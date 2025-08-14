@@ -5,5 +5,6 @@ export interface ScheduleStatisticItem {
   totalShifts: number;
   attendedShifts: number;
   leaveShifts: number;
+  lateShifts: number;
   attendanceRate: number;
 }

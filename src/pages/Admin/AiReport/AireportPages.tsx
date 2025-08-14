@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   Group,
@@ -18,24 +18,14 @@ import {
   List,
   ThemeIcon,
   Table,
+  Select,
+  Button,
 } from "@mantine/core";
-import { MonthPickerInput } from "@mantine/dates";
+import { MonthPickerInput, DateInput } from "@mantine/dates";
 import dayjs from "dayjs";
 import axiosInstance from "../../../services/axiosInstance";
 
 import { Chart } from "react-chartjs-2";
-// import type { ChartData, ChartOptions } from "chart.js";
-// import {
-//   Chart as ChartJS,
-//   CategoryScale,
-//   LinearScale,
-//   BarElement,
-//   LineElement,
-//   PointElement,
-//   Title as ChartTitle,
-//   Tooltip as ChartTooltip,
-//   Legend,
-// } from "chart.js";
 import {
   Chart as ChartJS,
   registerables,
@@ -43,22 +33,11 @@ import {
   type ChartOptions,
 } from "chart.js";
 
-// ✅ đăng ký tất cả thành phần cần thiết (controller, scale, element, plugin…)
 ChartJS.register(...registerables);
 import { IconCheck, IconCopy, IconCircleDot } from "@tabler/icons-react";
 import CustomTable from "../../../components/common/CustomTable";
 import { toast } from "react-toastify";
-
-// ChartJS.register(
-//   CategoryScale,
-//   LinearScale,
-//   BarElement,
-//   LineElement,
-//   PointElement,
-//   ChartTitle,
-//   ChartTooltip,
-//   Legend
-// );
+import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 
 interface InvoiceDailyRow {
   date: string;
@@ -119,6 +98,9 @@ export const AireportPages = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detail, setDetail] = useState<MetricDetail | null>(null);
 
+  // Abort controller để tránh race khi đổi trang/size nhanh
+  const metricsAbortRef = useRef<AbortController | null>(null);
+
   const monthParam = useMemo(() => {
     if (!monthStr) return "";
     const d = dayjs(monthStr, ["YYYY-MM", "YYYY-MM-DD"], true);
@@ -142,9 +124,7 @@ export const AireportPages = () => {
         e?.response?.data?.error ||
         e?.message ||
         "Lỗi chưa phân loại";
-
       setError(msg);
-
       toast.error(msg, {
         position: "top-right",
         autoClose: 3000,
@@ -161,35 +141,119 @@ export const AireportPages = () => {
     fetchDailyInvoices();
   }, [monthParam]);
 
-  const fetchMetrics = async () => {
+  // --- FILTER (đang nhập) ---
+  const [fltStart, setFltStart] = useState<Date | null>(null);
+  const [fltEnd, setFltEnd] = useState<Date | null>(null);
+  const [fltLevel, setFltLevel] = useState<string | null>(null); // ALL | CRITICAL | WARN | OK
+
+  // --- FILTER ĐÃ ÁP DỤNG (chỉ đổi khi bấm Tìm kiếm) ---
+  const [appliedStart, setAppliedStart] = useState<Date | null>(null);
+  const [appliedEnd, setAppliedEnd] = useState<Date | null>(null);
+  const [appliedLevel, setAppliedLevel] = useState<string | null>(null);
+
+  const toYMD = (d: Date | null) =>
+    d ? dayjs(d).format("YYYY-MM-DD") : undefined;
+
+  // Đảm bảo To >= From khi nhập
+  useEffect(() => {
+    if (fltStart && fltEnd && dayjs(fltEnd).isBefore(fltStart, "day")) {
+      setFltEnd(fltStart);
+    }
+  }, [fltStart, fltEnd]);
+
+  // Fetch metrics (đọc từ applied*)
+  const fetchMetrics = async (opts?: { page?: number; size?: number }) => {
+    if (metricsAbortRef.current) metricsAbortRef.current.abort();
+    const controller = new AbortController();
+    metricsAbortRef.current = controller;
+
     setMetricsLoading(true);
     setMetricsError(null);
     try {
+      const params: Record<string, any> = {
+        page: opts?.page ?? mtPage - 1,
+        size: opts?.size ?? mtPageSize,
+        metricCode: "dailyRevenue",
+      };
+
+      const start = toYMD(appliedStart);
+      const end = toYMD(appliedEnd);
+      if (start && end) {
+        params.fromDate = start;
+        params.toDate = end;
+      } else if (start && !end) {
+        params.fromDate = start;
+        params.toDate = start;
+      }
+      if (appliedLevel && appliedLevel !== "ALL") params.level = appliedLevel;
+
       const res = await axiosInstance.get(`/metrics`, {
-        params: {
-          page: mtPage - 1,
-          size: mtPageSize,
-          metricCode: "dailyRevenue",
-        },
+        params,
+        signal: controller.signal,
       });
+
+      if (controller.signal.aborted) return;
       setMetrics(res.data?.result ?? null);
     } catch (e: any) {
+      if (e?.name === "CanceledError" || e?.message === "canceled") return;
       const msg =
         e?.response?.data?.message ||
         e?.response?.data?.error ||
         e?.message ||
         "Không tải được metrics";
-
       setMetricsError(msg);
       toast.error(msg, { position: "top-right", autoClose: 3000 });
     } finally {
-      setMetricsLoading(false);
+      if (!metricsAbortRef.current?.signal.aborted) setMetricsLoading(false);
     }
   };
 
+  // [EDIT] Fetch khi đổi page/size (giữ nguyên)
   useEffect(() => {
     fetchMetrics();
+    return () => {
+      if (metricsAbortRef.current) metricsAbortRef.current.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mtPage, mtPageSize]);
+
+  // [EDIT] ★★★ Cách 2: khi appliedStart/End/Level thay đổi thì:
+  // - nếu đang không ở trang 1: set về 1 để callback page fetch hộ
+  // - nếu đã ở trang 1: fetch ngay (page=0)
+  useEffect(() => {
+    const changed =
+      appliedStart !== null ||
+      appliedEnd !== null ||
+      appliedLevel !== null || // có thể là all null nhưng khác state cũ vẫn chạy
+      true;
+    if (!changed) return;
+
+    if (mtPage !== 1) {
+      setMtPage(1);
+    } else {
+      fetchMetrics({ page: 0 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedStart, appliedEnd, appliedLevel]);
+
+  // [EDIT] Chỉ set applied*, không gọi fetch ngay
+  const handleApplyFilters = () => {
+    setAppliedStart(fltStart);
+    setAppliedEnd(fltEnd);
+    setAppliedLevel(fltLevel || "ALL");
+  };
+
+  // [EDIT] Reset: clear cả input & applied, không gọi fetch; effect phía trên sẽ lo
+  const handleResetFilters = () => {
+    setFltStart(null);
+    setFltEnd(null);
+    setFltLevel(null);
+    setAppliedStart(null);
+    setAppliedEnd(null);
+    setAppliedLevel(null);
+    if (mtPage !== 1) setMtPage(1);
+    // nếu đang ở page 1, effect applied* sẽ fetch ngay
+  };
 
   const handleViewMetric = async (row: MetricItem) => {
     setDetailOpen(true);
@@ -215,7 +279,6 @@ export const AireportPages = () => {
         e?.response?.data?.error ||
         e?.message ||
         "Không tải được chi tiết metric";
-
       toast.error(msg, { position: "top-right", autoClose: 3000 });
       setDetail(null);
     } finally {
@@ -522,8 +585,8 @@ export const AireportPages = () => {
 
       <Group gap="md" align="center" className="mb-4">
         <MonthPickerInput
-          value={monthStr}
-          onChange={(v) => setMonthStr(v ?? "")}
+          value={monthStr as any}
+          onChange={(v) => setMonthStr((v as any) ?? "")}
           maxDate={new Date()}
           valueFormat="YYYY-MM"
           placeholder="YYYY-MM"
@@ -600,6 +663,70 @@ export const AireportPages = () => {
         Metrics
       </Title>
       <Card shadow="sm" radius="lg" padding="lg" className="w-full">
+        {/* Filter (grid) */}
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          <div className="col-span-3">
+            <FloatingLabelWrapper label="From">
+              <DateInput
+                placeholder="YYYY-MM-DD"
+                value={fltStart}
+                onChange={(v) => setFltStart(v as Date | null)}
+                valueFormat="YYYY-MM-DD"
+                clearable
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-3">
+            <FloatingLabelWrapper label="To">
+              <DateInput
+                placeholder="YYYY-MM-DD"
+                value={fltEnd}
+                onChange={(v) => setFltEnd(v as Date | null)}
+                valueFormat="YYYY-MM-DD"
+                clearable
+                minDate={fltStart || undefined}
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-3">
+            <FloatingLabelWrapper label="Level">
+              <Select
+                placeholder="All"
+                value={fltLevel}
+                onChange={setFltLevel}
+                data={[
+                  { value: "ALL", label: "All" },
+                  { value: "CRITICAL", label: "CRITICAL" },
+                  { value: "WARN", label: "WARN" },
+                  { value: "OK", label: "OK" },
+                ]}
+                clearable
+              />
+            </FloatingLabelWrapper>
+          </div>
+
+          <div className="col-span-3 flex gap-2 items-end">
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={handleApplyFilters}
+              className="flex-1"
+            >
+              Search
+            </Button>
+            <Button
+              variant="light"
+              color="gray"
+              onClick={handleResetFilters}
+              className="flex-1"
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+
         <CustomTable<MetricItem>
           data={metrics?.content ?? []}
           columns={columns as any}
@@ -608,7 +735,8 @@ export const AireportPages = () => {
           totalItems={metrics?.totalElements ?? 0}
           onPageChange={(p) => setMtPage(p)}
           onPageSizeChange={(s) => {
-            setMtPageSize(s || 10);
+            const size = s || 10;
+            setMtPageSize(size);
             setMtPage(1);
           }}
           loading={metricsLoading}
@@ -723,7 +851,6 @@ export const AireportPages = () => {
 
             <Divider my="sm" />
 
-            {/* Header + nút copy JSON gốc */}
             <Group justify="space-between" align="center">
               <Text fw={600}>Report content</Text>
               {payloadText && (
@@ -743,7 +870,6 @@ export const AireportPages = () => {
               )}
             </Group>
 
-            {/* NOTE: nội dung payload đã được format thân thiện */}
             <ScrollArea h={260} type="auto">
               <Stack gap="sm">{renderPayloadContent(detail.payloadJson)}</Stack>
             </ScrollArea>

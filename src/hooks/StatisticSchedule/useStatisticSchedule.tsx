@@ -15,6 +15,7 @@ export const useStatisticSchedule = () => {
     leaveShifts: 0,
     totalStaffs: 0,
     attendanceRate: 0,
+    lateShifts: 0,
   });
 
   const fetchScheduleStatistics = async (
@@ -24,6 +25,7 @@ export const useStatisticSchedule = () => {
       fromDate?: string;
       toDate?: string;
       staffId?: string;
+      // staffCodeSearch?: string; // nếu bạn muốn filter mã NV ở server, thêm param này và truyền lên
     }
   ) => {
     setLoading(true);
@@ -35,6 +37,7 @@ export const useStatisticSchedule = () => {
           fromDate: filters?.fromDate,
           toDate: filters?.toDate,
           staffId: filters?.staffId,
+          // staffCodeSearch: filters?.staffCodeSearch,
         },
       });
 
@@ -50,6 +53,7 @@ export const useStatisticSchedule = () => {
         leaveShifts: result.leaveShifts,
         totalStaffs: result.totalStaffs,
         attendanceRate: result.attendanceRate,
+        lateShifts: result.lateShifts ?? 0,
       });
     } catch (error: any) {
       toast.error(
