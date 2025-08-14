@@ -16,10 +16,12 @@ import updateMedicalResult from "../../hooks/medicalRecord/updateMedicalResult";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 
+type ExistingImage = { id: string; url: string };
+
 interface MedicalRecordResult {
   id: string;
   completedBy: string;
-  imageUrls: string[];
+  images: ExistingImage[];
   note: string;
   description: string | null;
 }
@@ -55,51 +57,62 @@ const ServiceResultPanel = ({
   const [note, setNote] = useState("");
   const [suggestion] = useState("");
 
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  const [deleteImageIds, setDeleteImageIds] = useState<string[]>([]);
+
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const allPreviewUrls = [...existingImages.map((x) => x.url), ...newPreviews];
 
   useEffect(() => {
     if (initialResult) {
       setDescription(initialResult.description || "");
       setNote(initialResult.note || "");
-      setImagePreviews(initialResult.imageUrls || []);
-      setActiveImage(initialResult.imageUrls?.[0] || null);
+      setExistingImages(initialResult.images || []);
+      const firstUrl = initialResult.images?.[0]?.url ?? null;
+      setActiveImage(firstUrl);
+      setNewFiles([]);
+      setNewPreviews([]);
+      setDeleteImageIds([]);
     }
   }, [initialResult]);
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImagePreviews((prev) => {
-      const newList = prev.filter((_, i) => i !== index);
-      if (prev[index] === activeImage) {
-        setActiveImage(newList.length > 0 ? newList[newList.length - 1] : null);
-      }
-      return newList;
-    });
-
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
     const urls = files.map((file) => URL.createObjectURL(file));
 
-    setImagePreviews((prev) => {
-      const newList = [...prev, ...urls];
-      setActiveImage(newList[newList.length - 1]);
-      return newList;
-    });
+    setNewFiles((prev) => [...prev, ...files]);
+    setNewPreviews((prev) => [...prev, ...urls]);
 
-    setUploadedFiles((prev) => [...prev, ...files]);
+    setActiveImage(urls[urls.length - 1]);
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const existingCount = existingImages.length;
+
+    if (index < existingCount) {
+      const img = existingImages[index];
+      setExistingImages((prev) => prev.filter((_, i) => i !== index));
+      setDeleteImageIds((prev) =>
+        img?.id ? Array.from(new Set([...prev, img.id])) : prev
+      );
+    } else {
+      const newIndex = index - existingCount;
+      setNewFiles((prev) => prev.filter((_, i) => i !== newIndex));
+      setNewPreviews((prev) => prev.filter((_, i) => i !== newIndex));
     }
+
+    const next = allPreviewUrls.filter((_, i) => i !== index);
+    setActiveImage(next.length > 0 ? next[next.length - 1] : null);
   };
 
   const handleSave = async () => {
@@ -107,7 +120,6 @@ const ServiceResultPanel = ({
       toast.warning("Vui lòng nhập mô tả kết quả.");
       return;
     }
-
     if (!date) {
       toast.warning("Ngày thực hiện không hợp lệ.");
       return;
@@ -115,19 +127,20 @@ const ServiceResultPanel = ({
 
     try {
       if (initialResult) {
-        await updateMedicalResult(
-          initialResult.id,
-          uploadedFiles,
-          imagePreviews.filter((url) => !url.startsWith("blob:")),
-          technicalId,
+        await updateMedicalResult({
+          resultId: initialResult.id,
+          newFiles,
+          deleteImageIds,
+          staffId: technicalId,
           description,
-          note
-        );
+          note,
+        });
+
         toast.success("Đã sửa kết quả và upload file thành công.");
       } else {
         await uploadMedicalResult(
           medicalOrderId,
-          uploadedFiles,
+          newFiles,
           technicalId,
           description,
           note
@@ -140,7 +153,7 @@ const ServiceResultPanel = ({
         selectedStaffId: technicalId,
         performedAt: date,
         suggestion: suggestion.trim(),
-        images: imagePreviews,
+        images: [...existingImages.map((x) => x.url), ...newPreviews],
         note: note.trim(),
       });
     } catch (error: any) {
@@ -245,9 +258,9 @@ const ServiceResultPanel = ({
           )}
 
           <Group gap="sm" mb="sm" wrap="wrap">
-            {imagePreviews.map((src, index) => (
+            {allPreviewUrls.map((src, index) => (
               <div
-                key={index}
+                key={src + index}
                 style={{
                   position: "relative",
                   width: 65,

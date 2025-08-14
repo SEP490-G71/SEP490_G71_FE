@@ -18,7 +18,6 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-// import MecicalService from "./pages/Admin/MedicalService/MedicalService";
 import { ToastContainer } from "react-toastify";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
@@ -60,6 +59,9 @@ import ExaminationHistoryPage from "./pages/Patient/Examinations/ExaminationHist
 import InvoiceHistoryPage from "./pages/Patient/Invoices/InvoiceHistoryPage";
 import StaffFeedbackPage from "./pages/Admin/FeedBack/StaffFeedBack/StaffFeedBackPage";
 import ServiceFeedbackPage from "./pages/Admin/FeedBack/ServiceFeedBack/ServiceFeedbackPage";
+
+import EditProfilePageForUser from "./pages/Patient/EditProfilePage/EditProfilePageForUser";
+
 import SuperAdminSignIn from "./pages/AuthPages/SuperAdminSignIn";
 import SuperAdminDashboard from "./pages/Admin/SuperAdmin/SuperAdminDashboard";
 import { AireportPages } from "./pages/Admin/AiReport/AireportPages";
@@ -197,15 +199,20 @@ export default function App() {
           <Route path="/superadmin/signin" element={<SuperAdminSignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/home/login" element={<SignInClient />} />
+
           <Route path="/patient" element={<PatientPortalPage />}>
             <Route
               path="examinationHistory"
               element={<ExaminationHistoryPage />}
             />
             <Route path="invoiceHistory" element={<InvoiceHistoryPage />} />
-            {/* Optional fallback nếu route con không khớp */}
+            <Route
+              path="edit-profile-for-user"
+              element={<EditProfilePageForUser />}
+            />
             <Route path="*" element={<NotFound />} />
           </Route>
+
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
           <Route

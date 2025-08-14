@@ -1,30 +1,34 @@
 import axiosInstance from "../../services/axiosInstance";
 
-const updateMedicalResult = async (
-  resultId: string,
-  files: File[],
-  existingImageUrls: string[],
-  staffId: string,
-  description: string,
-  note: string
-) => {
-  const formData = new FormData();
+type UpdateMedicalResultArgs = {
+  resultId: string;
+  newFiles: File[];
+  deleteImageIds?: string[];
+  staffId: string;
+  description?: string;
+  note?: string;
+};
 
-  files.forEach((file) => {
-    formData.append("file", file);
-  });
+const updateMedicalResult = async ({
+  resultId,
+  newFiles,
+  deleteImageIds = [],
+  staffId,
+  description = "",
+  note = "",
+}: UpdateMedicalResultArgs) => {
+  const fd = new FormData();
 
-  existingImageUrls.forEach((url) => {
-    formData.append("imageUrls", url);
-  });
+  newFiles.forEach((f) => fd.append("file", f));
+  deleteImageIds.forEach((id) => fd.append("deleteImageIds", id));
 
-  formData.append("staffId", staffId);
-  formData.append("description", description);
-  formData.append("note", note);
+  fd.append("staffId", staffId);
+  fd.append("description", description);
+  fd.append("note", note);
 
-  return axiosInstance.put(`/medical-results/${resultId}/update`, formData, {
+  return axiosInstance.put(`/medical-results/${resultId}/update`, fd, {
     headers: {
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "multipart/form-data; charset=UTF-8",
     },
   });
 };

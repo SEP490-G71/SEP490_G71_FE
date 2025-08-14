@@ -2,7 +2,6 @@ import {
   Button,
   Flex,
   Grid,
-  Group,
   Paper,
   ScrollArea,
   Text,
@@ -45,6 +44,7 @@ const MedicalExaminationPage = () => {
   const { defaultService } = useDefaultMedicalService(department?.id ?? null);
   const { fetchStaffsById } = useStaffs();
   const [summary, setSummary] = useState("");
+  const [isFinal, setIsFinal] = useState(false);
   const { updateMedicalRecord } = useUpdateMedicalRecord();
   const [doctorName, setDoctorName] = useState("Không rõ");
   const { addServicesAsNewInvoice } = useAddServicesAsNewInvoice();
@@ -159,7 +159,7 @@ const MedicalExaminationPage = () => {
         bmi: recordDetail.bmi,
         spo2: recordDetail.spo2,
       });
-      setSummary(recordDetail.summary || "");
+      setIsFinal(recordDetail.status === "COMPLETED");
       setServiceRows(
         recordDetail.orders?.map((order, index) => ({
           id: index + 1,
@@ -168,7 +168,65 @@ const MedicalExaminationPage = () => {
         })) ?? []
       );
     }
-  }, [recordDetail, currentSelectedMedicalRecord]);
+  }, [
+    recordDetail,
+    currentSelectedMedicalRecord,
+    department?.id,
+    userInfo?.userId,
+  ]);
+
+  // NEW: sort lịch sử chuyển phòng theo thời gian tăng dần (an toàn phía FE)
+  const sortedTransfers = useMemo(() => {
+    const items = recordDetail?.roomTransfers ?? [];
+    return [...items]
+      .filter((t) => t && t.transferTime)
+      .sort(
+        (a, b) =>
+          new Date(a.transferTime).getTime() -
+          new Date(b.transferTime).getTime()
+      );
+  }, [recordDetail?.roomTransfers]);
+
+  // NEW: bản ghi chuyển phòng mới nhất
+  const lastTransfer = useMemo(() => {
+    return sortedTransfers.length
+      ? sortedTransfers[sortedTransfers.length - 1]
+      : null;
+  }, [sortedTransfers]);
+
+  // NEW: kết luận gần nhất có nội dung (để hiển thị khi isFinal=false)
+  const latestConclusionText = useMemo(() => {
+    for (let i = sortedTransfers.length - 1; i >= 0; i--) {
+      const t = sortedTransfers[i];
+      if (t.conclusionText && t.conclusionText.trim() !== "") {
+        return t.conclusionText;
+      }
+    }
+    return "";
+  }, [sortedTransfers]);
+
+  // NEW: khóa thao tác nếu hồ sơ đang ở phòng khác
+  const lockedByTransfer = useMemo(() => {
+    if (!lastTransfer) return false;
+    const currentDeptId = department?.id ?? null;
+    const currentRoom = department?.roomNumber ?? null;
+    const targetDeptId = lastTransfer.toDepartment?.id ?? null;
+    const targetRoom = lastTransfer.toDepartment?.roomNumber ?? null;
+
+    if (currentDeptId && targetDeptId) return currentDeptId !== targetDeptId;
+    if (currentRoom && targetRoom) return currentRoom !== targetRoom;
+    return false;
+  }, [lastTransfer, department?.id, department?.roomNumber]);
+
+  // NEW: Đồng bộ nội dung Textarea theo chế độ hiển thị
+  useEffect(() => {
+    if (!recordDetail) return;
+    if (isFinal) {
+      setSummary(recordDetail.summary || "");
+    } else {
+      setSummary(latestConclusionText || "");
+    }
+  }, [isFinal, recordDetail?.summary, latestConclusionText]);
 
   const form = useForm({
     initialValues: {
@@ -392,24 +450,22 @@ const MedicalExaminationPage = () => {
         spo2: form.values.spo2,
         notes: form.values.notes,
         services: servicesDto,
+        markFinal: isFinal,
       };
 
       await submitExamination(payload);
       await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
-      await refetchPatientDetail(); // đảm bảo detail cập nhật
+      await refetchPatientDetail();
       updateFilters({
         roomNumber: department?.roomNumber,
         registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
         registeredTimeTo: dayjs().format("YYYY-MM-DD"),
       });
 
-      // Reset UI để khóa nút
       setSelectedPatientId(null);
       form.reset();
       setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
       setActiveTab("info");
-
-      toast.success("✅ Đã lưu khám và chuyển sang chờ kết quả");
     } catch (e) {
       toast.error("❌ Lưu khám thất bại");
     } finally {
@@ -472,6 +528,14 @@ const MedicalExaminationPage = () => {
 
   const handleEndExamination = async () => {
     if (!currentSelectedMedicalRecord) return;
+
+    if (lockedByTransfer) {
+      toast.error(
+        `❌ Hồ sơ đã được chuyển sang phòng ${lastTransfer?.toDepartment?.roomNumber} – ${lastTransfer?.toDepartment?.name}. Không thể kết thúc khám tại phòng hiện tại.`
+      );
+      return;
+    }
+
     if (!summary || summary.trim() === "") {
       toast.error("❌ Tổng kết không được để trống.");
       return;
@@ -499,20 +563,29 @@ const MedicalExaminationPage = () => {
   const handleSaveSummaryOnly = async () => {
     if (!currentSelectedMedicalRecord || !recordDetail) return;
 
+    if (lockedByTransfer) {
+      toast.error(
+        `❌ Hồ sơ đã được chuyển sang phòng ${lastTransfer?.toDepartment?.roomNumber} – ${lastTransfer?.toDepartment?.name}. Không thể lưu tại phòng hiện tại.`
+      );
+      return;
+    }
+
     if (!form.values.diagnosisText || form.values.diagnosisText.trim() === "") {
       toast.error("❌ Chẩn đoán không được để trống.");
       return;
     }
 
     if (!summary || summary.trim() === "") {
-      toast.error("❌ Tổng kết được để trống.");
+      toast.error(
+        `❌ ${isFinal ? "Tổng kết" : "Kết luận"} không được để trống.`
+      );
       return;
     }
 
     const payload = {
       medicalRecordId: currentSelectedMedicalRecord.id,
       diagnosisText: form.values.diagnosisText,
-      summary: summary.trim(),
+      summary: summary.trim(), // luôn gửi summary
       temperature: recordDetail.temperature,
       respiratoryRate: recordDetail.respiratoryRate,
       bloodPressure: recordDetail.bloodPressure,
@@ -522,17 +595,29 @@ const MedicalExaminationPage = () => {
       bmi: recordDetail.bmi,
       spo2: recordDetail.spo2,
       notes: form.values.notes,
+      markFinal: isFinal,
     };
 
     const result = await updateMedicalRecord(payload);
     if (result) {
-      toast.success("✅ Đã lưu tổng kết và chẩn đoán");
+      toast.success(
+        isFinal
+          ? "Đã lưu Tổng kết và đánh dấu hoàn tất hồ sơ"
+          : "Đã lưu Kết luận"
+      );
+      await fetchMedicalRecordDetail(currentSelectedMedicalRecord.id);
     }
   };
 
   const handleAddServiceInDetail = () => {
     if (!currentSelectedMedicalRecord) {
       toast.error("❌ Chưa chọn hồ sơ khám");
+      return;
+    }
+    if (lockedByTransfer) {
+      toast.error(
+        `❌ Hồ sơ đã được chuyển sang phòng ${lastTransfer?.toDepartment?.roomNumber} – ${lastTransfer?.toDepartment?.name}. Không thể thêm dịch vụ tại phòng hiện tại.`
+      );
       return;
     }
     setAddServiceOpened(true);
@@ -562,20 +647,52 @@ const MedicalExaminationPage = () => {
     }
   };
 
+  // NEW: khi đổi trạng thái Final ở component con, đồng bộ luôn nội dung hiển thị
+  const handleFinalChange = (v: boolean) => {
+    setIsFinal(v);
+    if (!recordDetail) return;
+    if (v) {
+      setSummary(recordDetail.summary || "");
+    } else {
+      setSummary(latestConclusionText || "");
+    }
+  };
   const handleConfirmTransfer = async (payload: {
-    toDepartmentNumber: string;
+    // toDepartmentNumber: string;
+    toDepartmentId: string;
     reason: string;
   }) => {
     if (!currentSelectedMedicalRecord) return;
+
+    if (!department?.id) {
+      toast.error("❌ Không xác định được phòng hiện tại (fromDeptId).");
+      return;
+    }
+
+    if (payload.toDepartmentId === department.id) {
+      toast.error("❌ Phòng đích trùng phòng hiện tại.");
+      return;
+    }
+
+    const body = {
+      fromDeptId: department.id,
+      toDeptId: payload.toDepartmentId,
+      reason: payload.reason,
+    };
+    console.log(
+      "[TransferRoom][Page] recordId:",
+      currentSelectedMedicalRecord.id
+    );
+    console.log("[TransferRoom][Page] request body:", body);
+
     try {
-      await transferRoom(currentSelectedMedicalRecord.id, payload);
+      await transferRoom(currentSelectedMedicalRecord.id, body);
       setTransferOpened(false);
       await fetchMedicalRecordDetail(currentSelectedMedicalRecord.id);
     } catch {
       // toast đã bắn trong hook
     }
   };
-
   return (
     <>
       {department && (
@@ -599,7 +716,6 @@ const MedicalExaminationPage = () => {
             selectedQueuePatient={selectedPatient}
             selectedMedicalRecordInprogress={selectedMedicalRecordInprogress}
             selectedMedicalRecordTransfer={selectedMedicalRecordTransfer}
-            // 2 callback riêng:
             onSelectMedicalRecordInprogress={
               handleSelectMedicalRecordInprogress
             }
@@ -619,7 +735,6 @@ const MedicalExaminationPage = () => {
             onTabChange={(tab) => {
               setActiveListTab(tab);
               setActiveTab(tab === "waiting" ? "info" : "detail");
-              // (tuỳ chọn) clear selection khi đổi tab để không giữ highlight cũ
               if (tab === "inprogress") setSelectedMedicalRecordTransfer(null);
               if (tab === "transfers") setSelectedMedicalRecordInprogress(null);
             }}
@@ -667,27 +782,14 @@ const MedicalExaminationPage = () => {
               </Flex>
 
               {hasSelectionOnThisTab &&
-                recordDetail?.status === "TESTING_COMPLETED" && (
-                  <Group gap="sm">
-                    <Button
-                      variant="light"
-                      color="red"
-                      size="sm"
-                      disabled={!currentSelectedMedicalRecord}
-                      onClick={handleEndExamination}
-                    >
-                      Kết thúc khám
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      color="blue"
-                      size="sm"
-                      onClick={() => setTransferOpened(true)}
-                    >
-                      Chuyển phòng
-                    </Button>
-                  </Group>
+                recordDetail?.status === "TESTING_COMPLETED" &&
+                lockedByTransfer && (
+                  <Text size="sm" c="red.6">
+                    Hồ sơ đã chuyển sang phòng{" "}
+                    {lastTransfer?.toDepartment?.roomNumber} –{" "}
+                    {lastTransfer?.toDepartment?.name}. Các thao tác bị khóa tại
+                    phòng của bạn.
+                  </Text>
                 )}
             </Flex>
 
@@ -782,6 +884,7 @@ const MedicalExaminationPage = () => {
                     />
                   </>
                 )}
+
               {(activeListTab === "inprogress" ||
                 activeListTab === "transfers") &&
                 activeTab === "detail" && (
@@ -797,9 +900,19 @@ const MedicalExaminationPage = () => {
                           detail={recordDetail}
                           form={form}
                           summaryValue={summary}
+                          isFinal={isFinal}
+                          onFinalChange={handleFinalChange}
                           onSummaryChange={setSummary}
                           onSave={handleSaveSummaryOnly}
                           onAddService={handleAddServiceInDetail}
+                          onEndExamination={handleEndExamination}
+                          onOpenTransfer={() => setTransferOpened(true)}
+                          lockedByTransfer={lockedByTransfer}
+                          lastTransferRoomLabel={
+                            lastTransfer
+                              ? `${lastTransfer.toDepartment?.roomNumber} – ${lastTransfer.toDepartment?.name}`
+                              : undefined
+                          }
                         />
                       ) : (
                         <Text c="dimmed" fs="italic" mt="sm">

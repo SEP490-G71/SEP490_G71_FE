@@ -26,6 +26,8 @@ import {
 import { MedicalRecord } from "../../../types/MedicalRecord/MedicalRecord";
 import { mapDetailToQueuePatient } from "../../../components/common/patient.mapper";
 
+type ExistingImage = { id: string; url: string };
+
 const ClinicalPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<MedicalRecordOrder | null>(
     null
@@ -218,13 +220,30 @@ const ClinicalPage = () => {
     recordDetail?.orders.filter(
       (o) => o.status === "COMPLETED" && filteredOrders.has(o.id)
     ) ?? [];
-  const mapResultToInitialResult = (result: any) => ({
-    id: result?.id,
-    completedBy: result?.completedBy ?? "",
-    imageUrls: result?.imageUrls ?? [],
-    note: result?.note ?? "",
-    description: result?.description ?? "",
-  });
+
+  const mapResultToInitialResult = (result: any) => {
+    let images: ExistingImage[] = [];
+
+    if (Array.isArray(result?.images) && result.images.length) {
+      images = result.images as ExistingImage[];
+    } else if (Array.isArray(result?.imageUrls)) {
+      images = result.imageUrls
+        .map((x: any) => ({
+          id: x?.id ?? "",
+          url: x?.imageUrl ?? x?.url ?? "",
+        }))
+        .filter((x: ExistingImage) => !!x.url);
+    }
+
+    return {
+      id: result?.id,
+      completedBy: result?.completedBy ?? "",
+      images,
+      note: result?.note ?? "",
+      description: result?.description ?? "",
+    };
+  };
+
   return (
     <Grid>
       <Grid.Col span={12} style={{ paddingTop: 0, paddingBottom: 0 }}>
@@ -232,15 +251,12 @@ const ClinicalPage = () => {
           fw={700}
           c="red"
           size="lg"
-          style={{
-            marginTop: 0,
-            marginBottom: 0,
-            lineHeight: 1.2,
-          }}
+          style={{ marginTop: 0, marginBottom: 0, lineHeight: 1.2 }}
         >
           {department?.roomNumber} – {department?.name}
         </Text>
       </Grid.Col>
+
       {/* FILTER SECTION */}
       <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
         <Paper shadow="xs" p="md" radius={0} mb="md" withBorder>

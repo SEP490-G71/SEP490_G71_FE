@@ -1,17 +1,21 @@
+import React from "react";
 import {
   Button,
   Divider,
   Grid,
   Group,
+  Paper,
   ScrollArea,
   Stack,
+  Switch,
   Table,
   Text,
   Textarea,
+  Tooltip,
 } from "@mantine/core";
-import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 import dayjs from "dayjs";
 import { UseFormReturnType } from "@mantine/form";
+import { MedicalRecordDetail } from "../../types/MedicalRecord/MedicalRecordDetail";
 import {
   Status,
   StatusColor,
@@ -28,21 +32,42 @@ interface Props {
   summaryValue: string;
   onSummaryChange: (value: string) => void;
   onSave?: () => void;
+  isFinal: boolean;
   onAddService?: () => void;
+  onFinalChange: (v: boolean) => void;
+
+  onEndExamination?: () => void;
+  onOpenTransfer?: () => void;
+
+  lockedByTransfer?: boolean;
+  lastTransferRoomLabel?: string;
 }
 
-const PatientDetailSection = ({
+const PatientDetailSection: React.FC<Props> = ({
   detail,
   form,
   summaryValue,
   onSummaryChange,
   onSave,
+  isFinal,
   onAddService,
-}: Props) => {
+  onFinalChange,
+
+  onEndExamination,
+  onOpenTransfer,
+  lockedByTransfer = false,
+  lastTransferRoomLabel,
+}) => {
   const visit = detail.visit;
-  const allOrdersCompleted = detail.orders?.every(
-    (order) => order.status === "COMPLETED"
-  );
+
+  const allOrdersCompleted =
+    detail.orders?.every((order) => order.status === "COMPLETED") ?? false;
+
+  const recordCompleted = detail.status === "COMPLETED";
+  const hideAllActions = visit?.status === Status.DONE;
+  const saveDisabled =
+    lockedByTransfer || (isFinal && !allOrdersCompleted) || recordCompleted;
+
   const DeptCell = ({
     dept,
   }: {
@@ -57,7 +82,7 @@ const PatientDetailSection = ({
       </Text>
     </Stack>
   );
-  const recordCompleted = detail.status === "COMPLETED";
+
   const renderGridItem = (label: string, value: any) => (
     <Grid.Col span={{ base: 12, sm: 6 }}>
       <Text>
@@ -66,9 +91,33 @@ const PatientDetailSection = ({
     </Grid.Col>
   );
 
+  const handleToggleFinal = (checked: boolean) => {
+    if (checked && !allOrdersCompleted) return;
+    onFinalChange(checked);
+  };
+
+  // === KẾT LUẬN TRƯỚC ĐÓ ===
+  const previousConclusions = React.useMemo(() => {
+    const items = [...(detail.roomTransfers ?? [])].sort(
+      (a, b) =>
+        new Date(a.transferTime ?? 0).getTime() -
+        new Date(b.transferTime ?? 0).getTime()
+    );
+    items.pop();
+    const filtered = items.filter(
+      (t) => t.conclusionText && t.conclusionText.trim() !== ""
+    );
+    return filtered.reverse();
+  }, [detail.roomTransfers]);
+
+  const lockMsg = lockedByTransfer
+    ? `Hồ sơ đã được chuyển sang phòng ${
+        lastTransferRoomLabel ?? ""
+      }. Các thao tác bị khóa tại phòng của bạn.`
+    : undefined;
+
   return (
     <Stack gap="sm">
-      {/* Thông tin chi tiết bệnh nhân */}
       <Divider
         label="Thông tin chi tiết bệnh nhân"
         labelPosition="center"
@@ -90,7 +139,6 @@ const PatientDetailSection = ({
           <Grid>
             {renderGridItem("Phòng", visit.roomNumber)}
             {renderGridItem("Chuyên khoa", visit.specialization?.name)}
-
             {renderGridItem(
               "Trạng thái",
               <Text
@@ -104,7 +152,9 @@ const PatientDetailSection = ({
             )}
             {renderGridItem(
               "Thời gian check-in",
-              dayjs(visit.checkinTime).format("DD/MM/YYYY")
+              visit.checkinTime
+                ? dayjs(visit.checkinTime).format("DD/MM/YYYY")
+                : "—"
             )}
           </Grid>
         </>
@@ -125,8 +175,8 @@ const PatientDetailSection = ({
         {renderGridItem("BMI", detail.bmi)}
       </Grid>
 
+      {/* Lịch sử chuyển phòng */}
       <Divider label="Lịch sử chuyển phòng" labelPosition="center" my="xs" />
-
       {Array.isArray(detail.roomTransfers) &&
         detail.roomTransfers.length > 1 && (
           <ScrollArea.Autosize
@@ -153,7 +203,6 @@ const PatientDetailSection = ({
                   <Table.Th>NGƯỜI CHUYỂN</Table.Th>
                 </Table.Tr>
               </Table.Thead>
-
               <Table.Tbody>
                 {[...detail.roomTransfers]
                   .sort(
@@ -161,13 +210,12 @@ const PatientDetailSection = ({
                       new Date(a.transferTime).getTime() -
                       new Date(b.transferTime).getTime()
                   )
-                  .slice(1) // bỏ phần tử đầu
+                  .slice(1) // bỏ phần tử đầu (khởi tạo)
                   .map((t, idx) => (
                     <Table.Tr key={t.id}>
                       <Table.Td style={{ textAlign: "center" }}>
                         {idx + 1}
                       </Table.Td>
-
                       <Table.Td>
                         <Group gap="sm" wrap="nowrap" align="flex-start">
                           <DeptCell dept={t.fromDepartment} />
@@ -177,13 +225,11 @@ const PatientDetailSection = ({
                           <DeptCell dept={t.toDepartment} />
                         </Group>
                       </Table.Td>
-
                       <Table.Td>
                         {t.transferTime
                           ? dayjs(t.transferTime).format("DD/MM/YYYY HH:mm")
                           : "—"}
                       </Table.Td>
-
                       <Table.Td>{t.reason || "—"}</Table.Td>
                       <Table.Td>{t.transferredBy?.fullName ?? "—"}</Table.Td>
                     </Table.Tr>
@@ -204,7 +250,6 @@ const PatientDetailSection = ({
                   <Text fw={600}>
                     {index + 1}. {order.serviceName}
                   </Text>
-
                   <Text
                     fw={700}
                     fz="lg"
@@ -214,7 +259,6 @@ const PatientDetailSection = ({
                   </Text>
                 </Group>
 
-                {/* Nếu có kết quả thì hiển thị */}
                 {order.results && order.results.length > 0 && (
                   <Stack pl="md" gap={4}>
                     {order.results.map((result) => (
@@ -223,7 +267,6 @@ const PatientDetailSection = ({
                         <Text>- Mô tả: {result.description}</Text>
                         <Text>- Ghi chú: {result.note}</Text>
 
-                        {/* Nếu có hình ảnh */}
                         {result.imageUrls?.length > 0 && (
                           <Stack>
                             <Text>- Hình ảnh:</Text>
@@ -258,6 +301,7 @@ const PatientDetailSection = ({
         </>
       )}
 
+      {/* Tổng kết / Kết luận */}
       <Divider label="Tổng kết" labelPosition="center" my="xs" />
 
       <Text>
@@ -279,37 +323,157 @@ const PatientDetailSection = ({
         autosize
         minRows={2}
       />
+
+      {/* Kết luận trước đó (TRỪ cái gần nhất) */}
+      {previousConclusions.length > 0 && (
+        <Stack gap={6} mt="xs">
+          <Text fw={600} c="dimmed">
+            Kết luận trước đó
+          </Text>
+          <Stack gap="xs">
+            {previousConclusions.map((t, idx) => (
+              <Paper
+                key={t.id}
+                p="sm"
+                withBorder
+                radius="md"
+                style={{ background: "#f8fafc" }}
+              >
+                <Group justify="space-between" mb={6}>
+                  <Text fw={600} size="sm">
+                    #{idx + 1} • {t.fromDepartment?.roomNumber ?? "—"} →{" "}
+                    {t.toDepartment?.roomNumber ?? "—"}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {t.transferTime
+                      ? dayjs(t.transferTime).format("DD/MM/YYYY HH:mm")
+                      : "—"}
+                  </Text>
+                </Group>
+                <Text style={{ whiteSpace: "pre-wrap" }}>
+                  {t.conclusionText}
+                </Text>
+                <Text size="xs" c="dimmed" mt={6}>
+                  Bác sĩ:{" "}
+                  {t.doctor?.fullName ?? t.transferredBy?.fullName ?? "—"}
+                </Text>
+              </Paper>
+            ))}
+          </Stack>
+        </Stack>
+      )}
+
+      {/* Ô nhập một field cho cả hai chế độ */}
       <Text>
-        <strong>Tổng kết:</strong>
+        <b>{isFinal ? "Tổng kết" : "Kết luận"}</b>
       </Text>
       <Textarea
         value={summaryValue}
         onChange={(e) => onSummaryChange(e.currentTarget.value)}
-        placeholder="Nhập tóm tắt khám bệnh..."
+        placeholder={isFinal ? "Nhập tổng kết..." : "Nhập kết luận..."}
         autosize
         minRows={2}
       />
 
-      {/* Nút Lưu */}
-      <Stack align="flex-end">
-        <Group justify="flex-end" gap="sm">
-          {detail.status === "TESTING_COMPLETED" && (
-            <>
-              <Button variant="outline" onClick={onAddService}>
-                Thêm dịch vụ
-              </Button>
-            </>
-          )}
+      {/* Switch đánh dấu hoàn tất */}
+      <Group gap="sm" align="center" mt="xs">
+        <Text fw={600}>
+          Đánh dấu hồ sơ là <i>Hoàn tất</i>
+        </Text>
+        <Tooltip
+          label={
+            lockedByTransfer
+              ? lockMsg
+              : !allOrdersCompleted
+              ? "Cần hoàn tất tất cả dịch vụ trước khi kết thúc hồ sơ"
+              : recordCompleted
+              ? "Hồ sơ đã hoàn tất"
+              : undefined
+          }
+          disabled={!lockedByTransfer && allOrdersCompleted && !recordCompleted}
+          withArrow
+        >
+          <div>
+            <Switch
+              checked={isFinal}
+              onChange={(e) => handleToggleFinal(e.currentTarget.checked)}
+              disabled={
+                lockedByTransfer || !allOrdersCompleted || recordCompleted
+              }
+              size="lg"
+              radius="xl"
+              color="green"
+              onLabel="ON"
+              offLabel="OFF"
+            />
+          </div>
+        </Tooltip>
+      </Group>
 
-          <Button
-            color="red"
-            onClick={onSave}
-            disabled={!allOrdersCompleted || recordCompleted}
-          >
-            Lưu Tổng kết
-          </Button>
-        </Group>
-      </Stack>
+      {/* Cụm nút hành động */}
+      {!hideAllActions && (
+        <Stack align="flex-end">
+          <Group justify="flex-end" gap="sm">
+            {detail.status === "TESTING_COMPLETED" && (
+              <>
+                <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
+                  <div>
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="sm"
+                      onClick={onEndExamination}
+                      disabled={lockedByTransfer}
+                    >
+                      Kết thúc khám
+                    </Button>
+                  </div>
+                </Tooltip>
+
+                <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
+                  <div>
+                    <Button
+                      variant="light"
+                      color="blue"
+                      size="sm"
+                      onClick={onOpenTransfer}
+                      disabled={lockedByTransfer}
+                    >
+                      Chuyển phòng
+                    </Button>
+                  </div>
+                </Tooltip>
+              </>
+            )}
+
+            <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
+              <div>
+                <Button
+                  variant="light"
+                  color="green"
+                  onClick={onAddService}
+                  disabled={lockedByTransfer}
+                >
+                  Thêm dịch vụ
+                </Button>
+              </div>
+            </Tooltip>
+
+            <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
+              <div>
+                <Button
+                  variant="light"
+                  color="yellow"
+                  onClick={onSave}
+                  disabled={saveDisabled}
+                >
+                  Lưu {isFinal ? "Tổng kết" : "Kết luận"}
+                </Button>
+              </div>
+            </Tooltip>
+          </Group>
+        </Stack>
+      )}
     </Stack>
   );
 };
