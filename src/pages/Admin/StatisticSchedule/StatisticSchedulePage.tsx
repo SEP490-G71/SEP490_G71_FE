@@ -39,28 +39,36 @@ export const StatisticSchedulePage = () => {
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({});
 
   const { options: staffOptions, searchStaffs } = useStaffSearch();
+
   const {
     statistics,
     loading,
     fetchScheduleStatistics,
     exportScheduleStatistics,
     summary,
+    totalItems, // <— LẤY tổng từ hook (server)
   } = useStatisticSchedule();
 
+  // gọi API theo phân trang server
   useEffect(() => {
     fetchScheduleStatistics(page - 1, pageSize, {
       fromDate: appliedFilters.fromDate,
       toDate: appliedFilters.toDate,
       staffId: appliedFilters.staffId,
+      // staffCodeSearch: appliedFilters.staffCodeSearch, // nếu backend hỗ trợ
     });
   }, [page, pageSize, appliedFilters]);
 
+  // nhận pageSize mặc định từ setting và reset page
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
       setPageSize(setting.paginationSizeList[0]);
+      setPage(1); // tránh rơi vào trang trống khi đổi pageSize mặc định
     }
   }, [setting]);
 
+  // (Client filter theo mã NV trên TRANG HIỆN TẠI)
+  // Nếu muốn filter toàn bộ, hãy đẩy staffCodeSearch lên API và trả về từ server
   const filteredStatistics = statistics.filter(
     (item) =>
       !appliedFilters.staffCodeSearch ||
@@ -69,12 +77,10 @@ export const StatisticSchedulePage = () => {
         .includes(appliedFilters.staffCodeSearch.toLowerCase())
   );
 
-  const paginatedData = filteredStatistics.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
-
-  const totalItems = filteredStatistics.length;
+  // ❌ BỎ phân trang lần 2 ở client
+  // const paginatedData = filteredStatistics.slice((page - 1) * pageSize, page * pageSize);
+  // ✅ Dữ liệu bảng = trang hiện tại từ server (có thể đã lọc client theo mã NV)
+  const paginatedData = filteredStatistics;
 
   const handleExport = () => {
     exportScheduleStatistics({
@@ -127,6 +133,11 @@ export const StatisticSchedulePage = () => {
       key: "leaveShifts",
       label: "Đã nghỉ",
     }),
+    // 👉 THÊM CỘT MỚI
+    createColumn<ScheduleStatisticItem>({
+      key: "lateShifts",
+      label: "Đi muộn",
+    }),
     createColumn<ScheduleStatisticItem>({
       key: "attendanceRate",
       label: "Tỷ lệ đi làm",
@@ -159,23 +170,34 @@ export const StatisticSchedulePage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 text-sm">
+      {/* NOTE: đổi lg:grid-cols-5 -> lg:grid-cols-6 để chứa thêm 1 thẻ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4 text-sm">
         <div className="bg-blue-50 border border-blue-200 rounded shadow p-4 text-blue-700">
           <div className="font-medium">Tổng nhân viên</div>
           <div className="text-xl font-bold">{summary.totalStaffs}</div>
         </div>
+
         <div className="bg-yellow-50 border border-yellow-200 rounded shadow p-4 text-yellow-700">
           <div className="font-medium">Tổng ca</div>
           <div className="text-xl font-bold">{summary.totalShifts}</div>
         </div>
+
         <div className="bg-green-50 border border-green-200 rounded shadow p-4 text-green-700">
           <div className="font-medium">Đã làm</div>
           <div className="text-xl font-bold">{summary.attendedShifts}</div>
         </div>
+
         <div className="bg-red-50 border border-red-200 rounded shadow p-4 text-red-700">
           <div className="font-medium">Đã nghỉ</div>
           <div className="text-xl font-bold">{summary.leaveShifts}</div>
         </div>
+
+        {/* NOTE: THÊM THẺ MỚI “Đi muộn” */}
+        <div className="bg-orange-50 border border-orange-200 rounded shadow p-4 text-orange-700">
+          <div className="font-medium">Đi muộn</div>
+          <div className="text-xl font-bold">{summary.lateShifts}</div>
+        </div>
+
         <div className="bg-indigo-50 border border-indigo-200 rounded shadow p-4 text-indigo-700">
           <div className="font-medium">Tỷ lệ đi làm</div>
           <div className="text-xl font-bold">
@@ -185,7 +207,7 @@ export const StatisticSchedulePage = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-4 mb-4">
-        {/* Từ ngày - 2/12 */}
+        {/* Từ ngày */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Từ ngày">
             <DatePickerInput
@@ -203,7 +225,7 @@ export const StatisticSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Đến ngày - 2/12 */}
+        {/* Đến ngày */}
         <div className="col-span-12 lg:col-span-2">
           <FloatingLabelWrapper label="Đến ngày">
             <DatePickerInput
@@ -221,7 +243,7 @@ export const StatisticSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Tìm nhân viên - 3/12 */}
+        {/* Tìm nhân viên */}
         <div className="col-span-12 lg:col-span-3">
           <FloatingLabelWrapper label="Tìm nhân viên">
             <Select
@@ -244,7 +266,7 @@ export const StatisticSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Tìm mã nhân viên - 3/12 */}
+        {/* Tìm mã nhân viên (filter client trong trang) */}
         <div className="col-span-12 lg:col-span-3">
           <FloatingLabelWrapper label="Tìm mã nhân viên">
             <TextInput
@@ -261,7 +283,7 @@ export const StatisticSchedulePage = () => {
           </FloatingLabelWrapper>
         </div>
 
-        {/* Nút - 2/12 */}
+        {/* Nút */}
         <div className="col-span-12 lg:col-span-2 flex items-end gap-2">
           <Button variant="light" color="gray" onClick={handleReset} fullWidth>
             Tải lại
@@ -282,7 +304,7 @@ export const StatisticSchedulePage = () => {
         columns={columns}
         page={page}
         pageSize={pageSize}
-        totalItems={totalItems}
+        totalItems={totalItems} // <— dùng tổng từ server (vd: 8)
         onPageChange={(newPage) => setPage(newPage)}
         onPageSizeChange={(newSize) => {
           setPageSize(newSize);
