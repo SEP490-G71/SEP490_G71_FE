@@ -4,8 +4,8 @@ const uploadMedicalResult = async (
   resultId: string,
   files: File[],
   staffId: string,
+  description: string,
   note: string,
-   description: string
 ) => {
   const formData = new FormData();
   files.forEach((file) => {

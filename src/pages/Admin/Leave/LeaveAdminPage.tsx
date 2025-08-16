@@ -27,6 +27,7 @@ import {
   LeaveRequestStatus,
   LeaveRequestStatusLabels,
 } from "../../../enums/Admin/LeaveRequestStatus";
+import { useDeleteLeaveRequest } from "../../../hooks/leave/useDeleteLeaveRequest";
 
 const LeaveAdminPage = () => {
   const [data, setData] = useState<LeaveRequestResponse[]>([]);
@@ -53,7 +54,7 @@ const LeaveAdminPage = () => {
   const { updateStatus } = useUpdateLeaveRequestStatus();
   const [rejectNote, setRejectNote] = useState("");
   const [openedPopoverId, setOpenedPopoverId] = useState<string | null>(null);
-
+  const { deleteLeaveRequest } = useDeleteLeaveRequest();
   const staffOptions = selectedStaffOption
     ? [
         selectedStaffOption,
@@ -157,12 +158,9 @@ const LeaveAdminPage = () => {
   };
 
   const handleDelete = async (row: LeaveRequestResponse) => {
-    try {
-      await axiosInstance.delete(`/leave-request/${row.id}`);
-      toast.success("Xoá yêu cầu nghỉ phép thành công");
+    const ok = await deleteLeaveRequest(row.id);
+    if (ok) {
       fetchData();
-    } catch {
-      toast.error("Xoá yêu cầu nghỉ phép thất bại");
     }
   };
 

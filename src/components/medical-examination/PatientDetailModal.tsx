@@ -64,7 +64,9 @@ const PatientDetailSection: React.FC<Props> = ({
     detail.orders?.every((order) => order.status === "COMPLETED") ?? false;
 
   const recordCompleted = detail.status === "COMPLETED";
-  const hideAllActions = visit?.status === Status.DONE;
+  const isWaitingForPayment = detail.status === "WAITING_FOR_PAYMENT";
+
+  const hideAllActions = visit?.status === Status.DONE || isWaitingForPayment;
   const saveDisabled =
     lockedByTransfer || (isFinal && !allOrdersCompleted) || recordCompleted;
 
