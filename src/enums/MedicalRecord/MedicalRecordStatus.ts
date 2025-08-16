@@ -10,7 +10,7 @@ export enum MedicalRecordStatus {
 export const MedicalRecordStatusMap: Record<MedicalRecordStatus, string> = {
   [MedicalRecordStatus.WAITING_FOR_PAYMENT]: "Chờ thanh toán",
   [MedicalRecordStatus.TESTING]: "Đang thực hiện",
-  [MedicalRecordStatus.TESTING_COMPLETED]: "Đã hoàn xét nghiệm",
+  [MedicalRecordStatus.TESTING_COMPLETED]: "Đã hoàn tất xét nghiệm",
   [MedicalRecordStatus.WAITING_FOR_RESULT]: "Chờ nhập kết quả",
   [MedicalRecordStatus.COMPLETED]: "Đã hoàn tất kết quả",
   

@@ -31,7 +31,7 @@ interface Props {
   form: UseFormReturnType<any>;
   summaryValue: string;
   onSummaryChange: (value: string) => void;
-  onSave?: () => void;
+  onSave?: () => Promise<boolean | void> | boolean | void;
   isFinal: boolean;
   onAddService?: () => void;
   onFinalChange: (v: boolean) => void;
@@ -65,10 +65,26 @@ const PatientDetailSection: React.FC<Props> = ({
 
   const recordCompleted = detail.status === "COMPLETED";
   const isWaitingForPayment = detail.status === "WAITING_FOR_PAYMENT";
+  const isTesting = detail.status === "TESTING";
 
   const hideAllActions = visit?.status === Status.DONE || isWaitingForPayment;
+  const [uiIsFinal, setUiIsFinal] = React.useState(isFinal);
   const saveDisabled =
-    lockedByTransfer || (isFinal && !allOrdersCompleted) || recordCompleted;
+    lockedByTransfer || (uiIsFinal && !allOrdersCompleted) || recordCompleted;
+
+  const [hasSavedConclusion, setHasSavedConclusion] = React.useState(false);
+  const [hasSavedFinal, setHasSavedFinal] = React.useState(false);
+
+  React.useEffect(() => {
+    setUiIsFinal(isFinal);
+    setHasSavedConclusion(false);
+    setHasSavedFinal(false);
+  }, [detail?.medicalRecordCode]);
+
+  React.useEffect(() => {
+    if (uiIsFinal) setHasSavedFinal(false);
+    else setHasSavedConclusion(false);
+  }, [uiIsFinal]);
 
   const DeptCell = ({
     dept,
@@ -95,7 +111,14 @@ const PatientDetailSection: React.FC<Props> = ({
 
   const handleToggleFinal = (checked: boolean) => {
     if (checked && !allOrdersCompleted) return;
+    setUiIsFinal(checked);
     onFinalChange(checked);
+  };
+
+  const handleClickSave = async () => {
+    await Promise.resolve(onSave?.());
+    if (uiIsFinal) setHasSavedFinal(true);
+    else setHasSavedConclusion(true);
   };
 
   // === KẾT LUẬN TRƯỚC ĐÓ ===
@@ -133,7 +156,6 @@ const PatientDetailSection: React.FC<Props> = ({
         {renderGridItem("Ngày sinh", detail.dateOfBirth)}
         {renderGridItem("SĐT", detail.phone)}
       </Grid>
-
       {/* Thông tin lượt khám */}
       {visit && (
         <>
@@ -161,7 +183,6 @@ const PatientDetailSection: React.FC<Props> = ({
           </Grid>
         </>
       )}
-
       {/* Thông tin khám */}
       <Divider label="Thông tin khám" labelPosition="center" my="xs" />
       <Grid>
@@ -176,7 +197,6 @@ const PatientDetailSection: React.FC<Props> = ({
         {renderGridItem("Cân nặng", `${detail.weightKg} kg`)}
         {renderGridItem("BMI", detail.bmi)}
       </Grid>
-
       {/* Lịch sử chuyển phòng */}
       <Divider label="Lịch sử chuyển phòng" labelPosition="center" my="xs" />
       {Array.isArray(detail.roomTransfers) &&
@@ -212,7 +232,7 @@ const PatientDetailSection: React.FC<Props> = ({
                       new Date(a.transferTime).getTime() -
                       new Date(b.transferTime).getTime()
                   )
-                  .slice(1) // bỏ phần tử đầu (khởi tạo)
+                  .slice(1)
                   .map((t, idx) => (
                     <Table.Tr key={t.id}>
                       <Table.Td style={{ textAlign: "center" }}>
@@ -302,10 +322,8 @@ const PatientDetailSection: React.FC<Props> = ({
           </Stack>
         </>
       )}
-
       {/* Tổng kết / Kết luận */}
       <Divider label="Tổng kết" labelPosition="center" my="xs" />
-
       <Text>
         <strong>Ghi chú:</strong>
       </Text>
@@ -315,7 +333,6 @@ const PatientDetailSection: React.FC<Props> = ({
         autosize
         minRows={2}
       />
-
       <Text>
         <strong>Chẩn đoán:</strong>
       </Text>
@@ -325,8 +342,7 @@ const PatientDetailSection: React.FC<Props> = ({
         autosize
         minRows={2}
       />
-
-      {/* Kết luận trước đó (TRỪ cái gần nhất) */}
+      {/* Kết luận trước đó */}
       {previousConclusions.length > 0 && (
         <Stack gap={6} mt="xs">
           <Text fw={600} c="dimmed">
@@ -364,19 +380,17 @@ const PatientDetailSection: React.FC<Props> = ({
           </Stack>
         </Stack>
       )}
-
       {/* Ô nhập một field cho cả hai chế độ */}
       <Text>
-        <b>{isFinal ? "Tổng kết" : "Kết luận"}</b>
+        <b>{uiIsFinal ? "Tổng kết" : "Kết luận"}</b>
       </Text>
       <Textarea
         value={summaryValue}
         onChange={(e) => onSummaryChange(e.currentTarget.value)}
-        placeholder={isFinal ? "Nhập tổng kết..." : "Nhập kết luận..."}
+        placeholder={uiIsFinal ? "Nhập tổng kết..." : "Nhập kết luận..."} // ✅
         autosize
         minRows={2}
       />
-
       {/* Switch đánh dấu hoàn tất */}
       <Group gap="sm" align="center" mt="xs">
         <Text fw={600}>
@@ -397,7 +411,7 @@ const PatientDetailSection: React.FC<Props> = ({
         >
           <div>
             <Switch
-              checked={isFinal}
+              checked={uiIsFinal}
               onChange={(e) => handleToggleFinal(e.currentTarget.checked)}
               disabled={
                 lockedByTransfer || !allOrdersCompleted || recordCompleted
@@ -411,68 +425,98 @@ const PatientDetailSection: React.FC<Props> = ({
           </div>
         </Tooltip>
       </Group>
-
       {/* Cụm nút hành động */}
       {!hideAllActions && (
         <Stack align="flex-end">
           <Group justify="flex-end" gap="sm">
-            {detail.status === "TESTING_COMPLETED" && (
+            {!uiIsFinal && !isTesting && (
               <>
+                {/* Thêm dịch vụ */}
                 <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
                   <div>
                     <Button
                       variant="light"
-                      color="red"
-                      size="sm"
-                      onClick={onEndExamination}
+                      color="green"
+                      onClick={onAddService}
                       disabled={lockedByTransfer}
                     >
-                      Kết thúc khám
+                      Thêm dịch vụ
                     </Button>
                   </div>
                 </Tooltip>
 
+                {/* Lưu Kết luận */}
                 <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
                   <div>
                     <Button
                       variant="light"
-                      color="blue"
-                      size="sm"
-                      onClick={onOpenTransfer}
-                      disabled={lockedByTransfer}
+                      color="yellow"
+                      onClick={handleClickSave}
+                      disabled={saveDisabled}
                     >
-                      Chuyển phòng
+                      Lưu Kết luận
                     </Button>
                   </div>
                 </Tooltip>
+
+                {hasSavedConclusion && (
+                  <Tooltip
+                    label={lockMsg}
+                    disabled={!lockedByTransfer}
+                    withArrow
+                  >
+                    <div>
+                      <Button
+                        variant="light"
+                        color="blue"
+                        onClick={onOpenTransfer}
+                        disabled={lockedByTransfer}
+                      >
+                        Chuyển phòng
+                      </Button>
+                    </div>
+                  </Tooltip>
+                )}
               </>
             )}
 
-            <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
-              <div>
-                <Button
-                  variant="light"
-                  color="green"
-                  onClick={onAddService}
-                  disabled={lockedByTransfer}
-                >
-                  Thêm dịch vụ
-                </Button>
-              </div>
-            </Tooltip>
+            {uiIsFinal && !isTesting && (
+              <>
+                {/* Lưu Tổng kết */}
+                <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
+                  <div>
+                    <Button
+                      variant="light"
+                      color="yellow"
+                      onClick={handleClickSave}
+                      disabled={saveDisabled}
+                    >
+                      Lưu Tổng kết
+                    </Button>
+                  </div>
+                </Tooltip>
 
-            <Tooltip label={lockMsg} disabled={!lockedByTransfer} withArrow>
-              <div>
-                <Button
-                  variant="light"
-                  color="yellow"
-                  onClick={onSave}
-                  disabled={saveDisabled}
-                >
-                  Lưu {isFinal ? "Tổng kết" : "Kết luận"}
-                </Button>
-              </div>
-            </Tooltip>
+                {hasSavedFinal && (
+                  <Tooltip
+                    label={lockMsg}
+                    disabled={!lockedByTransfer}
+                    withArrow
+                  >
+                    <div>
+                      <Button
+                        variant="light"
+                        color="red"
+                        size="sm"
+                        onClick={onEndExamination}
+                        disabled={lockedByTransfer}
+                      >
+                        Kết thúc khám
+                      </Button>
+                    </div>
+                  </Tooltip>
+                )}
+              </>
+            )}
           </Group>
         </Stack>
       )}
