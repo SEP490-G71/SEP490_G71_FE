@@ -61,6 +61,10 @@ const ClinicalPage = () => {
 
   const [technicalName, setTechnicalName] = useState("Không rõ");
 
+  const resetDetailView = () => {
+    setSelectedOrder(null);
+    setIsResultMode(false);
+  };
   useEffect(() => {
     const fetch = async () => {
       if (userInfo?.userId) {
@@ -191,12 +195,14 @@ const ClinicalPage = () => {
 
   useEffect(() => {
     if (selectedRecordId && recordDetail?.id === selectedRecordId) {
+      resetDetailView();
       const mapped = mapDetailToQueuePatient(recordDetail);
       setSelectedQueuePatient(mapped);
     }
   }, [recordDetail, selectedRecordId]);
 
   const handleSelectRecordAndPatient = async (record: MedicalRecord) => {
+    resetDetailView();
     setSelectedRecordId(record.id);
     await fetchMedicalRecordDetail(record.id);
   };
