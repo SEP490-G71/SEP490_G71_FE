@@ -194,7 +194,6 @@ const MedicalExaminationPage = () => {
       : null;
   }, [sortedTransfers]);
 
-  // NEW: kết luận gần nhất có nội dung (để hiển thị khi isFinal=false)
   const latestConclusionText = useMemo(() => {
     for (let i = sortedTransfers.length - 1; i >= 0; i--) {
       const t = sortedTransfers[i];
@@ -218,7 +217,6 @@ const MedicalExaminationPage = () => {
     return false;
   }, [lastTransfer, department?.id, department?.roomNumber]);
 
-  // NEW: Đồng bộ nội dung Textarea theo chế độ hiển thị
   useEffect(() => {
     if (!recordDetail) return;
     if (isFinal) {

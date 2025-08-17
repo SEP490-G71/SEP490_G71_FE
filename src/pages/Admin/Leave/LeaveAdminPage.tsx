@@ -27,6 +27,7 @@ import {
   LeaveRequestStatus,
   LeaveRequestStatusLabels,
 } from "../../../enums/Admin/LeaveRequestStatus";
+import { useDeleteLeaveRequest } from "../../../hooks/leave/useDeleteLeaveRequest";
 
 const LeaveAdminPage = () => {
   const [data, setData] = useState<LeaveRequestResponse[]>([]);
@@ -53,7 +54,7 @@ const LeaveAdminPage = () => {
   const { updateStatus } = useUpdateLeaveRequestStatus();
   const [rejectNote, setRejectNote] = useState("");
   const [openedPopoverId, setOpenedPopoverId] = useState<string | null>(null);
-
+  const { deleteLeaveRequest } = useDeleteLeaveRequest();
   const staffOptions = selectedStaffOption
     ? [
         selectedStaffOption,
@@ -63,45 +64,55 @@ const LeaveAdminPage = () => {
       ]
     : rawStaffOptions;
 
-  const fetchData = async () => {
-    const isValid = validate(filterFromDate, filterToDate);
+  const fetchData = async (
+    overrides?: Partial<{
+      status: string;
+      staffId: string;
+      fromDate: Date | null;
+      toDate: Date | null;
+      page: number;
+      pageSize: number;
+    }>
+  ) => {
+    const _status = overrides?.status ?? filterStatus;
+    const _staffId = overrides?.staffId ?? filterStaffId;
+    const _fromDate = overrides?.fromDate ?? filterFromDate;
+    const _toDate = overrides?.toDate ?? filterToDate;
+    const _page = overrides?.page ?? page;
+    const _pageSize = overrides?.pageSize ?? pageSize;
 
+    const isValid = validate(_fromDate, _toDate);
     if (!isValid) {
       setFromDateError(
-        validateDateNotFuture(filterFromDate) ||
-          validateFromDateToDate(filterFromDate, filterToDate)
+        validateDateNotFuture(_fromDate) ||
+          validateFromDateToDate(_fromDate, _toDate)
       );
       setToDateError(
-        validateDateNotFuture(filterToDate) ||
-          validateFromDateToDate(filterFromDate, filterToDate)
+        validateDateNotFuture(_toDate) ||
+          validateFromDateToDate(_fromDate, _toDate)
       );
       return;
     }
-
     setFromDateError(null);
     setToDateError(null);
     setLoading(true);
 
     try {
       const params = {
-        page: page - 1,
-        size: pageSize,
-        status: filterStatus || undefined,
-        staffId: filterStaffId || undefined,
-        createdAtFrom: filterFromDate
-          ? dayjs(filterFromDate).format("YYYY-MM-DD")
+        page: _page - 1,
+        size: _pageSize,
+        status: _status || undefined,
+        staffId: _staffId || undefined,
+        createdAtFrom: _fromDate
+          ? dayjs(_fromDate).format("YYYY-MM-DD")
           : undefined,
-        createdAtTo: filterToDate
-          ? dayjs(filterToDate).format("YYYY-MM-DD")
-          : undefined,
+        createdAtTo: _toDate ? dayjs(_toDate).format("YYYY-MM-DD") : undefined,
       };
 
       const res = await axiosInstance.get(`/leave-requests`, { params });
       const result = res.data?.result;
-
       setData(result?.content || []);
       setTotalItems(result?.totalElements || 0);
-
       if (!result?.content?.length) toast.info("Không có dữ liệu nghỉ phép");
     } catch {
       toast.error("Không thể tải danh sách nghỉ phép.");
@@ -124,6 +135,7 @@ const LeaveAdminPage = () => {
 
   const handleSearch = () => {
     setPage(1);
+    setStaffSearch("");
     fetchData();
   };
   const handleResetFilters = () => {
@@ -134,9 +146,14 @@ const LeaveAdminPage = () => {
     setFilterToDate(null);
     setStaffSearch("");
     setPage(1);
-    setTimeout(() => {
-      fetchData();
-    }, 0);
+
+    fetchData({
+      status: "",
+      staffId: "",
+      fromDate: null,
+      toDate: null,
+      page: 1,
+    });
   };
   const handleStatusChange = async (
     leaveRequestId: string,
@@ -157,12 +174,9 @@ const LeaveAdminPage = () => {
   };
 
   const handleDelete = async (row: LeaveRequestResponse) => {
-    try {
-      await axiosInstance.delete(`/leave-request/${row.id}`);
-      toast.success("Xoá yêu cầu nghỉ phép thành công");
+    const ok = await deleteLeaveRequest(row.id);
+    if (ok) {
       fetchData();
-    } catch {
-      toast.error("Xoá yêu cầu nghỉ phép thất bại");
     }
   };
 
@@ -313,8 +327,10 @@ const LeaveAdminPage = () => {
               searchable
               clearable
               placeholder="Nhập tên hoặc mã nhân viên"
-              value={filterStaffId}
+              value={filterStaffId || null}
+              searchValue={staffSearch}
               onSearchChange={setStaffSearch}
+              onDropdownClose={() => setStaffSearch("")}
               onChange={(val) => {
                 const selected = staffOptions.find((opt) => opt.value === val);
                 setSelectedStaffOption(selected || null);

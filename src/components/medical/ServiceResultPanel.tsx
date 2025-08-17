@@ -161,7 +161,7 @@ const ServiceResultPanel = ({
       const message = error?.response?.data?.message;
 
       if (code === 2001) {
-        toast.warning("Kết quả đã được hoàn thành. Không thể lưu lại.");
+        toast.warning("Kết quả đã được hoàn thành. Chỉ có thể sửa.");
       } else {
         console.error("❌ Upload lỗi:", error);
         toast.error(message || "Không thể lưu/sửa kết quả hoặc upload file.");

@@ -1,4 +1,3 @@
-import { toast } from "react-toastify";
 import axiosInstance from "../../../services/axiosInstance";
 import { InvoiceDetail } from "../../../types/Invoice/invoice";
 
@@ -16,26 +15,39 @@ export const markInvoicePending = async (
   },
   fetchInvoiceDetail: (id: string) => Promise<void>
 ) => {
-  if (!invoiceDetail || !editableInvoiceDetail.confirmedBy || !editableInvoiceDetail.paymentType) {
-    throw new Error("MISSING_REQUIRED_FIELDS");
+  if (!invoiceDetail) {
+    const err: any = new Error("MISSING_INVOICE_DETAIL");
+    err.code = "MISSING_INVOICE_DETAIL";
+    throw err;
+  }
+  if (!editableInvoiceDetail.confirmedBy || !editableInvoiceDetail.paymentType) {
+    const err: any = new Error("MISSING_REQUIRED_FIELDS");
+    err.code = "MISSING_REQUIRED_FIELDS";
+    throw err;
   }
 
-  try {
-    const payload: MarkInvoicePendingRequest = {
-      invoiceId: invoiceDetail.invoiceId,
-      staffId: editableInvoiceDetail.confirmedBy,
-      paymentType: editableInvoiceDetail.paymentType,
-    };
+  const payload: MarkInvoicePendingRequest = {
+    invoiceId: invoiceDetail.invoiceId,
+    staffId: editableInvoiceDetail.confirmedBy,
+    paymentType: editableInvoiceDetail.paymentType,
+  };
 
-    await axiosInstance.post("/invoices/pay", payload);
+  try {
+    const res = await axiosInstance.post("/invoices/pay", payload);
+
+    // Nếu backend trả body có code khác 1000 thì coi là lỗi
+    const code = res?.data?.code;
+    if (typeof code === "number" && code !== 1000) {
+      const err: any = new Error(res?.data?.message || "PAY_FAILED");
+      err.response = { status: 400, data: res?.data };
+      err.code = res?.data?.code;
+      throw err;
+    }
 
     await fetchInvoiceDetail(invoiceDetail.invoiceId);
-  } catch (error: any) {
-    console.error("Lỗi khi thanh toán:", error);
-    const message =
-           error?.response?.data?.message ||
-           error?.message ||
-           "Không thể thanh toán.";
-         toast.error(message);
+    return res.data;
+  } catch (error) {
+    // ❗️Không toast ở đây — ném lên cho hàm cha xử lý (hiển thị đúng 1 toast)
+    throw error;
   }
 };

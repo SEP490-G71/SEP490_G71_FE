@@ -183,25 +183,38 @@ const BillingPage = () => {
   };
 
   const handleSavePendingInvoice = async () => {
-    if (!invoiceDetail || !editableInvoiceDetail.paymentType) {
+    if (!invoiceDetail) return;
+
+    const paymentTypeResolved =
+      invoiceDetail.paymentType ??
+      (editableInvoiceDetail.paymentType as
+        | keyof typeof PaymentType
+        | undefined);
+
+    if (!paymentTypeResolved) {
       toast.error("Vui lòng chọn hình thức thanh toán");
+      return;
+    }
+    if (!editableInvoiceDetail.confirmedBy) {
+      toast.error("Chưa xác nhận người thu");
       return;
     }
 
     try {
       setPaying(true);
-
       const wasLastItemOnPage = invoices.length === 1 && page > 1;
 
+      // ❗️Quan trọng: KHÔNG toast trước, chỉ chờ kết quả
       await markInvoicePending(
         invoiceDetail,
-        editableInvoiceDetail,
+        { ...editableInvoiceDetail, paymentType: paymentTypeResolved },
         fetchInvoiceDetail
       );
 
-      toast.success("Hóa đơn đã được thanh toán");
+      // ✅ Chỉ tới đây mới success
+      toast.success("Thanh toán thành công.");
 
-      // ✅ Reset toàn bộ panel bên phải ngay lập tức
+      // reset UI
       setSelectedInvoiceInfo(null);
       setSelectedPatient(null);
       setEditableInvoiceDetail({});
@@ -210,22 +223,31 @@ const BillingPage = () => {
       setPreviewUrl(null);
       setViewModalOpened(false);
 
-      // Điều chỉnh phân trang & reload list
       if (wasLastItemOnPage) {
         setPage((p) => Math.max(1, p - 1));
       } else {
         await fetchInvoices(currentFilters.current, page - 1, pageSize);
       }
-    } catch (error: any) {
-      const messageMap: Record<string, string> = {
-        MISSING_PAYMENT_TYPE: "Vui lòng chọn hình thức thanh toán",
-        MISSING_INVOICE_DETAIL: "Không tìm thấy thông tin hóa đơn",
-        MISSING_REQUIRED_FIELDS:
-          "Thiếu thông tin cần thiết để thanh toán hóa đơn",
-      };
-      toast.error(
-        messageMap[error?.message] || error?.message || "Đã có lỗi xảy ra"
-      );
+    } catch (e: any) {
+      // ❌ Chỉ 1 toast lỗi, đọc msg từ server
+      const status = e?.response?.status;
+      const code = e?.response?.data?.code;
+      const serverMsg = e?.response?.data?.message;
+
+      if (status === 401 || status === 403 || code === 1007) {
+        // ví dụ code=1007: “không trong ca làm…”
+        toast.error(
+          serverMsg || "Bạn không trong ca hoặc không có quyền thanh toán."
+        );
+      } else {
+        const messageMap: Record<string, string> = {
+          MISSING_PAYMENT_TYPE: "Vui lòng chọn hình thức thanh toán",
+          MISSING_INVOICE_DETAIL: "Không tìm thấy thông tin hóa đơn",
+          MISSING_REQUIRED_FIELDS:
+            "Thiếu thông tin cần thiết để thanh toán hóa đơn",
+        };
+        toast.error(messageMap[code] || serverMsg || "Thanh toán thất bại.");
+      }
     } finally {
       setPaying(false);
     }
@@ -387,15 +409,20 @@ const BillingPage = () => {
                   onClick={handleSavePendingInvoice}
                   disabled={
                     paying ||
-                    selectedInvoiceInfo?.status === "PAID" ||
-                    !editableInvoiceDetail.confirmedBy
+                    selectedInvoiceInfo?.status === InvoiceStatus.PAID ||
+                    !editableInvoiceDetail.confirmedBy ||
+                    (!invoiceDetail?.paymentType &&
+                      !editableInvoiceDetail.paymentType)
                   }
                   loading={paying}
                   title={
-                    selectedInvoiceInfo?.status === "PAID"
+                    selectedInvoiceInfo?.status === InvoiceStatus.PAID
                       ? "Hóa đơn đã thanh toán"
                       : !editableInvoiceDetail.confirmedBy
                       ? "Chưa xác nhận người thu"
+                      : !invoiceDetail?.paymentType &&
+                        !editableInvoiceDetail.paymentType
+                      ? "Vui lòng chọn hình thức thanh toán"
                       : ""
                   }
                 >
@@ -404,7 +431,6 @@ const BillingPage = () => {
               </Box>
             </>
           ) : (
-            // Trạng thái mặc định khi chưa chọn hóa đơn
             <Box mt="sm" style={{ color: "#667085", fontStyle: "italic" }}>
               Vui lòng chọn một hóa đơn ở danh sách bên trái để xem chi tiết.
             </Box>

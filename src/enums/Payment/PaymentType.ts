@@ -1,6 +1,6 @@
 export enum PaymentType {
   CASH = "Tiền mặt",
-  CARD = "Thẻ",
+  // CARD = "Thẻ",
   TRANSFER = "Chuyển khoản",
-  INSURANCE = "Bảo hiểm",
+  // INSURANCE = "Bảo hiểm",
 }

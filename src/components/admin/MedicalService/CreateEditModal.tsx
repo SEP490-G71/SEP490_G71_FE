@@ -3,10 +3,9 @@ import { useForm } from "@mantine/form";
 import React, { useEffect, useState } from "react";
 import {
   CreateMedicalServiceRequest,
-  Department,
   MedicalService,
 } from "../../../types/Admin/MedicalService/MedicalService";
-import axiosInstance from "../../../services/axiosInstance";
+import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 
 interface CreateEditModalProps {
   opened: boolean;
@@ -23,17 +22,11 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
   onSubmit,
   isViewMode = false,
 }) => {
-  const [departments, setDepartments] = useState<Department[]>([]);
-
-  const getAllDepartments = async () => {
-    try {
-      const res = await axiosInstance.get("departments/all");
-      setDepartments(res.data.result);
-    } catch (error) {
-      console.error("Failed to fetch departments", error);
-      return null;
-    }
-  };
+  const {
+    departments,
+    fetchAllDepartments,
+    loading: loadingDepts,
+  } = useDepartmentService();
 
   const form = useForm({
     initialValues: {
@@ -53,24 +46,13 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
         value.length > 500 ? "Mô tả có tối đa 500 ký tự" : null,
       departmentId: (value) => (!value ? "Phòng ban là bắt buộc" : null),
       price: (value) => {
-        const stringValue = String(value).trim();
-        const numberValue = Number(stringValue);
-
-        if (stringValue === "") {
+        if (value === null || value === undefined)
           return "Giá tiền là bắt buộc";
-        }
-
-        if (isNaN(numberValue)) {
+        if (typeof value !== "number" || Number.isNaN(value))
           return "Giá tiền phải là một số";
-        }
-
-        if (numberValue < 0) {
-          return "Giá tiền phải >= 0";
-        }
-
+        if (value < 0) return "Giá tiền phải >= 0";
         return null;
       },
-
       vat: (value) =>
         ![0, 8, 10].includes(value)
           ? "VAT phải là một trong 0, 8 hoặc 10"
@@ -78,26 +60,43 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
     },
   });
 
+  const [priceInput, setPriceInput] = useState<string>("");
+
+  const formatVN = (n: number) =>
+    Number.isFinite(n) ? n.toLocaleString("vi-VN") : "";
+
+  const handlePriceChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    const num = digits ? parseInt(digits, 10) : 0;
+    form.setFieldValue("price", num);
+    setPriceInput(digits ? formatVN(num) : "");
+  };
+
   useEffect(() => {
+    if (opened && departments.length === 0) {
+      fetchAllDepartments();
+    }
+
     if (initialData) {
       form.setValues({
         name: initialData.name ?? "",
         description: initialData.description ?? "",
-        departmentId: initialData?.department.id ?? "",
+        departmentId: initialData?.department?.id ?? "",
         price: initialData.price ?? 0,
         vat: initialData.vat ?? 0,
       });
+      setPriceInput(
+        initialData.price != null ? formatVN(initialData.price) : ""
+      );
     } else {
       form.reset();
+      setPriceInput("");
     }
-    getAllDepartments();
   }, [initialData, opened]);
 
   const handleSubmit = async (values: typeof form.values) => {
-    const success = await onSubmit(values);
-    if (success) {
-      onClose(); // ✅ chỉ đóng modal khi lưu thành công
-    }
+    const ok = await onSubmit(values);
+    if (ok) onClose();
   };
 
   return (
@@ -139,17 +138,22 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
           {...form.getInputProps("departmentId")}
           required
           mt="sm"
-          disabled={isViewMode}
+          disabled={isViewMode || loadingDepts}
+          rightSection={loadingDepts ? <span className="mr-2">⏳</span> : null}
+          searchable
+          clearable={false}
         />
 
         <TextInput
           label="Giá tiền"
-          placeholder="Giá tiền"
-          {...form.getInputProps("price")}
+          placeholder="VD: 100.000"
+          value={priceInput}
+          onChange={(e) => handlePriceChange(e.currentTarget.value)}
+          onBlur={(e) => handlePriceChange(e.currentTarget.value)}
           required
           mt="sm"
-          min={0}
           disabled={isViewMode}
+          inputMode="numeric"
         />
 
         <Select
@@ -160,7 +164,6 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
             { value: "8", label: "8%" },
             { value: "10", label: "10%" },
           ]}
-          {...form.getInputProps("vat")}
           required
           mt="sm"
           onChange={(value) => {
@@ -171,6 +174,7 @@ const CreateEditModal: React.FC<CreateEditModalProps> = ({
           value={form.values.vat.toString()}
           disabled={isViewMode}
         />
+
         {!isViewMode && (
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={onClose}>

@@ -1,20 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Select, Button, TextInput } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { createColumn } from "../../../components/utils/tableUtils";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
-import axiosInstance from "../../../services/axiosInstance";
-import { toast } from "react-toastify";
 import CreateEditModal from "../../../components/admin/MedicalService/CreateEditModal";
 import {
   CreateMedicalServiceRequest,
-  Department,
   MedicalService,
 } from "../../../types/Admin/MedicalService/MedicalService";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import PageMeta from "../../../components/common/PageMeta";
 import { useMedicalServiceUpdate } from "../../../hooks/medical-service/useMedicalServiceUpdate";
+import useDepartmentService from "../../../hooks/department-service/useDepartmentService";
 
 const MedicalServicePage = () => {
   const [page, setPage] = useState(1);
@@ -29,6 +27,12 @@ const MedicalServicePage = () => {
     handleDeleteMedicalServiceById,
   } = useMedicalService();
 
+  const {
+    departments,
+    loading: deptLoading,
+    fetchAllDepartments,
+  } = useDepartmentService();
+
   const [isViewMode, setIsViewMode] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedService, setSelectedService] = useState<MedicalService | null>(
@@ -37,23 +41,29 @@ const MedicalServicePage = () => {
 
   const [searchNameInput, setSearchNameInput] = useState<string>("");
   const [searchName, setSearchName] = useState<string>("");
+
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
-    string | undefined
-  >(undefined);
-
+    string | null
+  >(null);
   const [departmentFilterInput, setDepartmentFilterInput] = useState<
-    string | undefined
-  >(undefined);
+    string | null
+  >(null);
+  const [deptSearch, setDeptSearch] = useState("");
 
-  const [departments, setDepartments] = useState<
-    { label: string; value: string }[]
-  >([]);
-
-  const [, setServiceNameOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  const { updateMedicalService } = useMedicalServiceUpdate();
   const { setting } = useSettingAdminService();
+
+  const { updateMedicalService } = useMedicalServiceUpdate();
+
+  const departmentOptions = useMemo(
+    () => departments.map((d) => ({ label: d.name, value: d.id })),
+    [departments]
+  );
+
+  const refetchWithFilters = () =>
+    fetchAllMedicalServices(page - 1, pageSize, "name", "asc", {
+      name: searchName || undefined,
+      departmentId: selectedDepartmentId || undefined,
+    });
 
   useEffect(() => {
     if (setting?.paginationSizeList?.length) {
@@ -62,42 +72,12 @@ const MedicalServicePage = () => {
   }, [setting]);
 
   useEffect(() => {
-    fetchAllMedicalServices(page - 1, pageSize);
-  }, [page, pageSize, searchName, selectedDepartmentId]);
+    fetchAllDepartments();
+  }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const departmentsRes = await axiosInstance.get("/departments/all");
-        const departmentsOptions = departmentsRes.data.result.map(
-          (d: Department) => ({
-            label: d.name,
-            value: d.id,
-          })
-        );
-        setDepartments(departmentsOptions);
-
-        const servicesRes = await axiosInstance.get("/medical-services", {
-          params: { page: 0, size: 1000 },
-        });
-        const serviceNameOptions = Array.from(
-          new Set(
-            (servicesRes.data.result.content as MedicalService[]).map(
-              (s) => s.name
-            )
-          )
-        ).map((name) => ({
-          label: name,
-          value: name,
-        }));
-        setServiceNameOptions(serviceNameOptions);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+    refetchWithFilters();
+  }, [page, pageSize, searchName, selectedDepartmentId]);
 
   const handleAdd = () => {
     setSelectedService(null);
@@ -110,8 +90,6 @@ const MedicalServicePage = () => {
       setSelectedService(data);
       setIsViewMode(true);
       setModalOpened(true);
-    } else {
-      toast.error("Failed to fetch service details");
     }
   };
 
@@ -120,19 +98,18 @@ const MedicalServicePage = () => {
     if (data) {
       setSelectedService(data);
       setModalOpened(true);
-    } else {
-      toast.error("Failed to fetch service details");
     }
   };
 
   const handleDelete = async (row: MedicalService) => {
-    await handleDeleteMedicalServiceById(row.id);
+    const ok = await handleDeleteMedicalServiceById(row.id);
+    if (ok) refetchWithFilters();
   };
 
   const handleSubmit = async (formData: CreateMedicalServiceRequest) => {
     const success = await updateMedicalService(formData, selectedService?.id);
     if (success) {
-      fetchAllMedicalServices(page - 1, pageSize);
+      refetchWithFilters();
     }
     return success;
   };
@@ -144,11 +121,22 @@ const MedicalServicePage = () => {
   };
 
   const handleReset = () => {
-    setSearchNameInput("");
-    setSearchName("");
-    setDepartmentFilterInput(undefined);
-    setSelectedDepartmentId(undefined);
-    setPage(1);
+    const nextPage = 1;
+    const nextName = "";
+    const nextDept: string | null = null;
+
+    setSearchNameInput(nextName);
+    setDepartmentFilterInput(nextDept);
+    setDeptSearch("");
+
+    setSearchName(nextName);
+    setSelectedDepartmentId(nextDept);
+    setPage(nextPage);
+
+    fetchAllMedicalServices(nextPage - 1, pageSize, "name", "asc", {
+      name: undefined,
+      departmentId: undefined,
+    });
   };
 
   const columns = [
@@ -197,7 +185,6 @@ const MedicalServicePage = () => {
       label: "Giá",
       render: (row) => `${row.price.toLocaleString()} VND`,
     }),
-
     createColumn<MedicalService>({
       key: "vat",
       label: "VAT (%)",
@@ -208,6 +195,7 @@ const MedicalServicePage = () => {
   return (
     <>
       <PageMeta title="Quản lý dịch vụ" description="Quản lý dịch vụ" />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
         <h1 className="text-xl font-bold">Dịch Vụ Khám</h1>
         <Button onClick={handleAdd} color="blue">
@@ -220,13 +208,14 @@ const MedicalServicePage = () => {
           <FloatingLabelWrapper label="Chọn phòng ban">
             <Select
               placeholder="Chọn phòng ban"
-              data={departments}
+              data={departmentOptions}
               value={departmentFilterInput}
-              onChange={(value) => {
-                setDepartmentFilterInput(value || undefined);
-              }}
+              onChange={(value) => setDepartmentFilterInput(value)}
               clearable
               searchable
+              searchValue={deptSearch}
+              onSearchChange={setDeptSearch}
+              disabled={deptLoading}
             />
           </FloatingLabelWrapper>
         </div>
@@ -244,7 +233,13 @@ const MedicalServicePage = () => {
         </div>
 
         <div className="col-span-12 md:col-span-2 flex items-end gap-2">
-          <Button variant="light" color="gray" onClick={handleReset} fullWidth>
+          <Button
+            variant="light"
+            color="gray"
+            onClick={handleReset}
+            fullWidth
+            disabled={loading || deptLoading}
+          >
             Tải lại
           </Button>
           <Button
@@ -252,6 +247,7 @@ const MedicalServicePage = () => {
             color="blue"
             onClick={handleSearch}
             fullWidth
+            disabled={loading || deptLoading}
           >
             Tìm kiếm
           </Button>
