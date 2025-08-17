@@ -78,18 +78,21 @@ const useMedicalService = () => {
     }
   };
 
-  const handleDeleteMedicalServiceById = async (id: string) => {
-    try {
-      const res = await axiosInstance.delete(`/medical-services/${id}`);
-      if (res.status === 200) {
-        toast.success("Deleted successfully");
-        fetchAllMedicalServices();
-      }
-    } catch (error) {
-      console.error("Lỗi khi xoá dịch vụ y tế:", error);
-      toast.error(getErrorMessage(error, "Không thể xoá dịch vụ y tế."));
+ const handleDeleteMedicalServiceById = async (id: string): Promise<boolean> => {
+  try {
+    const res = await axiosInstance.delete(`/medical-services/${id}`);
+    if (res.status === 200) {
+      toast.success("Xoá dịch vụ thành công");
+      return true;
     }
-  };
+    toast.error("Không thể xoá dịch vụ y tế.");
+    return false;
+  } catch (error) {
+    console.error("Lỗi khi xoá dịch vụ y tế:", error);
+    toast.error(getErrorMessage(error, "Không thể xoá dịch vụ y tế."));
+    return false;
+  }
+};
 
   return {
     medicalServices,
