@@ -58,8 +58,11 @@ export const WorkSchedulePage = () => {
     }
   }, [setting]);
 
+  // =============================== [SỬA 1] ===============================
+  // Chỉ fetch THEO BỘ LỌC, KHÔNG fetch theo page/pageSize.
+  // Tránh trường hợp server đã trả về 1 trang rồi còn .slice lần nữa ở client.
   useEffect(() => {
-    fetchWorkSchedules(page - 1, pageSize, {
+    fetchWorkSchedules(0, 1000, {
       staffId: filters.staffId || undefined,
       shiftId: filters.shift || undefined,
       fromDate: filters.fromDate
@@ -70,7 +73,8 @@ export const WorkSchedulePage = () => {
         : undefined,
       dayOfWeek: filters.dayOfWeek || undefined,
     });
-  }, [filters, page, pageSize]);
+  }, [filters]); // <- bỏ page/pageSize khỏi dependency
+  // ======================================================================
 
   const handleReset = () => {
     const resetValue = {
@@ -102,7 +106,20 @@ export const WorkSchedulePage = () => {
 
   const handleDelete = async (row: WorkSchedule) => {
     await deleteWorkScheduleByStaff(row.staffId);
-    fetchWorkSchedules(page - 1, pageSize);
+    // ============================= [SỬA 2] ==============================
+    // Sau khi xóa, refetch lại theo BỘ LỌC hiện tại (không theo page).
+    fetchWorkSchedules(0, 1000, {
+      staffId: filters.staffId || undefined,
+      shiftId: filters.shift || undefined,
+      fromDate: filters.fromDate
+        ? dayjs(filters.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: filters.toDate
+        ? dayjs(filters.toDate).format("YYYY-MM-DD")
+        : undefined,
+      dayOfWeek: filters.dayOfWeek || undefined,
+    });
+    // ====================================================================
   };
 
   const handleSubmit = async (formData: any) => {
@@ -119,17 +136,34 @@ export const WorkSchedulePage = () => {
 
     setEditModalOpened(false);
     setSelectedSchedule(null);
-    fetchWorkSchedules(page - 1, pageSize);
+
+    // ============================= [SỬA 3] ==============================
+    // Refetch theo bộ lọc sau khi create/update.
+    fetchWorkSchedules(0, 1000, {
+      staffId: filters.staffId || undefined,
+      shiftId: filters.shift || undefined,
+      fromDate: filters.fromDate
+        ? dayjs(filters.fromDate).format("YYYY-MM-DD")
+        : undefined,
+      toDate: filters.toDate
+        ? dayjs(filters.toDate).format("YYYY-MM-DD")
+        : undefined,
+      dayOfWeek: filters.dayOfWeek || undefined,
+    });
+    // ====================================================================
   };
 
+  // =============================== [SỬA 4] ===============================
+  // Lọc ở client theo staffId (nếu cần), sau đó TỰ phân trang bằng slice.
   const filteredData = workSchedules.filter(
     (item) => !filters.staffId || item.staffId === filters.staffId
   );
+  const totalItems = filteredData.length;
   const paginatedData = filteredData.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
-  const totalItems = filteredData.length;
+  // =======================================================================
 
   const columns = [
     createColumn<WorkSchedule>({ key: "staffName", label: "Họ và tên" }),
@@ -208,7 +242,7 @@ export const WorkSchedulePage = () => {
           <FloatingLabelWrapper label="Ca trực">
             <Select
               data={shiftOptions}
-              value={filterInput.shift}
+              value={filterInput.shift || null}
               onChange={(value) =>
                 setFilterInput({ ...filterInput, shift: value || "" })
               }
@@ -260,7 +294,7 @@ export const WorkSchedulePage = () => {
                 { value: "SATURDAY", label: "Thứ 7" },
                 { value: "SUNDAY", label: "Chủ nhật" },
               ]}
-              value={filterInput.dayOfWeek}
+              value={filterInput.dayOfWeek || null}
               onChange={(value) =>
                 setFilterInput({ ...filterInput, dayOfWeek: value || "" })
               }

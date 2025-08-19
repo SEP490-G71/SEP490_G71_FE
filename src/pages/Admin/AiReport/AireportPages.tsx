@@ -161,6 +161,59 @@ export const AireportPages = () => {
     }
   }, [fltStart, fltEnd]);
 
+  // ======= Helpers Việt hoá =======
+
+  // [VI] Mapping level → tiếng Việt thống nhất trên toàn file
+  const levelVi = (level?: string) => {
+    switch ((level || "").toUpperCase()) {
+      case "CRITICAL":
+        return "Nguy cấp";
+      case "WARN":
+      case "WARNING":
+        return "Cảnh báo";
+      case "OK":
+      case "NORMAL":
+        return "Ổn định";
+      default:
+        return level || "-";
+    }
+  };
+
+  // [VI] Mapping direction → tiếng Việt
+  const directionVi = (dir?: string) => {
+    switch ((dir || "").toUpperCase()) {
+      case "UP":
+        return "Tăng";
+      case "DOWN":
+        return "Giảm";
+      default:
+        return dir || "-";
+    }
+  };
+
+  // [VI] Mapping impact → màu + nhãn tiếng Việt
+  const impactColor = (impact?: string) =>
+    impact?.toLowerCase() === "high"
+      ? "red"
+      : impact?.toLowerCase() === "medium"
+      ? "yellow"
+      : impact?.toLowerCase() === "low"
+      ? "green"
+      : "gray";
+
+  const impactVi = (impact?: string) => {
+    switch ((impact || "").toLowerCase()) {
+      case "high":
+        return "Cao";
+      case "medium":
+        return "Trung bình";
+      case "low":
+        return "Thấp";
+      default:
+        return impact || "-";
+    }
+  };
+
   // Fetch metrics (đọc từ applied*)
   const fetchMetrics = async (opts?: { page?: number; size?: number }) => {
     if (metricsAbortRef.current) metricsAbortRef.current.abort();
@@ -200,7 +253,7 @@ export const AireportPages = () => {
         e?.response?.data?.message ||
         e?.response?.data?.error ||
         e?.message ||
-        "Không tải được metrics";
+        "Không tải được chỉ số (metrics)";
       setMetricsError(msg);
       toast.error(msg, { position: "top-right", autoClose: 3000 });
     } finally {
@@ -208,23 +261,18 @@ export const AireportPages = () => {
     }
   };
 
-  // [EDIT] Fetch khi đổi page/size (giữ nguyên)
   useEffect(() => {
     fetchMetrics();
     return () => {
       if (metricsAbortRef.current) metricsAbortRef.current.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mtPage, mtPageSize]);
 
-  // [EDIT] ★★★ Cách 2: khi appliedStart/End/Level thay đổi thì:
-  // - nếu đang không ở trang 1: set về 1 để callback page fetch hộ
-  // - nếu đã ở trang 1: fetch ngay (page=0)
   useEffect(() => {
     const changed =
       appliedStart !== null ||
       appliedEnd !== null ||
-      appliedLevel !== null || // có thể là all null nhưng khác state cũ vẫn chạy
+      appliedLevel !== null ||
       true;
     if (!changed) return;
 
@@ -233,17 +281,14 @@ export const AireportPages = () => {
     } else {
       fetchMetrics({ page: 0 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedStart, appliedEnd, appliedLevel]);
 
-  // [EDIT] Chỉ set applied*, không gọi fetch ngay
   const handleApplyFilters = () => {
     setAppliedStart(fltStart);
     setAppliedEnd(fltEnd);
     setAppliedLevel(fltLevel || "ALL");
   };
 
-  // [EDIT] Reset: clear cả input & applied, không gọi fetch; effect phía trên sẽ lo
   const handleResetFilters = () => {
     setFltStart(null);
     setFltEnd(null);
@@ -252,7 +297,6 @@ export const AireportPages = () => {
     setAppliedEnd(null);
     setAppliedLevel(null);
     if (mtPage !== 1) setMtPage(1);
-    // nếu đang ở page 1, effect applied* sẽ fetch ngay
   };
 
   const handleViewMetric = async (row: MetricItem) => {
@@ -278,7 +322,7 @@ export const AireportPages = () => {
         e?.response?.data?.message ||
         e?.response?.data?.error ||
         e?.message ||
-        "Không tải được chi tiết metric";
+        "Không tải được chi tiết chỉ số";
       toast.error(msg, { position: "top-right", autoClose: 3000 });
       setDetail(null);
     } finally {
@@ -300,7 +344,7 @@ export const AireportPages = () => {
       datasets: [
         {
           type: "bar",
-          label: "Revenue",
+          label: "Doanh thu", // [VI] "Revenue" → "Doanh thu"
           data: days.map((d) => d.revenue ?? 0),
           backgroundColor: revenueBgColors,
           borderColor: revenueBorderColors,
@@ -309,7 +353,7 @@ export const AireportPages = () => {
         },
         {
           type: "line",
-          label: "Expected",
+          label: "Kỳ vọng", // [VI] "Expected" → "Kỳ vọng" (hoặc "Mục tiêu" tuỳ ngữ cảnh)
           data: days.map((d) => d.expected ?? 0),
           borderColor: "rgba(59,130,246,1)",
           backgroundColor: "rgba(59,130,246,0.15)",
@@ -330,7 +374,7 @@ export const AireportPages = () => {
         legend: { position: "top" },
         title: {
           display: true,
-          text: `Daily Revenue – ${payload?.month ?? monthParam}`,
+          text: `Doanh thu theo ngày – ${payload?.month ?? monthParam}`, // [VI]
         },
         tooltip: {
           callbacks: {
@@ -340,9 +384,10 @@ export const AireportPages = () => {
               if (!row) return "";
               const parts: string[] = [];
               if (typeof row.diffPct === "number")
-                parts.push(`Diff %: ${row.diffPct}%`);
-              if (row.level) parts.push(`Level: ${row.level}`);
-              if (row.direction) parts.push(`Direction: ${row.direction}`);
+                parts.push(`Chênh lệch %: ${row.diffPct}%`); // [VI]
+              if (row.level) parts.push(`Mức độ: ${levelVi(row.level)}`); // [VI]
+              if (row.direction)
+                parts.push(`Xu hướng: ${directionVi(row.direction)}`); // [VI]
               return parts.join("\n");
             },
           },
@@ -356,27 +401,27 @@ export const AireportPages = () => {
             callback: (v: any) =>
               new Intl.NumberFormat("vi-VN").format(Number(v)),
           },
-          title: { display: true, text: "VND" },
+          title: { display: true, text: "VNĐ" }, // [VI] "VND" → "VNĐ"
         },
       },
     };
   }, [payload, monthParam]);
 
   const columns = [
-    { key: "metricCode", label: "Metric", sortable: true },
+    { key: "metricCode", label: "Mã chỉ số", sortable: true }, // [VI]
     {
       key: "periodStart",
-      label: "Start Date",
+      label: "Từ ngày", // [VI] "Start Date"
       render: (row: MetricItem) => dayjs(row.periodStart).format("DD/MM/YYYY"),
     },
     {
       key: "periodEnd",
-      label: "End Date",
+      label: "Đến ngày", // [VI] "End Date"
       render: (row: MetricItem) => dayjs(row.periodEnd).format("DD/MM/YYYY"),
     },
     {
       key: "level",
-      label: "Level",
+      label: "Mức độ", // [VI]
       render: (row: MetricItem) => (
         <Badge
           color={
@@ -390,13 +435,13 @@ export const AireportPages = () => {
           }
           variant="light"
         >
-          {row.level}
+          {levelVi(row.level)}
         </Badge>
       ),
     },
     {
       key: "actualValue",
-      label: "Actual",
+      label: "Thực tế", // [VI] "Actual"
       render: (row: MetricItem) => (
         <NumberFormatter
           value={row.actualValue}
@@ -407,7 +452,7 @@ export const AireportPages = () => {
     },
     {
       key: "targetValue",
-      label: "Target",
+      label: "Mục tiêu", // [VI] "Target"
       render: (row: MetricItem) => (
         <NumberFormatter
           value={row.targetValue}
@@ -418,12 +463,12 @@ export const AireportPages = () => {
     },
     {
       key: "diffPct",
-      label: "Diff %",
+      label: "Chênh lệch %", // [VI] "Diff %"
       render: (row: MetricItem) => `${row.diffPct}%`,
     },
     {
       key: "momPct",
-      label: "MoM %",
+      label: "MoM % (so với tháng trước)", // [VI] rõ nghĩa
       render: (row: MetricItem) => `${row.momPct}%`,
     },
   ] as const;
@@ -436,15 +481,6 @@ export const AireportPages = () => {
       return String(detail.payloadJson ?? "");
     }
   }, [detail]);
-
-  const impactColor = (impact?: string) =>
-    impact?.toLowerCase() === "high"
-      ? "red"
-      : impact?.toLowerCase() === "medium"
-      ? "yellow"
-      : impact?.toLowerCase() === "low"
-      ? "green"
-      : "gray";
 
   const renderKV = (obj: any) => {
     if (!obj || typeof obj !== "object") {
@@ -507,7 +543,7 @@ export const AireportPages = () => {
           {summary && (
             <Paper p="sm" radius="md" withBorder>
               <Text fw={600} mb={4}>
-                Tổng quan
+                Tổng quan {/* [VI] */}
               </Text>
               <Text>{summary}</Text>
             </Paper>
@@ -516,7 +552,7 @@ export const AireportPages = () => {
           {insights && insights.length > 0 && (
             <Paper p="sm" radius="md" withBorder>
               <Text fw={600} mb={6}>
-                Điểm nổi bật
+                Điểm nổi bật {/* [VI] */}
               </Text>
               <List
                 spacing={6}
@@ -532,21 +568,21 @@ export const AireportPages = () => {
 
           {strategies && strategies.length > 0 && (
             <Stack gap="sm">
-              <Text fw={600}>Chiến lược đề xuất</Text>
+              <Text fw={600}>Chiến lược đề xuất</Text> {/* [VI] */}
               {strategies.map((s: any, idx: number) => (
                 <Paper key={idx} p="sm" radius="md" withBorder>
                   <Group justify="space-between" align="center" mb={6}>
-                    <Text fw={600}>{s.title ?? `Strategy #${idx + 1}`}</Text>
+                    <Text fw={600}>{s.title ?? `Chiến lược #${idx + 1}`}</Text>
                     {s.impact && (
                       <Badge color={impactColor(s.impact)} variant="light">
-                        Impact: {String(s.impact)}
+                        Tác động: {impactVi(s.impact)} {/* [VI] */}
                       </Badge>
                     )}
                   </Group>
                   <Group gap="xl" mb={6}>
                     {"eta_days" in s && (
                       <Text size="sm" c="dimmed">
-                        ETA:{" "}
+                        Dự kiến hoàn thành:{" "}
                         <Text span fw={600}>
                           {s.eta_days}
                         </Text>{" "}
@@ -580,7 +616,7 @@ export const AireportPages = () => {
   return (
     <div className="p-6">
       <Title order={3} className="mb-2">
-        Daily Revenue by Month
+        Doanh thu hàng ngày theo tháng {/* [VI] */}
       </Title>
 
       <Group gap="md" align="center" className="mb-4">
@@ -597,11 +633,11 @@ export const AireportPages = () => {
       <Stack gap="xs" className="mb-3">
         <Group gap="sm">
           <Badge variant="light" radius="sm">
-            Month: {payload?.month ?? monthParam}
+            Tháng: {payload?.month ?? monthParam} {/* [VI] */}
           </Badge>
           {typeof payload?.monthlyTarget === "number" && (
             <Badge color="grape" variant="light" radius="sm">
-              Target:{" "}
+              Mục tiêu:{" "}
               <NumberFormatter
                 value={payload.monthlyTarget}
                 thousandSeparator
@@ -610,13 +646,13 @@ export const AireportPages = () => {
           )}
           {typeof payload?.totalToDate === "number" && (
             <Badge color="blue" variant="light" radius="sm">
-              Actual Σ:{" "}
+              Tổng doanh thu thực tế Σ:{" "}
               <NumberFormatter value={payload.totalToDate} thousandSeparator />
             </Badge>
           )}
           {typeof payload?.expectedToDate === "number" && (
             <Badge color="red" variant="light" radius="sm">
-              Expected Σ:{" "}
+              Doanh thu mục tiêu Σ:{" "}
               <NumberFormatter
                 value={payload.expectedToDate}
                 thousandSeparator
@@ -629,8 +665,9 @@ export const AireportPages = () => {
               variant="light"
               radius="sm"
             >
-              Δ% to date: {payload.diffPctToDate}% (
-              {payload?.levelToDate || "-"})
+              {/* [VI] "Δ% to date" → "Chênh lệch % đến hiện tại" (ngắn gọn, đúng nghĩa) */}
+              Chênh lệch % đến hiện tại: {payload.diffPctToDate}% (
+              {levelVi(payload?.levelToDate)})
             </Badge>
           )}
         </Group>
@@ -660,13 +697,14 @@ export const AireportPages = () => {
       </Card>
 
       <Title order={4} className="mb-2">
-        Metrics
+        Chỉ số (Metrics) {/* [VI] thêm chú thích */}
       </Title>
       <Card shadow="sm" radius="lg" padding="lg" className="w-full">
-        {/* Filter (grid) */}
         <div className="grid grid-cols-12 gap-4 mb-4">
           <div className="col-span-3">
-            <FloatingLabelWrapper label="From">
+            <FloatingLabelWrapper label="Từ ngày">
+              {" "}
+              {/* [VI] From */}
               <DateInput
                 placeholder="YYYY-MM-DD"
                 value={fltStart}
@@ -678,7 +716,9 @@ export const AireportPages = () => {
           </div>
 
           <div className="col-span-3">
-            <FloatingLabelWrapper label="To">
+            <FloatingLabelWrapper label="Đến ngày">
+              {" "}
+              {/* [VI] To */}
               <DateInput
                 placeholder="YYYY-MM-DD"
                 value={fltEnd}
@@ -691,16 +731,18 @@ export const AireportPages = () => {
           </div>
 
           <div className="col-span-3">
-            <FloatingLabelWrapper label="Level">
+            <FloatingLabelWrapper label="Mức độ">
+              {" "}
+              {/* [VI] Level */}
               <Select
-                placeholder="All"
+                placeholder="Tất cả" // [VI] All
                 value={fltLevel}
                 onChange={setFltLevel}
                 data={[
-                  { value: "ALL", label: "All" },
-                  { value: "CRITICAL", label: "CRITICAL" },
-                  { value: "WARN", label: "WARN" },
-                  { value: "OK", label: "OK" },
+                  { value: "ALL", label: "Tất cả" }, // [VI]
+                  { value: "CRITICAL", label: "Nguy cấp" }, // [VI]
+                  { value: "WARN", label: "Cảnh báo" }, // [VI]
+                  { value: "OK", label: "Ổn định" }, // [VI]
                 ]}
                 clearable
               />
@@ -714,7 +756,7 @@ export const AireportPages = () => {
               onClick={handleApplyFilters}
               className="flex-1"
             >
-              Search
+              Tìm kiếm {/* [VI] Search */}
             </Button>
             <Button
               variant="light"
@@ -722,7 +764,7 @@ export const AireportPages = () => {
               onClick={handleResetFilters}
               className="flex-1"
             >
-              Reset
+              Tải lại {/* [VI] Reset */}
             </Button>
           </div>
         </div>
@@ -740,19 +782,18 @@ export const AireportPages = () => {
             setMtPage(1);
           }}
           loading={metricsLoading}
-          emptyText={metricsError ?? "Không có metrics"}
+          emptyText={metricsError ?? "Không có chỉ số"} // [VI]
           showActions={true}
           onView={handleViewMetric}
         />
       </Card>
 
-      {/* Modal chi tiết */}
       <Modal
         opened={detailOpen}
         onClose={() => setDetailOpen(false)}
         title={
           <div>
-            <h2 className="text-xl font-bold">Metric Detail</h2>
+            <h2 className="text-xl font-bold">Chi tiết chỉ số</h2> {/* [VI] */}
             <div className="mt-2 border-b border-gray-300" />
           </div>
         }
@@ -786,7 +827,7 @@ export const AireportPages = () => {
                 }
                 tt="uppercase"
               >
-                {detail.level}
+                {levelVi(detail.level)} {/* [VI] */}
               </Badge>
             </Group>
 
@@ -795,13 +836,13 @@ export const AireportPages = () => {
             <Group gap="xl" wrap="nowrap">
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  Start Date
+                  Từ ngày {/* [VI] */}
                 </Text>
                 <Text>{dayjs(detail.periodStart).format("DD/MM/YYYY")}</Text>
               </Stack>
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  End Date
+                  Đến ngày {/* [VI] */}
                 </Text>
                 <Text>{dayjs(detail.periodEnd).format("DD/MM/YYYY")}</Text>
               </Stack>
@@ -810,7 +851,7 @@ export const AireportPages = () => {
             <Group gap="xl" wrap="nowrap" mt="xs">
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  Actual
+                  Thực tế {/* [VI] */}
                 </Text>
                 <Text fw={700}>
                   <NumberFormatter
@@ -822,7 +863,7 @@ export const AireportPages = () => {
               </Stack>
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  Target
+                  Mục tiêu {/* [VI] */}
                 </Text>
                 <Text fw={700}>
                   <NumberFormatter
@@ -837,13 +878,13 @@ export const AireportPages = () => {
             <Group gap="xl" wrap="nowrap" mt="xs">
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  Diff %
+                  Chênh lệch % {/* [VI] */}
                 </Text>
                 <Text>{detail.diffPct}%</Text>
               </Stack>
               <Stack gap={2} style={{ minWidth: 200 }}>
                 <Text size="sm" c="dimmed">
-                  MoM %
+                  MoM % (so với tháng trước) {/* [VI] */}
                 </Text>
                 <Text>{detail.momPct}%</Text>
               </Stack>
@@ -852,11 +893,14 @@ export const AireportPages = () => {
             <Divider my="sm" />
 
             <Group justify="space-between" align="center">
-              <Text fw={600}>Report content</Text>
+              <Text fw={600}>Nội dung báo cáo</Text> {/* [VI] Report content */}
               {payloadText && (
                 <CopyButton value={payloadText}>
                   {({ copied, copy }) => (
-                    <Tooltip label={copied ? "Đã copy" : "Copy JSON"} withArrow>
+                    <Tooltip
+                      label={copied ? "Đã sao chép" : "Sao chép JSON"}
+                      withArrow
+                    >
                       <ActionIcon variant="light" onClick={copy}>
                         {copied ? (
                           <IconCheck size={16} />
