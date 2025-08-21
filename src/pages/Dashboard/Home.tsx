@@ -1,23 +1,18 @@
 import { useEffect } from "react";
 import { useDashboard } from "../../hooks/DashBoard/useDashboard";
-import { useChatHistory } from "../../hooks/DashBoard/useChat";
-
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "../../components/ecommerce/StatisticsChart";
 import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
 import PageMeta from "../../components/common/PageMeta";
-import ChatbotWidget from "../../components/ecommerce/ChatbotWidget";
 import DemographicCard from "../../components/ecommerce/DemographicCard";
 
 export default function Home() {
   const { stats, fetchDashboardStats } = useDashboard();
-  const { messages, fetchChatHistory, setMessages } = useChatHistory();
 
   useEffect(() => {
     fetchDashboardStats();
-    fetchChatHistory();
   }, []);
 
   if (!stats) return null;
@@ -56,8 +51,6 @@ export default function Home() {
           <DemographicCard />
         </div>
       </div>
-
-      <ChatbotWidget messages={messages} setMessages={setMessages} />
     </>
   );
 }
