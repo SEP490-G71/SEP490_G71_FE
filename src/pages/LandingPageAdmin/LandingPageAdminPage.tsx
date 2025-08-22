@@ -12,6 +12,20 @@ import type { Hospital } from "../../types/Admin/LandingPageAdmin/Hospital";
 import { toast } from "react-toastify";
 import About from "../../components/LandingPageAdmin/About";
 
+const getAxiosErrMsg = (err: unknown) => {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as any;
+    return (
+      data?.message ||
+      data?.error ||
+      data?.detail ||
+      (typeof data === "string" ? data : null) ||
+      (err.response?.status ? `Request failed (${err.response.status})` : null)
+    );
+  }
+  return null;
+};
+
 export const LandingPageAdminPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,8 +43,6 @@ export const LandingPageAdminPage = () => {
 
   const handleOk = async (values: Hospital, resetForm: () => void) => {
     setLoading(true);
-    console.log("Thông tin đăng ký: ", values);
-
     try {
       const response = await axios.post(
         "https://api.datnd.id.vn/medical-diagnosis/auth/register-tenant",
@@ -40,19 +52,27 @@ export const LandingPageAdminPage = () => {
           email: values.email,
           phone: values.phone,
           servicePackageId: values.servicePackageId,
-        }
+        },
+        { timeout: 15000 }
       );
 
-      if (response.status === 200) {
-        toast.success("Đăng ký thành công! Vui lòng kiểm tra email!");
+      // NOTE [UPDATED]: chấp nhận tất cả mã 2xx
+      if (response.status >= 200 && response.status < 300) {
+        toast.success(
+          response.data?.message ||
+            "Đăng ký thành công! Vui lòng kiểm tra email!"
+        );
         setIsModalVisible(false);
         resetForm();
       } else {
-        toast.error(response.data.message || "Không thêm đăng ký thành công");
+        toast.error(
+          response.data?.message || "Không thể đăng ký. Vui lòng thử lại."
+        );
       }
-    } catch (error: any) {
-      console.error("Có lỗi khi gửi dữ liệu đăng ký:", error);
-      toast.error("Không thể kết nối đến máy chủ");
+    } catch (error) {
+      const msg = getAxiosErrMsg(error);
+      toast.error(msg || "Không thể kết nối đến máy chủ");
+      console.error("Đăng ký thất bại:", error);
     } finally {
       setLoading(false);
     }
@@ -61,6 +81,7 @@ export const LandingPageAdminPage = () => {
   return (
     <>
       <Navbar />
+
       <div className="bg-[#f0f4f8]" id="intro-section">
         <div className="max-w-7xl mx-auto px-6 pt-1">
           <IntroSection onRegisterClick={() => showModal()} />

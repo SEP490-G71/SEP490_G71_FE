@@ -3,11 +3,6 @@ import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import axiosInstanceSuperAdmin from "../../services/axiosInstanceSuperAdmin";
 
-/**
- * Hook đăng nhập SUPERADMIN
- * - Chỉ login và lưu token vào "sa_token"
- * - Điều hướng tới /superadmin/dashboard
- */
 export const useSignInSuperAdmin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,13 +13,11 @@ export const useSignInSuperAdmin = () => {
   ): Promise<boolean> => {
     setLoading(true);
     try {
-      // 1) Login
       const res = await axiosInstanceSuperAdmin.post("/auth/login", {
         username,
         password,
       });
 
-      // 2) Lấy token
       const token =
         res.data?.result?.token ||
         res.data?.token ||
@@ -33,7 +26,6 @@ export const useSignInSuperAdmin = () => {
       if (!token) throw new Error("Không nhận được token");
       localStorage.setItem("sa_token", token);
 
-      // 3) Điều hướng thẳng đến dashboard superadmin
       toast.success("Đăng nhập SUPERADMIN thành công!");
       navigate("/superadmin/dashboard");
       return true;

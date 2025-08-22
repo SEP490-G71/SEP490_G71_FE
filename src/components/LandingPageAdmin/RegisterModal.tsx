@@ -4,6 +4,13 @@ import { useForm } from "@mantine/form";
 import type { Hospital } from "../../types/Admin/LandingPageAdmin/Hospital";
 import useServicePackages from "../../hooks/LangdingPagesAdmin/useServicePackages";
 
+const sanitizeCode = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+
 const RegisterModal = ({
   visible,
   onOk,
@@ -30,8 +37,14 @@ const RegisterModal = ({
     validate: {
       name: (value) =>
         value.trim().length === 0 ? "Vui lòng nhập tên bệnh viện!" : null,
-      code: (value) =>
-        value.trim().length === 0 ? "Vui lòng nhập mã bệnh viện!" : null,
+
+      code: (value) => {
+        if (value.trim().length === 0) return "Vui lòng nhập mã bệnh viện!";
+        return /^[a-z0-9]+$/.test(value)
+          ? null
+          : "Mã chỉ gồm chữ thường không dấu và số (a-z, 0-9), không khoảng trắng/ký tự đặc biệt!";
+      },
+
       email: (value) =>
         /^\S+@\S+$/.test(value) ? null : "Email không hợp lệ!",
       phone: (value) =>
@@ -43,10 +56,9 @@ const RegisterModal = ({
     },
   });
 
-  // 📝 Lấy gói dịch vụ khi modal mở
   useEffect(() => {
     if (visible) fetchServicePackages();
-  }, [visible]);
+  }, [visible, fetchServicePackages]);
 
   const handleSubmit = (values: Hospital) => {
     onOk(values, form.reset);
@@ -81,18 +93,31 @@ const RegisterModal = ({
           required
           disabled={loading}
         />
+
         <TextInput
           label={
             <span>
               Mã bệnh viện <span style={{ color: "red" }}>*</span>
             </span>
           }
-          placeholder="VD: thuduc, bachmai"
+          placeholder="VD: thuduc, bachmai, bv123"
           {...form.getInputProps("code")}
+          value={form.values.code}
+          onChange={(e) =>
+            form.setFieldValue("code", sanitizeCode(e.currentTarget.value))
+          }
+          onKeyDown={(e) => {
+            if (e.key === " ") e.preventDefault(); // chặn khoảng trắng
+          }}
+          autoComplete="off"
+          inputMode="text"
+          spellCheck={false}
+          description="Chỉ cho phép chữ thường không dấu và số (a-z, 0-9); không khoảng trắng, không ký tự đặc biệt."
           mb="sm"
           required
           disabled={loading}
         />
+
         <TextInput
           label={
             <span>
@@ -105,6 +130,7 @@ const RegisterModal = ({
           required
           disabled={loading}
         />
+
         <TextInput
           label={
             <span>
@@ -125,7 +151,7 @@ const RegisterModal = ({
             </span>
           }
           placeholder="Chọn gói dịch vụ"
-          data={servicePackages.map((pkg) => ({
+          data={(servicePackages ?? []).map((pkg) => ({
             label: `${pkg.packageName} - ${new Intl.NumberFormat("vi-VN", {
               style: "currency",
               currency: "VND",
