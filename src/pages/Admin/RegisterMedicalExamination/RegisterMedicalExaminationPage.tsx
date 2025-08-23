@@ -1,6 +1,5 @@
 import {
   Button,
-  Container,
   Grid,
   Select,
   TextInput,
@@ -13,10 +12,8 @@ import {
   Text,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-// import { IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Patient } from "../../../types/Admin/RegisterMedicalExamination/RegisterMedicalExamination";
-// import SearchPatientModal from "../../../components/admin/RegisterMedicalExamination/SearchPatientModal";
 import CreateModal from "../../../components/admin/RegisterMedicalExamination/createModal";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
@@ -41,14 +38,10 @@ interface PatientOption {
 
 export default function RegisterMedicalExaminationPage() {
   const [patientsToday, setPatientsToday] = useState<Patient[]>([]);
-  // const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [confirmedPatient, setConfirmedPatient] = useState<Patient | null>(
     null
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  // const [tempSelectedPatient, setTempSelectedPatient] =
-  //   useState<Patient | null>(null);
-  // const [modalOpened, setModalOpened] = useState(false);
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [selectedOption, setSelectedOption] = useState<PatientOption | null>(
     null
@@ -408,13 +401,6 @@ export default function RegisterMedicalExaminationPage() {
     );
   };
 
-  // const openModal = async () => {
-  //   const { content } = await fetchAllPatients(0, 100);
-  //   setSearchResults(content);
-  //   setTempSelectedPatient(confirmedPatient);
-  //   setModalOpened(true);
-  // };
-
   const handleCreatePatient = async (
     data: Partial<Patient>,
     resetForm: () => void
@@ -458,22 +444,12 @@ export default function RegisterMedicalExaminationPage() {
   }, [confirmedPatient?.ngayDangKy]);
 
   return (
-    <Container fluid size="100%" className="pt-6 px-6   max-w-[1600px] mx-auto">
-      <Title order={3} className="mb-4 text-xl font-semibold">
-        Đăng ký khám bệnh
-      </Title>
-
-      {/* <SearchPatientModal
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
-        patients={searchResults}
-        selected={tempSelectedPatient}
-        onSelect={setTempSelectedPatient}
-        onConfirm={() => {
-          setConfirmedPatient(tempSelectedPatient);
-          setModalOpened(false);
-        }}
-      /> */}
+    <Grid style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
+      <Grid.Col span={12} style={{ paddingBottom: 0 }}>
+        <Title order={3} className="text-xl font-semibold">
+          Đăng ký khám bệnh
+        </Title>
+      </Grid.Col>
 
       <CreateModal
         opened={createModalOpened}
@@ -481,157 +457,548 @@ export default function RegisterMedicalExaminationPage() {
         onSubmit={handleCreatePatient}
       />
 
-      <div className="flex flex-col lg:flex-row gap-4 mt-6">
-        <div className="w-full lg:flex-[1.3] min-w-[350px]">
-          <div className="w-full lg:flex-[1.3] min-w-[350px]">
-            <Paper p="md" shadow="sm" radius="md" withBorder>
-              <div className="grid grid-cols-12 gap-4 mb-4">
-                <div className="col-span-12 md:col-span-6">
-                  <FloatingLabelWrapper label="Họ tên">
+      <Grid.Col span={{ base: 12, lg: 5 }} className="min-w-0">
+        <Paper p="md" shadow="sm" radius="md" withBorder className="min-w-0">
+          <div className="grid grid-cols-12 gap-4 mb-4 min-w-0">
+            <div className="col-span-12 md:col-span-6">
+              <FloatingLabelWrapper label="Họ tên">
+                <Select
+                  placeholder="Nhập họ tên"
+                  searchable
+                  data={patientOptions}
+                  onSearchChange={(query) => searchPatients(query)}
+                  onChange={(value) => {
+                    setSearchFilters({
+                      ...searchFilters,
+                      patientId: value || "",
+                    });
+                  }}
+                  value={searchFilters.patientId}
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-6">
+              <FloatingLabelWrapper label="Mã BN">
+                <TextInput
+                  placeholder="Nhập mã bệnh nhân"
+                  value={searchFilters.patientCode}
+                  onChange={(e) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      patientCode: e.target.value,
+                    })
+                  }
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4">
+              <FloatingLabelWrapper label="Số điện thoại">
+                <TextInput
+                  placeholder="Nhập số điện thoại"
+                  value={searchFilters.phone}
+                  onChange={(e) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      phone: e.target.value,
+                    })
+                  }
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4">
+              <FloatingLabelWrapper label="Chuyên khoa">
+                <Select
+                  placeholder="Chọn chuyên khoa"
+                  data={specializations.map((s) => ({
+                    value: s.name,
+                    label: s.name,
+                  }))}
+                  value={searchFilters.specialization}
+                  onChange={(value) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      specialization: value || "",
+                    })
+                  }
+                  searchable
+                  clearable
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4">
+              <FloatingLabelWrapper label="Trạng thái">
+                <Select
+                  placeholder="Chọn trạng thái"
+                  data={[
+                    { value: "WAITING", label: "Chờ khám" },
+                    { value: "IN_PROGRESS", label: "Đang khám" },
+                    { value: "DONE", label: "Hoàn thành" },
+                    { value: "CANCELED", label: "Đã hủy" },
+                    { value: "AWAITING_RESULT", label: "Chờ kết quả" },
+                    { value: "CALLING", label: "Đang gọi" },
+                  ]}
+                  value={searchFilters.status}
+                  onChange={(value) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      status: value || "",
+                    })
+                  }
+                  searchable
+                  clearable
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4">
+              <FloatingLabelWrapper label="Từ ngày">
+                <DatePickerInput
+                  placeholder="Chọn ngày"
+                  value={searchFilters.registeredTimeFrom}
+                  valueFormat="DD/MM/YYYY"
+                  onChange={(value) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      registeredTimeFrom: value ? new Date(value) : today,
+                    })
+                  }
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4">
+              <FloatingLabelWrapper label="Đến ngày">
+                <DatePickerInput
+                  placeholder="Chọn ngày"
+                  value={searchFilters.registeredTimeTo}
+                  onChange={(value) =>
+                    setSearchFilters({
+                      ...searchFilters,
+                      registeredTimeTo: value ? new Date(value) : today,
+                    })
+                  }
+                  valueFormat="DD/MM/YYYY"
+                />
+              </FloatingLabelWrapper>
+            </div>
+
+            <div className="col-span-12 md:col-span-4 flex items-end gap-2">
+              <Button
+                variant="light"
+                color="gray"
+                className="flex-1"
+                onClick={() => {
+                  const now = dayjs().startOf("day").toDate();
+                  const reset = {
+                    fullName: "",
+                    patientId: "",
+                    phone: "",
+                    patientCode: "",
+                    specialization: "",
+                    registeredTimeFrom: now,
+                    registeredTimeTo: now,
+                    status: "",
+                  };
+                  setSearchFilters(reset);
+                  setSubmittedFilters(reset);
+                  setPage(1);
+                }}
+              >
+                Tải lại
+              </Button>
+
+              <Button
+                variant="filled"
+                color="blue"
+                className="flex-1"
+                onClick={() => {
+                  setSubmittedFilters(searchFilters);
+                  setPage(1);
+                }}
+              >
+                Tìm kiếm
+              </Button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <CustomTable
+              data={patientsToday}
+              columns={columns}
+              page={page}
+              pageSize={pageSize}
+              totalItems={totalTodayPatients}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onSortChange={(key, dir) => {
+                setSortKey(key);
+                setSortDirection(dir);
+              }}
+              showActions={false}
+              pageSizeOptions={setting?.paginationSizeList
+                ?.slice()
+                ?.sort((a, b) => a - b)}
+            />
+          </div>
+        </Paper>
+      </Grid.Col>
+
+      {/* Bên phải: Tabs thông tin chi tiết */}
+      <Grid.Col span={{ base: 12, lg: 7 }} className="min-w-0">
+        <Paper p="md" shadow="sm" radius="md" withBorder className="min-w-0">
+          <Tabs
+            value={activeTab}
+            onChange={(value) =>
+              setActiveTab(value as "register-info" | "register-info-2")
+            }
+          >
+            <div className="w-full flex justify-between items-center mb-4">
+              <Group gap="sm" mb="md">
+                <Button
+                  color="blue"
+                  variant={activeTab === "register-info" ? "filled" : "outline"}
+                  onClick={() => setActiveTab("register-info")}
+                >
+                  Thông tin đăng ký
+                </Button>
+
+                <Button
+                  color="blue"
+                  variant={
+                    activeTab === "register-info-2" ? "filled" : "outline"
+                  }
+                  onClick={() => setActiveTab("register-info-2")}
+                >
+                  Thông tin đăng ký online
+                </Button>
+              </Group>
+
+              <div className="flex gap-2">
+                <Button variant="default" onClick={handleReset}>
+                  Reset
+                </Button>
+                <Button
+                  variant="light"
+                  onClick={() => setCreateModalOpened(true)}
+                >
+                  Thêm
+                </Button>
+
+                <Button variant="filled" onClick={handleSave}>
+                  Lưu
+                </Button>
+              </div>
+            </div>
+
+            <Tabs.Panel value="register-info" pt="xs">
+              {/* Thông tin người đăng ký */}
+              <Divider label="1. Thông tin người đăng ký" mb="sm" />
+              <Grid gutter="xs">
+                {/* Mã bệnh nhân + tìm kiếm */}
+                <Grid.Col span={6}>
+                  <Select
+                    label="Mã bệnh nhân"
+                    searchable
+                    placeholder="Nhập tên, mã BN hoặc số điện thoại"
+                    data={patientOptions}
+                    searchValue={
+                      isTyping ? searchInput : selectedOption?.label ?? ""
+                    }
+                    onDropdownOpen={() => {
+                      setIsTyping(true);
+                      setSearchInput("");
+                      searchPatients("");
+                    }}
+                    onSearchChange={(query) => {
+                      setIsTyping(true);
+                      setSearchInput(query);
+                      searchPatients(query);
+                    }}
+                    onBlur={() => {
+                      setIsTyping(false);
+                    }}
+                    value={confirmedPatient ? String(confirmedPatient.id) : ""}
+                    onChange={(value) => {
+                      const selected = patientOptions.find(
+                        (opt) => opt.value === value
+                      );
+                      if (!selected) return;
+
+                      setSelectedOption(selected);
+
+                      axiosInstance.get(`/patients/${value}`).then((res) => {
+                        const patient = res.data?.result;
+                        if (patient) {
+                          setConfirmedPatient({
+                            ...patient,
+                            ngayDangKy: new Date().toISOString().split("T")[0],
+                            stt: "",
+                            phongKham: "",
+                          });
+                          setSelectedDate(new Date());
+                          setSearchInput("");
+                          setIsTyping(false);
+                        }
+                      });
+                    }}
+                  />
+                </Grid.Col>
+
+                {/* Họ và tên */}
+                <Grid.Col span={6}>
+                  <TextInput
+                    label="Họ tên"
+                    placeholder="Nhập họ và tên"
+                    value={
+                      confirmedPatient
+                        ? `${confirmedPatient.firstName ?? ""} ${
+                            confirmedPatient.middleName ?? ""
+                          } ${confirmedPatient.lastName ?? ""}`.trim()
+                        : ""
+                    }
+                    readOnly
+                    variant="default"
+                    styles={{
+                      input: {
+                        backgroundColor: "white",
+                        color: "#111",
+                        opacity: 1,
+                      },
+                    }}
+                  />
+                </Grid.Col>
+
+                {/* Ngày sinh */}
+                <Grid.Col span={4}>
+                  <TextInput
+                    label="Ngày sinh"
+                    placeholder="Ngày sinh"
+                    value={
+                      confirmedPatient?.dob
+                        ? dayjs(confirmedPatient.dob).format("DD/MM/YYYY")
+                        : ""
+                    }
+                    readOnly
+                    variant="default"
+                    styles={{
+                      input: {
+                        backgroundColor: "white",
+                        color: "#111",
+                        opacity: 1,
+                      },
+                    }}
+                  />
+                </Grid.Col>
+
+                {/* Giới tính */}
+                <Grid.Col span={4}>
+                  <TextInput
+                    label="Giới tính"
+                    value={confirmedPatient?.gender === "MALE" ? "Nam" : "Nữ"}
+                    readOnly
+                    variant="default"
+                    styles={{
+                      input: {
+                        backgroundColor: "white",
+                        color: "#111",
+                        opacity: 1,
+                      },
+                    }}
+                  />
+                </Grid.Col>
+
+                {/* Số điện thoại */}
+                <Grid.Col span={4}>
+                  <TextInput
+                    label="Điện thoại"
+                    placeholder="Điện thoại"
+                    value={confirmedPatient?.phone || ""}
+                    readOnly
+                    variant="default"
+                    styles={{
+                      input: {
+                        backgroundColor: "white",
+                        color: "#111",
+                        opacity: 1,
+                      },
+                    }}
+                  />
+                </Grid.Col>
+              </Grid>
+
+              <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
+              {confirmedPatient && (
+                <div className="grid grid-cols-12 gap-2">
+                  <div className="col-span-12 md:col-span-3">
                     <Select
-                      placeholder="Nhập họ tên"
+                      label="Chuyên khoa"
+                      placeholder="Chọn chuyên khoa"
+                      data={specializations.map((item) => ({
+                        value: item.id,
+                        label: item.name,
+                      }))}
+                      value={confirmedPatient?.specializationId || ""}
+                      onChange={(value) =>
+                        setConfirmedPatient((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                specializationId: value || "",
+                                specialization:
+                                  specializations.find((s) => s.id === value)
+                                    ?.name || "",
+                                phongKham: "",
+                              }
+                            : prev
+                        )
+                      }
                       searchable
-                      data={patientOptions}
-                      onSearchChange={(query) => searchPatients(query)}
-                      onChange={(value) => {
-                        setSearchFilters({
-                          ...searchFilters,
-                          patientId: value || "",
+                      disabled={loadingSpecializations}
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <Select
+                      label="Phòng khám"
+                      placeholder="Chọn phòng khám"
+                      data={departments
+                        .filter((dep) => !!dep.roomNumber)
+                        .map((dep) => ({
+                          value: dep.roomNumber as string,
+                          label: dep.roomNumber as string,
+                        }))}
+                      value={confirmedPatient?.phongKham || ""}
+                      onChange={(value) =>
+                        setConfirmedPatient((prev) =>
+                          prev ? { ...prev, phongKham: value || "" } : prev
+                        )
+                      }
+                      searchable
+                      disabled={
+                        !confirmedPatient?.specializationId ||
+                        loadingDepartments
+                      }
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3">
+                    <DatePickerInput
+                      label="Ngày đăng ký"
+                      value={selectedDate}
+                      onChange={(dateValue) => {
+                        const date = dateValue as Date | null;
+                        setSelectedDate(date);
+                      }}
+                      valueFormat="DD/MM/YYYY"
+                      placeholder="DD/MM/YYYY"
+                      minDate={new Date()}
+                    />
+                  </div>
+
+                  <div className="col-span-12 md:col-span-3 flex items-end">
+                    <Checkbox
+                      label="Ưu tiên"
+                      disabled={!confirmedPatient}
+                      checked={confirmedPatient?.isPriority ?? false}
+                      onChange={(e) => {
+                        if (!confirmedPatient) return;
+                        setConfirmedPatient({
+                          ...confirmedPatient,
+                          isPriority: e.currentTarget.checked,
                         });
                       }}
-                      value={searchFilters.patientId}
                     />
-                  </FloatingLabelWrapper>
+                  </div>
                 </div>
+              )}
+            </Tabs.Panel>
 
-                <div className="col-span-12 md:col-span-6">
-                  <FloatingLabelWrapper label="Mã BN">
+            <Tabs.Panel value="register-info-2" pt="xs">
+              <Divider
+                label="Danh sách bệnh nhân đăng ký khám online"
+                mb="sm"
+              />
+
+              <div className="grid grid-cols-12 gap-4 my-4">
+                <div className="col-span-12 md:col-span-3">
+                  <FloatingLabelWrapper label="Họ tên">
                     <TextInput
-                      placeholder="Nhập mã bệnh nhân"
-                      value={searchFilters.patientCode}
+                      placeholder="Nhập họ tên"
+                      value={onlineSearchFilters.fullName}
                       onChange={(e) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          patientCode: e.target.value,
-                        })
+                        setOnlineSearchFilters((prev) => ({
+                          ...prev,
+                          fullName: e.target.value,
+                        }))
                       }
                     />
                   </FloatingLabelWrapper>
                 </div>
 
-                <div className="col-span-12 md:col-span-4">
+                <div className="col-span-12 md:col-span-2">
+                  <FloatingLabelWrapper label="Email">
+                    <TextInput
+                      placeholder="Nhập email"
+                      value={onlineSearchFilters.email}
+                      onChange={(e) =>
+                        setOnlineSearchFilters((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                    />
+                  </FloatingLabelWrapper>
+                </div>
+
+                <div className="col-span-12 md:col-span-2">
                   <FloatingLabelWrapper label="Số điện thoại">
                     <TextInput
                       placeholder="Nhập số điện thoại"
-                      value={searchFilters.phone}
+                      value={onlineSearchFilters.phoneNumber}
                       onChange={(e) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          phone: e.target.value,
-                        })
+                        setOnlineSearchFilters((prev) => ({
+                          ...prev,
+                          phoneNumber: e.target.value,
+                        }))
                       }
                     />
                   </FloatingLabelWrapper>
                 </div>
 
-                <div className="col-span-12 md:col-span-4">
-                  <FloatingLabelWrapper label="Chuyên khoa">
-                    <Select
-                      placeholder="Chọn chuyên khoa"
-                      data={specializations.map((s) => ({
-                        value: s.name,
-                        label: s.name,
-                      }))}
-                      value={searchFilters.specialization}
-                      onChange={(value) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          specialization: value || "",
-                        })
-                      }
-                      searchable
-                      clearable
-                    />
-                  </FloatingLabelWrapper>
-                </div>
-
-                <div className="col-span-12 md:col-span-4">
-                  <FloatingLabelWrapper label="Trạng thái">
-                    <Select
-                      placeholder="Chọn trạng thái"
-                      data={[
-                        { value: "WAITING", label: "Chờ khám" },
-                        { value: "IN_PROGRESS", label: "Đang khám" },
-                        { value: "DONE", label: "Hoàn thành" },
-                        { value: "CANCELED", label: "Đã hủy" },
-                        { value: "AWAITING_RESULT", label: "Chờ kết quả" },
-                        { value: "CALLING", label: "Đang gọi" },
-                      ]}
-                      value={searchFilters.status}
-                      onChange={(value) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          status: value || "",
-                        })
-                      }
-                      searchable
-                      clearable
-                    />
-                  </FloatingLabelWrapper>
-                </div>
-
-                <div className="col-span-12 md:col-span-4">
-                  <FloatingLabelWrapper label="Từ ngày">
+                <div className="col-span-12 md:col-span-3">
+                  <FloatingLabelWrapper label="Chọn Ngày đăng ký">
                     <DatePickerInput
                       placeholder="Chọn ngày"
-                      value={searchFilters.registeredTimeFrom}
-                      valueFormat="DD/MM/YYYY"
+                      value={onlineDate}
                       onChange={(value) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          registeredTimeFrom: value ? new Date(value) : today,
-                        })
-                      }
-                    />
-                  </FloatingLabelWrapper>
-                </div>
-
-                <div className="col-span-12 md:col-span-4">
-                  <FloatingLabelWrapper label="Đến ngày">
-                    <DatePickerInput
-                      placeholder="Chọn ngày"
-                      value={searchFilters.registeredTimeTo}
-                      onChange={(value) =>
-                        setSearchFilters({
-                          ...searchFilters,
-                          registeredTimeTo: value ? new Date(value) : today,
-                        })
+                        setOnlineDate(value ? new Date(value) : new Date())
                       }
                       valueFormat="DD/MM/YYYY"
                     />
                   </FloatingLabelWrapper>
                 </div>
 
-                <div className="col-span-12 md:col-span-4 flex items-end gap-2">
+                <div className="col-span-12 md:col-span-2 flex items-end gap-2">
                   <Button
                     variant="light"
                     color="gray"
-                    className="flex-1"
                     onClick={() => {
-                      const now = dayjs().startOf("day").toDate();
                       const reset = {
+                        registeredAt: dayjs().format("YYYY-MM-DD"),
                         fullName: "",
-                        patientId: "",
-                        phone: "",
-                        patientCode: "",
-                        specialization: "",
-                        registeredTimeFrom: now,
-                        registeredTimeTo: now,
-                        status: "",
+                        email: "",
+                        phoneNumber: "",
                       };
-                      setSearchFilters(reset);
-                      setSubmittedFilters(reset);
-                      setPage(1);
+
+                      setOnlineSearchFilters(reset);
+                      setSubmittedOnlineFilters(reset);
+                      setOnlineDate(new Date());
+                      setOnlinePage(1);
                     }}
                   >
                     Tải lại
@@ -639,11 +1006,13 @@ export default function RegisterMedicalExaminationPage() {
 
                   <Button
                     variant="filled"
-                    color="blue"
-                    className="flex-1"
                     onClick={() => {
-                      setSubmittedFilters(searchFilters);
-                      setPage(1);
+                      const updatedFilters = {
+                        ...onlineSearchFilters,
+                        registeredAt: dayjs(onlineDate).format("YYYY-MM-DD"),
+                      };
+                      setSubmittedOnlineFilters(updatedFilters);
+                      setOnlinePage(1);
                     }}
                   >
                     Tìm kiếm
@@ -652,393 +1021,22 @@ export default function RegisterMedicalExaminationPage() {
               </div>
 
               <CustomTable
-                data={patientsToday}
-                columns={columns}
-                page={page}
-                pageSize={pageSize}
-                totalItems={totalTodayPatients}
-                onPageChange={setPage}
-                onPageSizeChange={setPageSize}
-                sortKey={sortKey}
-                sortDirection={sortDirection}
-                onSortChange={(key, dir) => {
-                  setSortKey(key);
-                  setSortDirection(dir);
-                }}
+                data={onlinePatients}
+                columns={onlineColumns}
+                page={onlinePage}
+                pageSize={onlinePageSize}
+                totalItems={totalOnlinePatients}
+                onPageChange={setOnlinePage}
+                onPageSizeChange={setOnlinePageSize}
                 showActions={false}
                 pageSizeOptions={setting?.paginationSizeList
                   ?.slice()
                   .sort((a, b) => a - b)}
               />
-            </Paper>
-          </div>
-        </div>
-
-        {/* Bên phải: Tabs thông tin chi tiết */}
-        <div className="w-full lg:flex-[2] min-w-[500px]">
-          <Paper p="md" shadow="sm" radius="md" withBorder>
-            <Tabs
-              value={activeTab}
-              onChange={(value) =>
-                setActiveTab(value as "register-info" | "register-info-2")
-              }
-            >
-              <div className="w-full flex justify-between items-center mb-4">
-                <Group gap="sm" mb="md">
-                  <Button
-                    color="blue"
-                    variant={
-                      activeTab === "register-info" ? "filled" : "outline"
-                    }
-                    onClick={() => setActiveTab("register-info")}
-                  >
-                    Thông tin đăng ký
-                  </Button>
-
-                  <Button
-                    color="blue"
-                    variant={
-                      activeTab === "register-info-2" ? "filled" : "outline"
-                    }
-                    onClick={() => setActiveTab("register-info-2")}
-                  >
-                    Thông tin đăng ký online
-                  </Button>
-                </Group>
-
-                <div className="flex gap-2">
-                  <Button variant="default" onClick={handleReset}>
-                    Reset
-                  </Button>
-                  <Button
-                    variant="light"
-                    onClick={() => setCreateModalOpened(true)}
-                  >
-                    Thêm
-                  </Button>
-
-                  <Button variant="filled" onClick={handleSave}>
-                    Lưu
-                  </Button>
-                </div>
-              </div>
-
-              <Tabs.Panel value="register-info" pt="xs">
-                {/* Thông tin người đăng ký */}
-                <Divider label="1. Thông tin người đăng ký" mb="sm" />
-                <Grid gutter="xs">
-                  {/* Mã bệnh nhân + tìm kiếm */}
-                  <Grid.Col span={6}>
-                    <Select
-                      label="Mã bệnh nhân"
-                      searchable
-                      placeholder="Nhập tên, mã BN hoặc số điện thoại"
-                      data={patientOptions}
-                      searchValue={
-                        isTyping ? searchInput : selectedOption?.label ?? ""
-                      }
-                      onDropdownOpen={() => {
-                        setIsTyping(true);
-                        setSearchInput("");
-                        searchPatients("");
-                      }}
-                      onSearchChange={(query) => {
-                        setIsTyping(true);
-                        setSearchInput(query);
-                        searchPatients(query);
-                      }}
-                      onBlur={() => {
-                        setIsTyping(false);
-                      }}
-                      value={
-                        confirmedPatient ? String(confirmedPatient.id) : ""
-                      }
-                      onChange={(value) => {
-                        const selected = patientOptions.find(
-                          (opt) => opt.value === value
-                        );
-                        if (!selected) return;
-
-                        setSelectedOption(selected);
-
-                        axiosInstance.get(`/patients/${value}`).then((res) => {
-                          const patient = res.data?.result;
-                          if (patient) {
-                            setConfirmedPatient({
-                              ...patient,
-                              ngayDangKy: new Date()
-                                .toISOString()
-                                .split("T")[0],
-                              stt: "",
-                              phongKham: "",
-                            });
-                            setSelectedDate(new Date());
-                            setSearchInput(""); // ✅ reset input sau khi chọn
-                            setIsTyping(false); // ✅ reset trạng thái gõ
-                          }
-                        });
-                      }}
-                    />
-                  </Grid.Col>
-
-                  {/* Họ và tên */}
-                  <Grid.Col span={6}>
-                    <TextInput
-                      label="Họ tên"
-                      placeholder="Nhập họ và tên"
-                      value={
-                        confirmedPatient
-                          ? `${confirmedPatient.firstName ?? ""} ${
-                              confirmedPatient.middleName ?? ""
-                            } ${confirmedPatient.lastName ?? ""}`.trim()
-                          : ""
-                      }
-                      disabled
-                    />
-                  </Grid.Col>
-
-                  {/* Ngày sinh */}
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Ngày sinh"
-                      placeholder="Ngày sinh"
-                      value={
-                        confirmedPatient?.dob
-                          ? dayjs(confirmedPatient.dob).format("DD/MM/YYYY")
-                          : ""
-                      }
-                      disabled
-                    />
-                  </Grid.Col>
-
-                  {/* Giới tính */}
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Giới tính"
-                      value={confirmedPatient?.gender === "MALE" ? "Nam" : "Nữ"}
-                      disabled
-                    />
-                  </Grid.Col>
-
-                  {/* Số điện thoại */}
-                  <Grid.Col span={4}>
-                    <TextInput
-                      label="Điện thoại"
-                      placeholder="Điện thoại"
-                      value={confirmedPatient?.phone || ""}
-                      disabled
-                    />
-                  </Grid.Col>
-                </Grid>
-
-                <Divider label="2. Thông tin đăng ký" mt="md" mb="sm" />
-                {confirmedPatient && (
-                  <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-12 md:col-span-3">
-                      <Select
-                        label="Chuyên khoa"
-                        placeholder="Chọn chuyên khoa"
-                        data={specializations.map((item) => ({
-                          value: item.id,
-                          label: item.name,
-                        }))}
-                        value={confirmedPatient?.specializationId || ""}
-                        onChange={(value) =>
-                          setConfirmedPatient((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  specializationId: value || "",
-                                  specialization:
-                                    specializations.find((s) => s.id === value)
-                                      ?.name || "",
-                                  phongKham: "",
-                                }
-                              : prev
-                          )
-                        }
-                        searchable
-                        disabled={loadingSpecializations}
-                      />
-                    </div>
-
-                    <div className="col-span-12 md:col-span-3">
-                      <Select
-                        label="Phòng khám"
-                        placeholder="Chọn phòng khám"
-                        data={departments
-                          .filter((dep) => !!dep.roomNumber)
-                          .map((dep) => ({
-                            value: dep.roomNumber as string,
-                            label: dep.roomNumber as string,
-                          }))}
-                        value={confirmedPatient?.phongKham || ""}
-                        onChange={(value) =>
-                          setConfirmedPatient((prev) =>
-                            prev ? { ...prev, phongKham: value || "" } : prev
-                          )
-                        }
-                        searchable
-                        disabled={
-                          !confirmedPatient?.specializationId ||
-                          loadingDepartments
-                        }
-                      />
-                    </div>
-
-                    <div className="col-span-12 md:col-span-3">
-                      <DatePickerInput
-                        label="Ngày đăng ký"
-                        value={selectedDate}
-                        onChange={(dateValue) => {
-                          const date = dateValue as Date | null;
-                          setSelectedDate(date);
-                        }}
-                        valueFormat="DD/MM/YYYY"
-                        placeholder="DD/MM/YYYY"
-                        minDate={new Date()}
-                      />
-                    </div>
-
-                    <div className="col-span-12 md:col-span-3 flex items-end">
-                      <Checkbox
-                        label="Ưu tiên"
-                        disabled={!confirmedPatient}
-                        checked={confirmedPatient?.isPriority ?? false}
-                        onChange={(e) => {
-                          if (!confirmedPatient) return;
-                          setConfirmedPatient({
-                            ...confirmedPatient,
-                            isPriority: e.currentTarget.checked,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </Tabs.Panel>
-
-              <Tabs.Panel value="register-info-2" pt="xs">
-                <Divider
-                  label="Danh sách bệnh nhân đăng ký khám online"
-                  mb="sm"
-                />
-
-                <div className="grid grid-cols-12 gap-4 my-4">
-                  <div className="col-span-12 md:col-span-3">
-                    <FloatingLabelWrapper label="Họ tên">
-                      <TextInput
-                        placeholder="Nhập họ tên"
-                        value={onlineSearchFilters.fullName}
-                        onChange={(e) =>
-                          setOnlineSearchFilters((prev) => ({
-                            ...prev,
-                            fullName: e.target.value,
-                          }))
-                        }
-                      />
-                    </FloatingLabelWrapper>
-                  </div>
-
-                  <div className="col-span-12 md:col-span-2">
-                    <FloatingLabelWrapper label="Email">
-                      <TextInput
-                        placeholder="Nhập email"
-                        value={onlineSearchFilters.email}
-                        onChange={(e) =>
-                          setOnlineSearchFilters((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                      />
-                    </FloatingLabelWrapper>
-                  </div>
-
-                  <div className="col-span-12 md:col-span-2">
-                    <FloatingLabelWrapper label="Số điện thoại">
-                      <TextInput
-                        placeholder="Nhập số điện thoại"
-                        value={onlineSearchFilters.phoneNumber}
-                        onChange={(e) =>
-                          setOnlineSearchFilters((prev) => ({
-                            ...prev,
-                            phoneNumber: e.target.value,
-                          }))
-                        }
-                      />
-                    </FloatingLabelWrapper>
-                  </div>
-
-                  <div className="col-span-12 md:col-span-3">
-                    <FloatingLabelWrapper label="Chọn Ngày đăng ký">
-                      <DatePickerInput
-                        placeholder="Chọn ngày"
-                        value={onlineDate}
-                        onChange={
-                          (value) =>
-                            setOnlineDate(value ? new Date(value) : new Date()) // hoặc today
-                        }
-                        valueFormat="DD/MM/YYYY"
-                      />
-                    </FloatingLabelWrapper>
-                  </div>
-
-                  <div className="col-span-12 md:col-span-2 flex items-end gap-2">
-                    <Button
-                      variant="light"
-                      color="gray"
-                      onClick={() => {
-                        const reset = {
-                          registeredAt: dayjs().format("YYYY-MM-DD"),
-                          fullName: "",
-                          email: "",
-                          phoneNumber: "",
-                        };
-
-                        setOnlineSearchFilters(reset);
-                        setSubmittedOnlineFilters(reset);
-                        setOnlineDate(new Date());
-                        setOnlinePage(1);
-                      }}
-                    >
-                      Tải lại
-                    </Button>
-
-                    <Button
-                      variant="filled"
-                      onClick={() => {
-                        const updatedFilters = {
-                          ...onlineSearchFilters,
-                          registeredAt: dayjs(onlineDate).format("YYYY-MM-DD"),
-                        };
-                        setSubmittedOnlineFilters(updatedFilters);
-                        setOnlinePage(1);
-                      }}
-                    >
-                      Tìm kiếm
-                    </Button>
-                  </div>
-                </div>
-
-                <CustomTable
-                  data={onlinePatients}
-                  columns={onlineColumns}
-                  page={onlinePage}
-                  pageSize={onlinePageSize}
-                  totalItems={totalOnlinePatients}
-                  onPageChange={setOnlinePage}
-                  onPageSizeChange={setOnlinePageSize}
-                  showActions={false}
-                  pageSizeOptions={setting?.paginationSizeList
-                    ?.slice()
-                    .sort((a, b) => a - b)}
-                />
-              </Tabs.Panel>
-            </Tabs>
-          </Paper>
-        </div>
-      </div>
-    </Container>
+            </Tabs.Panel>
+          </Tabs>
+        </Paper>
+      </Grid.Col>
+    </Grid>
   );
 }
