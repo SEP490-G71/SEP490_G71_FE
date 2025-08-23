@@ -10,6 +10,7 @@ import {
   Paper,
   Checkbox,
   Text,
+  FileButton,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useEffect, useState } from "react";
@@ -155,7 +156,10 @@ export default function RegisterMedicalExaminationPage() {
     createPatient,
     fetchDepartmentsBySpecialization,
     fetchOnlineRegisteredPatients,
+    importQueuePatients,
   } = useRegisterMedicalExamination();
+
+  const [isImporting, setIsImporting] = useState(false);
 
   const onlineColumns: Column<Patient>[] = [
     { key: "fullName", label: "Họ tên", align: "left" },
@@ -295,39 +299,40 @@ export default function RegisterMedicalExaminationPage() {
     loadDepartments();
   }, [confirmedPatient?.specializationId]);
 
-  useEffect(() => {
-    const loadTodayPatients = async () => {
-      const filters = {
-        patientId: submittedFilters.patientId,
-        fullName: submittedFilters.fullName,
-        phone: submittedFilters.phone,
-        patientCode: submittedFilters.patientCode,
-        specialization: submittedFilters.specialization,
-        registeredTimeFrom: submittedFilters.registeredTimeFrom
-          ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
-          : undefined,
-        registeredTimeTo: submittedFilters.registeredTimeTo
-          ? dayjs(submittedFilters.registeredTimeTo).format("YYYY-MM-DD")
-          : undefined,
-        status: submittedFilters.status,
-      };
-
-      const { content, totalElements } = await fetchTodayRegisteredPatients(
-        page - 1,
-        pageSize,
-        filters
-      );
-
-      const mappedPatients = content.map((p) => ({
-        ...p,
-        registeredTime: p.registeredTime ?? p.ngayDangKy ?? null,
-      }));
-
-      setPatientsToday(mappedPatients);
-      setTotalTodayPatients(totalElements);
+  const loadTodayPatients = async () => {
+    const filters = {
+      patientId: submittedFilters.patientId,
+      fullName: submittedFilters.fullName,
+      phone: submittedFilters.phone,
+      patientCode: submittedFilters.patientCode,
+      specialization: submittedFilters.specialization,
+      registeredTimeFrom: submittedFilters.registeredTimeFrom
+        ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
+        : undefined,
+      registeredTimeTo: submittedFilters.registeredTimeTo
+        ? dayjs(submittedFilters.registeredTimeTo).format("YYYY-MM-DD")
+        : undefined,
+      status: submittedFilters.status,
     };
 
+    const { content, totalElements } = await fetchTodayRegisteredPatients(
+      page - 1,
+      pageSize,
+      filters
+    );
+
+    const mappedPatients = content.map((p) => ({
+      ...p,
+      registeredTime: p.registeredTime ?? (p as any).ngayDangKy ?? null,
+    }));
+
+    setPatientsToday(mappedPatients);
+    setTotalTodayPatients(totalElements);
+  };
+
+  useEffect(() => {
     loadTodayPatients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, submittedFilters]);
 
   const handleSave = async () => {
@@ -359,36 +364,7 @@ export default function RegisterMedicalExaminationPage() {
       updatedPatient.id.toString(),
       `${isoDate}T00:00:00`,
       async () => {
-        const filters = {
-          patientId: submittedFilters.patientId,
-          fullName: submittedFilters.fullName,
-          phone: submittedFilters.phone,
-          patientCode: submittedFilters.patientCode,
-          specialization: submittedFilters.specialization,
-          registeredTimeFrom: submittedFilters.registeredTimeFrom
-            ? dayjs(submittedFilters.registeredTimeFrom).format("YYYY-MM-DD")
-            : undefined,
-          registeredTimeTo: submittedFilters.registeredTimeTo
-            ? dayjs(submittedFilters.registeredTimeTo).format("YYYY-MM-DD")
-            : undefined,
-
-          status: submittedFilters.status,
-        };
-
-        const { content, totalElements } = await fetchTodayRegisteredPatients(
-          page - 1,
-          pageSize,
-          filters
-        );
-
-        const safePatients: Patient[] = content.map((p) => ({
-          ...p,
-          ngayDangKy: p.ngayDangKy ?? null,
-          stt: p.stt ?? "",
-          phongKham: p.phongKham ?? "",
-        }));
-        setPatientsToday(safePatients);
-        setTotalTodayPatients(totalElements);
+        await loadTodayPatients(); // [CHANGED] dùng hàm tách
         setConfirmedPatient(null);
         setSelectedDate(null);
         setSelectedOption(null);
@@ -442,6 +418,18 @@ export default function RegisterMedicalExaminationPage() {
       }
     }
   }, [confirmedPatient?.ngayDangKy]);
+
+  const handleImport = async (file: File | null) => {
+    if (!file) return;
+    try {
+      setIsImporting(true);
+      await importQueuePatients(file);
+      await loadTodayPatients();
+    } catch {
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   return (
     <Grid style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
@@ -688,6 +676,18 @@ export default function RegisterMedicalExaminationPage() {
                 >
                   Thêm
                 </Button>
+
+                <FileButton
+                  onChange={handleImport}
+                  accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  disabled={isImporting}
+                >
+                  {(props) => (
+                    <Button variant="outline" {...props} loading={isImporting}>
+                      Import
+                    </Button>
+                  )}
+                </FileButton>
 
                 <Button variant="filled" onClick={handleSave}>
                   Lưu

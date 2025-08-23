@@ -5,12 +5,15 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { useSignIn } from "../../hooks/auth/useSignIn";
+import ResetPasswordModal from "./ResetPasswordModal";
 
 export default function SignInClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, loading } = useSignIn();
+
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
@@ -74,14 +77,17 @@ export default function SignInClient() {
                   </span>
                 </div>
               </div>
+
               <div className="flex items-center justify-between">
-                <Link
-                  to="/reset-password"
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Quên Mật Khẩu
-                </Link>
+                </button>
               </div>
+
               <div>
                 <Button
                   className="w-full"
@@ -94,20 +100,13 @@ export default function SignInClient() {
               </div>
             </div>
           </form>
-
-          {/* <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-              Bạn chưa có tài khoản?{" "}
-              <Link
-                to="/signup"
-                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-              >
-                Đăng ký
-              </Link>
-            </p>
-          </div> */}
         </div>
       </div>
+
+      <ResetPasswordModal
+        open={showResetModal}
+        onClose={() => setShowResetModal(false)}
+      />
     </div>
   );
 }

@@ -57,8 +57,10 @@ const RegisterModal = ({
   });
 
   useEffect(() => {
-    if (visible) fetchServicePackages();
-  }, [visible, fetchServicePackages]);
+    if (visible && servicePackages.length === 0) {
+      fetchServicePackages();
+    }
+  }, [visible, fetchServicePackages, servicePackages.length]);
 
   const handleSubmit = (values: Hospital) => {
     onOk(values, form.reset);
@@ -84,7 +86,7 @@ const RegisterModal = ({
         <TextInput
           label={
             <span>
-              Tên bệnh viện <span style={{ color: "red" }}>*</span>
+              Tên bệnh viện <span style={{ color: "red" }}></span>
             </span>
           }
           placeholder="VD: Bệnh viện Bạch Mai"
@@ -97,7 +99,7 @@ const RegisterModal = ({
         <TextInput
           label={
             <span>
-              Mã bệnh viện <span style={{ color: "red" }}>*</span>
+              Mã bệnh viện <span style={{ color: "red" }}></span>
             </span>
           }
           placeholder="VD: thuduc, bachmai, bv123"
@@ -121,7 +123,7 @@ const RegisterModal = ({
         <TextInput
           label={
             <span>
-              Email <span style={{ color: "red" }}>*</span>
+              Email <span style={{ color: "red" }}></span>
             </span>
           }
           placeholder="VD: example@gmail.com"
@@ -134,7 +136,7 @@ const RegisterModal = ({
         <TextInput
           label={
             <span>
-              Số điện thoại <span style={{ color: "red" }}>*</span>
+              Số điện thoại <span style={{ color: "red" }}></span>
             </span>
           }
           placeholder="VD: 0123456789"

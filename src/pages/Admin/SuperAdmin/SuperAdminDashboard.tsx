@@ -30,6 +30,12 @@ const formatVND = (v: any) => {
     : String(v ?? "");
 };
 
+// [CHANGED] helper định dạng ngày cho UI
+const formatDateUI = (v: any) => {
+  const d = dayjs(v);
+  return d.isValid() ? d.format("DD/MM/YYYY") : "";
+};
+
 export default function SuperAdminDashboard() {
   // ---------- paging ----------
   const [page, setPage] = useState(1);
@@ -463,12 +469,13 @@ export default function SuperAdminDashboard() {
                         );
                       }
                       if (c.key === "startDate" || c.key === "endDate") {
+                        // [CHANGED] chỉ format UI, không ảnh hưởng payload gửi BE
                         return (
                           <td
                             key={c.key}
                             className="px-3 sm:px-4 py-3 whitespace-nowrap"
                           >
-                            {v ? String(v).replace("T", " ") : ""}
+                            {v ? formatDateUI(v) : ""}
                           </td>
                         );
                       }
