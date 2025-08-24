@@ -8,20 +8,19 @@ export interface MedicalServiceRow {
   quantity: number;
 }
 
-// Payload gửi lên API
 interface SubmitPayload {
   patientId: string;
   staffId: string;
   visitId: string;
   diagnosisText: string;
-  temperature: number;
-  respiratoryRate: number;
+  temperature?: number | null;
+  respiratoryRate?: number | null;
   bloodPressure: string;
-  heartRate: number;
-  heightCm: number;
-  weightKg: number;
-  bmi: number;
-  spo2: number;
+  heartRate?: number | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  bmi?: number | null;
+  spo2?: number | null;
   notes: string;
   services: MedicalServiceRow[];
 }

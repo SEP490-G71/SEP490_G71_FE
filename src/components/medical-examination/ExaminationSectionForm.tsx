@@ -1,6 +1,6 @@
 import { Grid, TextInput, Textarea } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { UseFormReturnType } from "@mantine/form";
 
 interface Props {
@@ -24,6 +24,27 @@ const ExaminationSectionForm = ({
     form.setFieldValue("doctor", doctorId);
     form.setFieldValue("department", departmentId);
   }, [doctorId, departmentId]);
+
+  useEffect(() => {
+    const h = Number(form.values.heightCm);
+    const w = Number(form.values.weightKg);
+    if (h > 0 && w > 0) {
+      const bmi = w / Math.pow(h / 100, 2);
+      form.setFieldValue("bmi", Number(bmi.toFixed(1)));
+    } else {
+      form.setFieldValue("bmi", 0);
+    }
+  }, [form.values.heightCm, form.values.weightKg]);
+
+  const bmiBorderColorVar = useMemo(() => {
+    const bmi = Number(form.values.bmi) || 0;
+    if (bmi <= 0) return undefined;
+    if (bmi < 18.5) return "var(--mantine-color-red-6)";
+    if (bmi < 23) return "var(--mantine-color-green-6)";
+    if (bmi < 25) return "var(--mantine-color-yellow-6)";
+    if (bmi < 30) return "var(--mantine-color-orange-6)";
+    return "var(--mantine-color-red-6)";
+  }, [form.values.bmi]);
 
   return (
     <Grid gutter="xs">
@@ -116,7 +137,14 @@ const ExaminationSectionForm = ({
           label="BMI"
           type="number"
           placeholder="20.7"
-          {...form.getInputProps("bmi")}
+          value={form.values.bmi ? Number(form.values.bmi).toFixed(1) : ""}
+          readOnly
+          styles={{
+            input: {
+              fontWeight: 600,
+              borderColor: bmiBorderColorVar,
+            },
+          }}
         />
       </Grid.Col>
 
@@ -128,6 +156,7 @@ const ExaminationSectionForm = ({
           {...form.getInputProps("spo2")}
         />
       </Grid.Col>
+
       <Grid.Col span={6}>
         <Textarea
           label="Chẩn đoán"
@@ -138,6 +167,7 @@ const ExaminationSectionForm = ({
           {...form.getInputProps("diagnosisText")}
         />
       </Grid.Col>
+
       <Grid.Col span={6}>
         <Textarea
           label="Ghi chú"
