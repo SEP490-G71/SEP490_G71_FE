@@ -50,7 +50,7 @@ export default function RegisterMedicalExaminationPage() {
   const [isTyping, setIsTyping] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState<keyof Patient | undefined>();
   const [sortDirection, setSortDirection] = useState<
     "asc" | "desc" | undefined
@@ -628,6 +628,7 @@ export default function RegisterMedicalExaminationPage() {
                 setSortDirection(dir);
               }}
               showActions={false}
+              hidePagination={totalTodayPatients <= pageSize}
               pageSizeOptions={setting?.paginationSizeList
                 ?.slice()
                 ?.sort((a, b) => a - b)}
@@ -704,7 +705,7 @@ export default function RegisterMedicalExaminationPage() {
                   <Select
                     label="Mã bệnh nhân"
                     searchable
-                    placeholder="Nhập tên, mã BN hoặc số điện thoại"
+                    placeholder="Nhập tên, mã BN"
                     data={patientOptions}
                     searchValue={
                       isTyping ? searchInput : selectedOption?.label ?? ""
@@ -1029,6 +1030,7 @@ export default function RegisterMedicalExaminationPage() {
                 onPageChange={setOnlinePage}
                 onPageSizeChange={setOnlinePageSize}
                 showActions={false}
+                hidePagination={totalTodayPatients <= pageSize}
                 pageSizeOptions={setting?.paginationSizeList
                   ?.slice()
                   .sort((a, b) => a - b)}
