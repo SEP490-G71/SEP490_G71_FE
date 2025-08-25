@@ -40,7 +40,8 @@ import FilterPanel, {
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import { mapDetailToQueuePatient } from "../../../components/common/patient.mapper";
 import useMedicalService from "../../../hooks/medical-service/useMedicalService";
-
+import { Modal, Image } from "@mantine/core";
+import useInvoiceQr from "../../../hooks/invoice/useInvoiceQr";
 const BillingPage = () => {
   const { userInfo } = useUserInfo();
   const { previewInvoice } = usePreviewInvoice();
@@ -253,9 +254,18 @@ const BillingPage = () => {
     }
   };
 
-  const handleGenerateQr = (invoiceId: string) => {
-    // TODO: gọi API sinh QR ở đây
-    toast.info(`Sinh mã QR cho hóa đơn ${invoiceId}`);
+  const { qrUrl, loadingQr, errorQr, fetchInvoiceQr, clearQr } = useInvoiceQr();
+  const [qrOpen, setQrOpen] = useState(false);
+
+  // báo lỗi nếu API lỗi
+  useEffect(() => {
+    if (errorQr) {
+      toast.error(errorQr);
+    }
+  }, [errorQr]);
+  const handleGenerateQr = async (invoiceId: string) => {
+    await fetchInvoiceQr(invoiceId); // gọi GET /invoices/:id/qr
+    setQrOpen(true); // mở modal xem QR
   };
 
   const filterFields: FilterField<any>[] = [
@@ -478,6 +488,33 @@ const BillingPage = () => {
         pdfUrl={previewUrl}
         title="Xem trước hóa đơn"
       />
+      <Modal
+        opened={qrOpen}
+        onClose={() => {
+          setQrOpen(false);
+          clearQr(); // dọn URL tạm
+        }}
+        title="Mã QR thanh toán"
+        centered
+      >
+        {loadingQr ? (
+          <div style={{ padding: 20 }}>Đang tạo mã QR…</div>
+        ) : qrUrl ? (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Image
+              src={qrUrl}
+              alt="Invoice QR"
+              radius="md"
+              mah={420}
+              fit="contain"
+              w="100%"
+              style={{ maxWidth: 360, marginInline: "auto" }}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: 20 }}>Chưa có mã QR.</div>
+        )}
+      </Modal>
     </Grid>
   );
 };
