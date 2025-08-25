@@ -70,9 +70,25 @@ export const useViewRegisterOnline = () => {
     }
   };
 
+  // [ADDED] API đổi lịch hẹn (cập nhật registeredAt)
+  // Theo curl bạn cung cấp: PUT /medical-diagnosis/registered-online/status/{id}
+  // body: { "registeredAt": "YYYY-MM-DDTHH:mm:ss" }
+  const updateRegisteredAt = async (id: string, registeredAtISO: string) => {
+    try {
+      await axiosInstance.put(`/registered-online/status/${id}`, {
+        registeredAt: registeredAtISO,
+      });
+      toast.success("Đổi lịch hẹn thành công");
+    } catch (error: any) {
+      toast.error(getErrorMessage(error, "Đổi lịch hẹn thất bại"));
+      console.error(error);
+    }
+  };
+
   return {
     fetchOnlinePatients,
     updateConfirmationStatus,
+    updateRegisteredAt, // [ADDED]
     loading,
   };
 };
