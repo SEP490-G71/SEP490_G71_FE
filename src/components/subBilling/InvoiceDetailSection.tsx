@@ -1,4 +1,3 @@
-// ✅ Refactored InvoiceDetailSection.tsx
 import {
   Button,
   Divider,
@@ -34,6 +33,7 @@ interface Props {
   handleDownload: (invoiceId: string) => Promise<void>;
   handleOpenModal: () => void;
   setEditableInvoiceDetail: (val: any) => void;
+  handleGenerateQr?: (invoiceId: string) => void;
 }
 
 const InvoiceDetailSection = ({
@@ -49,8 +49,10 @@ const InvoiceDetailSection = ({
   handleDownload,
   handleOpenModal,
   setEditableInvoiceDetail,
+  handleGenerateQr,
 }: Props) => {
   const isPaid = selectedInvoiceInfo?.status === InvoiceStatus.PAID;
+  const isUnpaid = selectedInvoiceInfo?.status === InvoiceStatus.UNPAID;
 
   return (
     <>
@@ -134,7 +136,9 @@ const InvoiceDetailSection = ({
             <Title order={5} c="blue.7">
               Dịch vụ đã chọn
             </Title>
+
             <Group gap="xs" justify="end">
+              {/* Luôn có: Xem trước */}
               <Button
                 color="cyan"
                 size="xs"
@@ -142,30 +146,47 @@ const InvoiceDetailSection = ({
               >
                 xem trước
               </Button>
-              <Button
-                color="cyan"
-                size="xs"
-                onClick={() => handleDownload(invoiceDetail.invoiceId)}
-                disabled={isDownloading}
-                loading={isDownloading}
-              >
-                tải xuống
-              </Button>
-              <Button
-                color="cyan"
-                size="xs"
-                onClick={handleOpenModal}
-                disabled={isPaid || !editableInvoiceDetail.confirmedBy}
-                title={
-                  isPaid
-                    ? "Hóa đơn đã thanh toán"
-                    : !editableInvoiceDetail.confirmedBy
-                    ? "Vui lòng chọn người thu trước"
-                    : ""
-                }
-              >
-                Thêm dịch vụ
-              </Button>
+
+              {/* UNPAID: Ẩn tải xuống, hiện Sinh mã QR */}
+              {isUnpaid && (
+                <Button
+                  color="grape"
+                  size="xs"
+                  onClick={() => handleGenerateQr?.(invoiceDetail.invoiceId)}
+                >
+                  sinh mã qr
+                </Button>
+              )}
+
+              {/* PAID: Chỉ xem trước & tải xuống → hiện tải xuống, ẩn QR + Thêm DV */}
+              {isPaid && (
+                <Button
+                  color="cyan"
+                  size="xs"
+                  onClick={() => handleDownload(invoiceDetail.invoiceId)}
+                  disabled={isDownloading}
+                  loading={isDownloading}
+                >
+                  tải xuống
+                </Button>
+              )}
+
+              {/* Chỉ cho thêm dịch vụ khi CHƯA paid */}
+              {!isPaid && (
+                <Button
+                  color="cyan"
+                  size="xs"
+                  onClick={handleOpenModal}
+                  disabled={!editableInvoiceDetail.confirmedBy}
+                  title={
+                    !editableInvoiceDetail.confirmedBy
+                      ? "Vui lòng chọn người thu trước"
+                      : ""
+                  }
+                >
+                  Thêm dịch vụ
+                </Button>
+              )}
             </Group>
           </Group>
 

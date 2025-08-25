@@ -5,6 +5,7 @@ export enum MedicalRecordStatus {
   COMPLETED = "COMPLETED",
   WAITING_FOR_RESULT = "WAITING_FOR_RESULT",
   // RESULT_COMPLETED = "RESULT_COMPLETED",
+  PENDING="PENDING",
 }
 
 export const MedicalRecordStatusMap: Record<MedicalRecordStatus, string> = {
@@ -13,7 +14,7 @@ export const MedicalRecordStatusMap: Record<MedicalRecordStatus, string> = {
   [MedicalRecordStatus.TESTING_COMPLETED]: "Đã hoàn tất xét nghiệm",
   [MedicalRecordStatus.WAITING_FOR_RESULT]: "Chờ nhập kết quả",
   [MedicalRecordStatus.COMPLETED]: "Đã hoàn tất kết quả",
-  
+  [MedicalRecordStatus.PENDING]: "Chờ kết quả",
 };
 
 
@@ -23,4 +24,5 @@ export const MedicalRecordStatusColor: Record<MedicalRecordStatus, string> = {
   [MedicalRecordStatus.TESTING_COMPLETED]: "green.6",
   [MedicalRecordStatus.WAITING_FOR_RESULT]: "yellow",
   [MedicalRecordStatus.COMPLETED]: "#bb65f4ff",
+  [MedicalRecordStatus.PENDING]: "gray",
 };

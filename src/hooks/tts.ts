@@ -1,7 +1,7 @@
 export type ViettelTtsOptions = {
   voice?: string;     
   speed?: number;     
-  returnOption?: 0 | 1 | 2 | 3; 
+  returnOption?: 0 | 1 | 2 | 3|5; 
   withoutFilter?: boolean;
 };
 
@@ -14,9 +14,9 @@ export async function speakWithViettel(
 
   const body = {
     text,
-    voice: opts.voice ?? (import.meta.env.VITE_VIETTEL_TTS_VOICE || "hcm-diemmy"),
-    speed: opts.speed ?? 1,
-    tts_return_option: opts.returnOption ?? 3,
+    voice: opts.voice ?? (import.meta.env.VITE_VIETTEL_TTS_VOICE || "hn-quynhanh"),
+    speed: opts.speed ?? 0.8,
+    tts_return_option: opts.returnOption ?? 5,
     token,
     without_filter: opts.withoutFilter ?? false,
   };

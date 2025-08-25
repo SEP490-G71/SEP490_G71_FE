@@ -33,9 +33,10 @@ interface Props {
 }
 
 const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
 
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<Department[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -44,15 +45,16 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
   const [selected, setSelected] = useState<Department | null>(null);
   const [reason, setReason] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+
   const fetchDepartments = useCallback(
-    async (params?: { page?: number; size?: number; name?: string }) => {
+    async (params: { page: number; size: number; name: string }) => {
       setLoading(true);
       try {
         const res = await axiosInstance.get("/departments", {
           params: {
-            page: (params?.page ?? page) - 1,
-            size: params?.size ?? pageSize,
-            name: params?.name ?? (search || undefined),
+            page: params.page - 1,
+            size: params.size,
+            name: params.name || undefined,
             type: "CONSULTATION",
           },
         });
@@ -67,18 +69,18 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
           setRows(content);
           setTotalItems(total);
         }
-      } catch (e) {
+      } catch {
         setRows([]);
         setTotalItems(0);
       } finally {
         setLoading(false);
       }
     },
-    [page, pageSize, search]
+    []
   );
 
-  const columns = useMemo<Column<Department>[]>(() => {
-    return [
+  const columns = useMemo<Column<Department>[]>(
+    () => [
       {
         key: "name",
         label: "Tên phòng",
@@ -97,24 +99,32 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
         sortable: false,
         render: (d) => d.specialization?.name ?? "---",
       },
-    ];
-  }, []);
+    ],
+    []
+  );
 
   useEffect(() => {
-    if (opened && hasSearched) {
-      fetchDepartments({ page, size: pageSize, name: search });
-    }
-  }, [opened, page, pageSize, hasSearched, fetchDepartments]);
+    if (!opened) return;
+    setSelected(null);
+    setReason("");
+    setSearchInput("");
+    setQuery("");
+    setPage(1);
+    setHasSearched(true);
+  }, [opened]);
+
+  useEffect(() => {
+    if (!opened || !hasSearched) return;
+    fetchDepartments({ page, size: pageSize, name: query });
+  }, [opened, hasSearched, page, pageSize, query, fetchDepartments]);
 
   const handleReload = () => {
     setHasSearched(true);
     setPage(1);
-    fetchDepartments({ page: 1, size: pageSize, name: search });
+    setQuery(searchInput);
   };
 
-  const handleRowClick = (row: Department) => {
-    setSelected(row);
-  };
+  const handleRowClick = (row: Department) => setSelected(row);
 
   const handleConfirm = async () => {
     if (!selected) return;
@@ -123,16 +133,6 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
       reason: reason.trim() || "Chuyển phòng",
     });
   };
-
-  useEffect(() => {
-    if (!opened) {
-      setSelected(null);
-      setReason("");
-      setSearch("");
-      setPage(1);
-      setHasSearched(false);
-    }
-  }, [opened]);
 
   return (
     <Modal
@@ -149,20 +149,20 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
     >
       <Stack gap="sm">
         <Grid align="end" gutter="sm">
-          <Grid.Col span={{ base: 12, sm: 9 }}>
+          <Grid.Col span={9}>
             <FloatingLabelWrapper label="Tìm kiếm phòng">
               <TextInput
                 placeholder="Nhập tên phòng..."
-                value={search}
-                onChange={(e) => setSearch(e.currentTarget.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.currentTarget.value)}
               />
             </FloatingLabelWrapper>
           </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 3 }}>
+          <Grid.Col span={3}>
             <Button
               onClick={handleReload}
               disabled={loading}
-              className="w-full sm:w-[140px]"
+              className="w-full"
             >
               {loading ? <Loader size="sm" /> : "Tìm kiếm"}
             </Button>
@@ -188,7 +188,9 @@ const TransferRoomModal = ({ opened, onClose, onConfirm }: Props) => {
               ? { backgroundColor: "rgba(59,130,246,0.10)" }
               : {}
           }
-          emptyText="Không có phòng phù hợp"
+          emptyText={
+            hasSearched ? "Không có phòng phù hợp" : "Nhập tên và bấm Tìm kiếm"
+          }
         />
 
         <FloatingLabelWrapper label="Phòng đích">
