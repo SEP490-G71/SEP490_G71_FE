@@ -80,6 +80,7 @@ export const AppointmentForm = () => {
               required
             />
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, md: 4 }}>
             <TextInput
               label="Tên đệm"
@@ -90,6 +91,7 @@ export const AppointmentForm = () => {
               }
             />
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, md: 4 }}>
             <TextInput
               label="Tên"
@@ -110,6 +112,7 @@ export const AppointmentForm = () => {
               required
             />
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               label="Số điện thoại"
@@ -136,8 +139,15 @@ export const AppointmentForm = () => {
               valueFormat="DD/MM/YYYY"
               required
               className="w-full"
+              popoverProps={{
+                position: "bottom-start",
+                middlewares: { flip: false, shift: true, inline: true },
+                offset: 6,
+                zIndex: 400,
+              }}
             />
           </Grid.Col>
+
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Select
               label="Giới tính"
@@ -159,19 +169,22 @@ export const AppointmentForm = () => {
               placeholder="Chọn thời gian"
               value={form.registeredAt ? new Date(form.registeredAt) : null}
               onChange={(date) => {
-                // NOTE: chặn chọn thời điểm nhỏ hơn T+2 ngày
-                if (date && dayjs(date).isBefore(minBookingDate)) {
-                  return;
-                }
+                if (date && dayjs(date).isBefore(minBookingDate)) return;
                 handleChange(
                   "registeredAt",
                   date ? dayjs(date).format("YYYY-MM-DDTHH:mm") : ""
                 );
               }}
               valueFormat="DD/MM/YYYY HH:mm"
-              dropdownType="modal"
-              required
+              dropdownType="popover"
+              popoverProps={{
+                position: "bottom-start",
+                middlewares: { flip: false, shift: true, inline: true },
+                offset: 6,
+                zIndex: 400,
+              }}
               className="w-full"
+              required
               minDate={minBookingDate}
               excludeDate={(d) => dayjs(d).isBefore(minBookingDate, "day")}
             />

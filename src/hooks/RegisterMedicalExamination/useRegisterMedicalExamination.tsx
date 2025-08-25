@@ -107,6 +107,7 @@ export const useRegisterMedicalExamination = () => {
       toast.error(getErrorMessage(error, "Đăng ký khám thất bại"));
     }
   };
+
   const fetchTodayRegisteredPatients = async (
     page = 0,
     size = 10,
@@ -187,6 +188,38 @@ export const useRegisterMedicalExamination = () => {
     }
   };
 
+  // ------------------------------
+  // [NEW] Import queue patients từ file Excel
+  // ------------------------------
+  const importQueuePatients = async (file: File): Promise<any> => {
+    try {
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await axiosInstance.post("/queue-patients/import", form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // Tuỳ backend trả gì, mình ưu tiên hiện message chung và đếm số dòng nếu có
+      const result = res.data?.result ?? res.data;
+      const okCount =
+        result?.successCount ?? result?.imported ?? result?.count ?? undefined;
+
+      toast.success(
+        okCount !== undefined
+          ? `Import thành công ${okCount} dòng`
+          : "Import thành công"
+      );
+      return result;
+    } catch (error) {
+      console.error("❌ Lỗi import queue-patients:", error);
+      toast.error(getErrorMessage(error, "Import thất bại"));
+      throw error;
+    }
+  };
+
   return {
     createPatient,
     fetchAllPatients,
@@ -194,5 +227,8 @@ export const useRegisterMedicalExamination = () => {
     fetchTodayRegisteredPatients,
     fetchDepartmentsBySpecialization,
     fetchOnlineRegisteredPatients,
+    importQueuePatients, // [NEW]
   };
 };
+
+export default useRegisterMedicalExamination;
