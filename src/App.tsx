@@ -64,6 +64,7 @@ import EditProfilePageForUser from "./pages/Patient/EditProfilePage/EditProfileP
 import SuperAdminSignIn from "./pages/AuthPages/SuperAdminSignIn";
 import SuperAdminDashboard from "./pages/Admin/SuperAdmin/SuperAdminDashboard";
 import { AireportPages } from "./pages/Admin/AiReport/AireportPages";
+import UserViewMedicalExaminationByRoomPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationByRoomPage";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -93,6 +94,10 @@ export default function App() {
             <Route
               path="/admin/view-medical-records"
               element={<UserViewMedicalExaminationPage />}
+            />
+            <Route
+              path="/satff/view-medical-records-by-room"
+              element={<UserViewMedicalExaminationByRoomPage />}
             />
             <Route
               path="/admin/medical-records"

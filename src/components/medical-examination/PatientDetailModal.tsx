@@ -272,12 +272,19 @@ const PatientDetailSection: React.FC<Props> = ({
                   <Text fw={600}>
                     {index + 1}. {order.serviceName}
                   </Text>
+
                   <Text
                     fw={700}
                     fz="lg"
-                    c={MedicalRecordStatusColor[order.status] ?? "gray"}
+                    c={
+                      MedicalRecordStatusColor[
+                        order.status as keyof typeof MedicalRecordStatusColor
+                      ] ?? "gray"
+                    }
                   >
-                    {MedicalRecordStatusMap[order.status] ?? order.status}
+                    {MedicalRecordStatusMap[
+                      order.status as keyof typeof MedicalRecordStatusMap
+                    ] ?? order.status}
                   </Text>
                 </Group>
 

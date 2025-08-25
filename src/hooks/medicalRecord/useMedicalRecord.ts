@@ -64,7 +64,7 @@ export const useMedicalRecord = () => {
         }
       );
 
-      toast.success("Lưu thông tin khám bệnh thành công");
+      // toast.success("Lưu thông tin khám bệnh thành công");
       setSubmittedData(res.data.result || null);
     } catch (error: any) {
   console.error("❌ Lỗi khi gửi dữ liệu khám bệnh:", error);

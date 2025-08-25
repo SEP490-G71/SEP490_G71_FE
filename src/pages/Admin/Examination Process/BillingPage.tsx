@@ -253,6 +253,11 @@ const BillingPage = () => {
     }
   };
 
+  const handleGenerateQr = (invoiceId: string) => {
+    // TODO: gọi API sinh QR ở đây
+    toast.info(`Sinh mã QR cho hóa đơn ${invoiceId}`);
+  };
+
   const filterFields: FilterField<any>[] = [
     {
       key: "status",
@@ -396,6 +401,7 @@ const BillingPage = () => {
                 }}
                 handleOpenModal={() => setViewModalOpened(true)}
                 setEditableInvoiceDetail={setEditableInvoiceDetail}
+                handleGenerateQr={handleGenerateQr}
               />
 
               <Box
