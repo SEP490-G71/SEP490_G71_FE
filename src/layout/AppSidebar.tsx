@@ -86,8 +86,8 @@ const navItemsByRole: Record<string, NavItem[]> = {
       name: "Cấu hình hệ thống",
       icon: <IoMdSettings />,
       subItems: [
-        { name: "Mẫu in hoá đơn", path: "/admin/invoice-templates" },
-        { name: "Mẫu in bệnh án", path: "/admin/medical-templates" },
+        // { name: "Mẫu in hoá đơn", path: "/admin/invoice-templates" },
+        // { name: "Mẫu in bệnh án", path: "/admin/medical-templates" },
         { name: "Quản lý quyền", path: "/admin/role" },
         { name: "Cài đặt hệ thống", path: "/admin/settings" },
       ],

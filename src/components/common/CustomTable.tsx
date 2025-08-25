@@ -32,6 +32,9 @@ interface CustomTableProps<T> {
   showActions?: boolean;
   onRowClick?: (row: T) => void;
   getRowStyle?: (row: T) => React.CSSProperties;
+
+  // Cho phép ẩn toàn bộ khu vực phân trang & chọn page size
+  hidePagination?: boolean;
 }
 
 function CustomTable<T>({
@@ -54,9 +57,10 @@ function CustomTable<T>({
   onRowClick,
   showActions = true,
   getRowStyle,
+  hidePagination = false,
 }: CustomTableProps<T>) {
   const totalPages = useMemo(
-    () => Math.ceil(totalItems / pageSize),
+    () => Math.ceil(Math.max(0, totalItems) / Math.max(1, pageSize)),
     [totalItems, pageSize]
   );
   const { setting } = useSettingAdminService();
@@ -73,6 +77,34 @@ function CustomTable<T>({
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<T | null>(null);
+
+  const { startPage, endPage, showLeftEllipsis, showRightEllipsis } =
+    useMemo(() => {
+      const maxButtons = 3; // tối đa số nút trang hiển thị
+      if (totalPages <= maxButtons) {
+        return {
+          startPage: 1,
+          endPage: totalPages,
+          showLeftEllipsis: false,
+          showRightEllipsis: false,
+        };
+      }
+      let start = Math.max(1, page - Math.floor(maxButtons / 2));
+      let end = start + maxButtons - 1;
+      if (end > totalPages) {
+        end = totalPages;
+        start = Math.max(1, end - maxButtons + 1);
+      }
+      return {
+        startPage: start,
+        endPage: end,
+        showLeftEllipsis: start > 1,
+        showRightEllipsis: end < totalPages,
+      };
+    }, [page, totalPages]);
+
+  // Khi hidePagination = true hoặc chỉ có 1 trang → ẩn footer phân trang
+  const shouldShowPagination = !hidePagination && totalPages > 1;
 
   return (
     <div className="w-full border rounded-lg overflow-hidden shadow-sm">
@@ -203,62 +235,106 @@ function CustomTable<T>({
         </table>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-gray-800 border-t text-sm text-gray-600 dark:text-gray-300">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <span>Hiển thị </span>
-            <select
-              value={pageSize}
-              onChange={async (e) => {
-                const newSize = Number(e.target.value);
-                if (onPageSizeChange) {
-                  onPageSizeChange(newSize);
-                }
-              }}
-              className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"
+      {shouldShowPagination && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-white dark:bg-gray-800 border-t text-sm text-gray-600 dark:text-gray-300">
+          {/* Select page size */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <span>Hiển thị </span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const newSize = Number(e.target.value);
+                  if (onPageSizeChange) {
+                    onPageSizeChange(newSize);
+                  }
+                }}
+                className="border rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:border-blue-300"
+              >
+                {resolvedPageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              <span>trên {totalItems} kết quả</span>
+            </div>
+          </div>
+
+          {/* Pagination buttons (condensed) */}
+          <div className="flex items-center flex-wrap justify-start gap-1 sm:gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <button
+              onClick={() => page > 1 && onPageChange(page - 1)}
+              disabled={page === 1}
+              className="p-2 border rounded disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Trang trước"
             >
-              {resolvedPageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span>trên {totalItems} kết quả</span>
+              <FaChevronLeft />
+            </button>
+
+            {/* first page */}
+            {showLeftEllipsis && (
+              <>
+                <button
+                  onClick={() => onPageChange(1)}
+                  className={`px-3 py-1 rounded ${
+                    page === 1
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  1
+                </button>
+                <span className="px-2 select-none">…</span>
+              </>
+            )}
+
+            {/* windowed page numbers */}
+            {Array.from(
+              { length: endPage - startPage + 1 },
+              (_, i) => startPage + i
+            ).map((p) => (
+              <button
+                key={p}
+                onClick={() => onPageChange(p)}
+                className={`px-3 py-1 rounded ${
+                  p === page
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            {/* last page */}
+            {showRightEllipsis && (
+              <>
+                <span className="px-2 select-none">…</span>
+                <button
+                  onClick={() => onPageChange(totalPages)}
+                  className={`px-3 py-1 rounded ${
+                    page === totalPages
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={() => page < totalPages && onPageChange(page + 1)}
+              disabled={page === totalPages}
+              className="p-2 border rounded disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
+              aria-label="Trang sau"
+            >
+              <FaChevronRight />
+            </button>
           </div>
         </div>
-
-        <div className="flex items-center flex-wrap justify-start gap-1 sm:gap-2 text-sm text-gray-600 dark:text-gray-300">
-          <button
-            onClick={() => page > 1 && onPageChange(page - 1)}
-            disabled={page === 1}
-            className="p-2 border rounded disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <FaChevronLeft />
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              onClick={() => onPageChange(p)}
-              className={`px-3 py-1 rounded ${
-                p === page
-                  ? "bg-blue-500 text-white"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-
-          <button
-            onClick={() => page < totalPages && onPageChange(page + 1)}
-            disabled={page === totalPages}
-            className="p-2 border rounded disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <FaChevronRight />
-          </button>
-        </div>
-      </div>
+      )}
 
       <Modal
         opened={isDeleteModalOpen}
