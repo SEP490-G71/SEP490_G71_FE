@@ -175,7 +175,6 @@ const MedicalExaminationPage = () => {
     userInfo?.userId,
   ]);
 
-  // NEW: sort lịch sử chuyển phòng theo thời gian tăng dần (an toàn phía FE)
   const sortedTransfers = useMemo(() => {
     const items = recordDetail?.roomTransfers ?? [];
     return [...items]
@@ -187,7 +186,6 @@ const MedicalExaminationPage = () => {
       );
   }, [recordDetail?.roomTransfers]);
 
-  // NEW: bản ghi chuyển phòng mới nhất
   const lastTransfer = useMemo(() => {
     return sortedTransfers.length
       ? sortedTransfers[sortedTransfers.length - 1]
@@ -204,7 +202,6 @@ const MedicalExaminationPage = () => {
     return "";
   }, [sortedTransfers]);
 
-  // NEW: khóa thao tác nếu hồ sơ đang ở phòng khác
   const lockedByTransfer = useMemo(() => {
     if (!lastTransfer) return false;
     const currentDeptId = department?.id ?? null;
@@ -225,22 +222,38 @@ const MedicalExaminationPage = () => {
       setSummary(latestConclusionText || "");
     }
   }, [isFinal, recordDetail?.summary, latestConclusionText]);
+  type FormValues = {
+    appointmentDate: Date;
+    doctor: string;
+    department: string;
+    symptoms: string;
+    notes: string;
+    temperature: number | null;
+    respiratoryRate: number | null;
+    bloodPressure: string;
+    heartRate: number | null;
+    heightCm: number | null;
+    weightKg: number | null;
+    bmi: number | null;
+    spo2: number | null;
+    diagnosisText: string;
+  };
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     initialValues: {
       appointmentDate: new Date(),
       doctor: "",
       department: "",
       symptoms: "",
-      notes: "Không",
-      temperature: 0,
-      respiratoryRate: 0,
+      notes: "",
+      temperature: null,
+      respiratoryRate: null,
       bloodPressure: "",
-      heartRate: 0,
-      heightCm: 0,
-      weightKg: 0,
-      bmi: 0,
-      spo2: 0,
+      heartRate: null,
+      heightCm: null,
+      weightKg: null,
+      bmi: null,
+      spo2: null,
       diagnosisText: "",
     },
     validate: {
@@ -404,6 +417,9 @@ const MedicalExaminationPage = () => {
     await fetchMedicalRecordDetail(record.id);
   };
 
+  const toNumberOrNull = (v: any) =>
+    v === "" || v === null || v === undefined ? null : Number(v);
+
   const handleSave = async () => {
     if (saving) return;
 
@@ -438,20 +454,22 @@ const MedicalExaminationPage = () => {
         visitId: selectedPatient.id,
         diagnosisText:
           form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
-        temperature: form.values.temperature,
-        respiratoryRate: form.values.respiratoryRate,
-        bloodPressure: form.values.bloodPressure,
-        heartRate: form.values.heartRate,
-        heightCm: form.values.heightCm,
-        weightKg: form.values.weightKg,
-        bmi: form.values.bmi,
-        spo2: form.values.spo2,
-        notes: form.values.notes,
+
+        temperature: toNumberOrNull(form.values.temperature),
+        respiratoryRate: toNumberOrNull(form.values.respiratoryRate),
+        bloodPressure: form.values.bloodPressure ?? "",
+        heartRate: toNumberOrNull(form.values.heartRate),
+        heightCm: toNumberOrNull(form.values.heightCm),
+        weightKg: toNumberOrNull(form.values.weightKg),
+        bmi: toNumberOrNull(form.values.bmi),
+        spo2: toNumberOrNull(form.values.spo2),
+
+        notes: form.values.notes ?? "",
         services: servicesDto,
         markFinal: isFinal,
       };
 
-      await submitExamination(payload);
+      await submitExamination(payload as any);
       await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
       await refetchPatientDetail();
       updateFilters({
