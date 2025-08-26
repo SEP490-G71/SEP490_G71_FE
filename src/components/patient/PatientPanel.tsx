@@ -94,15 +94,22 @@ const PatientPanel = ({
 
   const [transferPage, setTransferPage] = useState(1);
   const [transferPageSize, setTransferPageSize] = useState(10);
+  const STATUS_ALL_EXCEPT_COMPLETED = useMemo(
+    () =>
+      Object.values(MedicalRecordStatus)
+        .filter((s) => s !== MedicalRecordStatus.COMPLETED)
+        .join(","),
+    []
+  );
 
   const inprogressBase = useMemo(
     () => ({
       roomNumber: department?.roomNumber ?? "",
       fromDate: dayjs(sharedDateFilters.fromDate).format("YYYY-MM-DD"),
       toDate: dayjs(sharedDateFilters.toDate).format("YYYY-MM-DD"),
-      status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
+      status: STATUS_ALL_EXCEPT_COMPLETED,
     }),
-    [department?.roomNumber, sharedDateFilters]
+    [department?.roomNumber, sharedDateFilters, STATUS_ALL_EXCEPT_COMPLETED]
   );
 
   const transferDateRange = useMemo(
@@ -355,7 +362,7 @@ const PatientPanel = ({
         patientName: "",
         patientPhone: "",
         medicalRecordCode: "",
-        status: "",
+        status: STATUS_ALL_EXCEPT_COMPLETED,
         fromDate: todayStr,
         toDate: todayStr,
         roomNumber: department?.roomNumber ?? "",
@@ -383,7 +390,7 @@ const PatientPanel = ({
         roomNumber: department.roomNumber,
         fromDate: todayStr,
         toDate: todayStr,
-        status: `${MedicalRecordStatus.TESTING},${MedicalRecordStatus.WAITING_FOR_RESULT}`,
+        status: STATUS_ALL_EXCEPT_COMPLETED,
       });
       setHasFetchedInprogress(true);
     }
