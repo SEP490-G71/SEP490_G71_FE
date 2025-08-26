@@ -46,7 +46,7 @@ interface Props {
 const PatientDetailSection: React.FC<Props> = ({
   detail,
   form,
-  summaryValue,
+
   onSummaryChange,
   onSave,
   isFinal,
@@ -75,11 +75,26 @@ const PatientDetailSection: React.FC<Props> = ({
   const [hasSavedConclusion, setHasSavedConclusion] = React.useState(false);
   const [hasSavedFinal, setHasSavedFinal] = React.useState(false);
 
+  const [summaryDraft, setSummaryDraft] = React.useState("");
+
+  // 2) Xác định lần chuyển phòng hiện tại (bạn đang có latestTransfer)
+  const latestTransfer = React.useMemo(() => {
+    const list = detail.roomTransfers ?? [];
+    if (list.length === 0) return undefined;
+    return [...list].sort(
+      (a, b) =>
+        new Date(b.transferTime ?? 0).getTime() -
+        new Date(a.transferTime ?? 0).getTime()
+    )[0];
+  }, [detail.roomTransfers]);
+
   React.useEffect(() => {
-    setUiIsFinal(isFinal);
+    setSummaryDraft(latestTransfer?.conclusionText ?? "");
+    // đồng bộ ngược cho cha nếu cần lưu ngoài
+    onSummaryChange(latestTransfer?.conclusionText ?? "");
     setHasSavedConclusion(false);
     setHasSavedFinal(false);
-  }, [detail?.medicalRecordCode]);
+  }, [latestTransfer?.id]);
 
   React.useEffect(() => {
     if (uiIsFinal) setHasSavedFinal(false);
@@ -122,18 +137,29 @@ const PatientDetailSection: React.FC<Props> = ({
   };
 
   // === KẾT LUẬN TRƯỚC ĐÓ ===
+  // const previousConclusions = React.useMemo(() => {
+  //   const items = [...(detail.roomTransfers ?? [])].sort(
+  //     (a, b) =>
+  //       new Date(a.transferTime ?? 0).getTime() -
+  //       new Date(b.transferTime ?? 0).getTime()
+  //   );
+  //   items.pop();
+  //   const filtered = items.filter(
+  //     (t) => t.conclusionText && t.conclusionText.trim() !== ""
+  //   );
+  //   return filtered.reverse();
+  // }, [detail.roomTransfers]);
   const previousConclusions = React.useMemo(() => {
-    const items = [...(detail.roomTransfers ?? [])].sort(
-      (a, b) =>
-        new Date(a.transferTime ?? 0).getTime() -
-        new Date(b.transferTime ?? 0).getTime()
-    );
-    items.pop();
-    const filtered = items.filter(
-      (t) => t.conclusionText && t.conclusionText.trim() !== ""
-    );
-    return filtered.reverse();
-  }, [detail.roomTransfers]);
+    const latestId = latestTransfer?.id;
+    return (detail.roomTransfers ?? [])
+      .filter((t) => t.id !== latestId) // loại lần hiện tại
+      .filter((t) => (t.conclusionText ?? "").trim() !== "")
+      .sort(
+        (a, b) =>
+          new Date(b.transferTime ?? 0).getTime() -
+          new Date(a.transferTime ?? 0).getTime()
+      );
+  }, [detail.roomTransfers, latestTransfer?.id]);
 
   const lockMsg = lockedByTransfer
     ? `Hồ sơ đã được chuyển sang phòng ${
@@ -366,8 +392,7 @@ const PatientDetailSection: React.FC<Props> = ({
               >
                 <Group justify="space-between" mb={6}>
                   <Text fw={600} size="sm">
-                    #{idx + 1} • {t.fromDepartment?.roomNumber ?? "—"} →{" "}
-                    {t.toDepartment?.roomNumber ?? "—"}
+                    #{idx + 1} • Phòng {t.fromDepartment?.roomNumber ?? "—"}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {t.transferTime
@@ -392,9 +417,12 @@ const PatientDetailSection: React.FC<Props> = ({
         <b>{uiIsFinal ? "Tổng kết" : "Kết luận"}</b>
       </Text>
       <Textarea
-        value={summaryValue}
-        onChange={(e) => onSummaryChange(e.currentTarget.value)}
-        placeholder={uiIsFinal ? "Nhập tổng kết..." : "Nhập kết luận..."} // ✅
+        value={summaryDraft}
+        onChange={(e) => {
+          setSummaryDraft(e.currentTarget.value);
+          onSummaryChange(e.currentTarget.value);
+        }}
+        placeholder={uiIsFinal ? "Nhập tổng kết..." : "Nhập kết luận..."}
         autosize
         minRows={2}
       />

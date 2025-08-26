@@ -7,7 +7,7 @@ const finishMedicalRecord = async (medicalRecordId: string) => {
       `/medical-records/${medicalRecordId}/complete`
     );
 
-    toast.success("✅ Đã kết thúc khám và cập nhật trạng thái hồ sơ");
+    // toast.success("✅ Đã kết thúc khám và cập nhật trạng thái hồ sơ");
     return response.data.result;
   } catch (error: any) {
     console.error("❌ Lỗi khi kết thúc khám:", error);
