@@ -52,9 +52,13 @@ const ClinicalPage = () => {
   const { fetchStaffsById } = useStaffs();
   const { department } = useMyDepartment();
 
-  const { orders: departmentOrders } = useMedicalOrdersByDepartment(
-    department?.id || ""
-  );
+  // const { orders: departmentOrders } = useMedicalOrdersByDepartment(
+  //   department?.id || ""
+  // );
+
+  const { orders: departmentOrders, refresh: refreshDepartmentOrders } =
+    useMedicalOrdersByDepartment(department?.id || "");
+
   const { records, loading, pagination, fetchMedicalRecords } =
     useMedicalRecordList();
   const { recordDetail, fetchMedicalRecordDetail } = useMedicalRecordDetail();
@@ -205,6 +209,7 @@ const ClinicalPage = () => {
     resetDetailView();
     setSelectedRecordId(record.id);
     await fetchMedicalRecordDetail(record.id);
+    await refreshDepartmentOrders();
   };
 
   const displayedRecords = records;
@@ -327,6 +332,7 @@ const ClinicalPage = () => {
                 }
                 onSubmit={async () => {
                   await fetchMedicalRecordDetail(selectedRecordId!);
+                  await refreshDepartmentOrders();
                   handleCloseOrder();
                 }}
                 onCancel={handleCloseOrder}
