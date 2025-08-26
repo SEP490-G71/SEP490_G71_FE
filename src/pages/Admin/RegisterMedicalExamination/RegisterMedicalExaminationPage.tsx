@@ -628,7 +628,7 @@ export default function RegisterMedicalExaminationPage() {
                 setSortDirection(dir);
               }}
               showActions={false}
-              hidePagination={totalTodayPatients <= pageSize}
+              // hidePagination={totalTodayPatients <= pageSize}
               pageSizeOptions={setting?.paginationSizeList
                 ?.slice()
                 ?.sort((a, b) => a - b)}
@@ -1030,7 +1030,7 @@ export default function RegisterMedicalExaminationPage() {
                 onPageChange={setOnlinePage}
                 onPageSizeChange={setOnlinePageSize}
                 showActions={false}
-                hidePagination={totalTodayPatients <= pageSize}
+                // hidePagination={totalTodayPatients <= pageSize}
                 pageSizeOptions={setting?.paginationSizeList
                   ?.slice()
                   .sort((a, b) => a - b)}
