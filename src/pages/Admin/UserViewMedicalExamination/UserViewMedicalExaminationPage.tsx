@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useUserViewMedicalExamination from "../../../hooks/UserViewMedicalExamination/useUserViewMedicalExamination";
 import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExamination/UserViewMedicalExamination";
 import CustomTable from "../../../components/common/CustomTable";
@@ -94,19 +94,18 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
 const UserViewMedicalExaminationPage: React.FC = () => {
   const { queuePatients, loading } = useUserViewMedicalExamination();
   const { setting } = useSettingAdminService();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
 
-  useEffect(() => {
-    if (setting?.paginationSizeList?.length) {
-      setPageSize(setting.paginationSizeList[0]);
-    }
-  }, [setting]);
+  const [roomPage, setRoomPage] = useState<Record<string, number>>({});
+  const [roomPageSize, setRoomPageSize] = useState<Record<string, number>>({});
 
-  const getProcessedQueuePatients = (): Record<
-    string,
-    QueuePatientsResponse[]
-  > => {
+  // pageSize mặc định
+  const defaultPageSize = useMemo(
+    () =>
+      setting?.paginationSizeList?.length ? setting.paginationSizeList[0] : 5,
+    [setting]
+  );
+
+  const groupedPatients = useMemo(() => {
     const grouped: Record<string, QueuePatientsResponse[]> = {};
     queuePatients.forEach((p) => {
       const key = p.roomNumber?.toString() ?? "NO_ROOM";
@@ -116,34 +115,63 @@ const UserViewMedicalExaminationPage: React.FC = () => {
 
     const result: Record<string, QueuePatientsResponse[]> = {};
     Object.entries(grouped).forEach(([room, group]) => {
-      const sorted = [...group].sort((a, b) => {
-        const priority = (status: string) => {
-          if (status === "WAITING") return 0;
-          if (status === "CALLING") return 1;
-          if (status === "IN_PROGRESS") return 2;
-          if (status === "AWAITING_RESULT") return 3;
-          if (status === "DONE") return 99;
-          if (status === "CANCELED") return 100;
-          return 50;
-        };
-        return priority(a.status) - priority(b.status);
-      });
-
-      const updated = sorted.map((p) => {
-        const modified = { ...p };
-        if (p.status === "WAITING" && p.calledTime) {
-          modified.status = "CALLING";
-        }
-        return modified;
-      });
-
+      const priority = (status: string) => {
+        if (status === "WAITING") return 0;
+        if (status === "CALLING") return 1;
+        if (status === "IN_PROGRESS") return 2;
+        if (status === "AWAITING_RESULT") return 3;
+        if (status === "DONE") return 99;
+        if (status === "CANCELED") return 100;
+        return 50;
+      };
+      const sorted = [...group].sort(
+        (a, b) => priority(a.status) - priority(b.status)
+      );
+      const updated = sorted.map((p) =>
+        p.status === "WAITING" && p.calledTime ? { ...p, status: "CALLING" } : p
+      );
       result[room] = updated;
     });
 
     return result;
-  };
+  }, [queuePatients]);
 
-  const groupedPatients = getProcessedQueuePatients();
+  useEffect(() => {
+    const nextPages: Record<string, number> = { ...roomPage };
+    const nextSizes: Record<string, number> = { ...roomPageSize };
+
+    Object.keys(groupedPatients).forEach((room) => {
+      if (!nextPages[room]) nextPages[room] = 1;
+      if (!nextSizes[room]) nextSizes[room] = defaultPageSize;
+    });
+
+    // Thu gọn state nếu phòng biến mất
+    Object.keys(nextPages).forEach((room) => {
+      if (!groupedPatients[room]) {
+        delete nextPages[room];
+        delete nextSizes[room];
+      }
+    });
+
+    setRoomPage(nextPages);
+    setRoomPageSize(nextSizes);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedPatients, defaultPageSize]);
+
+  // Khi tổng số bản ghi giảm, đảm bảo trang hiện tại không vượt quá tổng trang
+  useEffect(() => {
+    const nextPages: Record<string, number> = { ...roomPage };
+    Object.entries(groupedPatients).forEach(([room, list]) => {
+      const size = roomPageSize[room] ?? defaultPageSize;
+      const totalPages = Math.max(1, Math.ceil(list.length / size));
+      if ((roomPage[room] ?? 1) > totalPages) nextPages[room] = totalPages;
+    });
+    setRoomPage(nextPages);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedPatients, roomPageSize, defaultPageSize]);
+
+  const getPage = (room: string) => roomPage[room] ?? 1;
+  const getPageSize = (room: string) => roomPageSize[room] ?? defaultPageSize;
 
   return (
     <div>
@@ -177,9 +205,12 @@ const UserViewMedicalExaminationPage: React.FC = () => {
             }}
           >
             {Object.entries(groupedPatients).map(([room, patients]) => {
+              const page = getPage(room);
+              const size = getPageSize(room);
+
               const paginatedPatients = patients
-                .slice((page - 1) * pageSize, page * pageSize)
-                .map((p, i) => ({ ...p, index: (page - 1) * pageSize + i }));
+                .slice((page - 1) * size, page * size)
+                .map((p, i) => ({ ...p, index: (page - 1) * size + i }));
 
               return (
                 <div
@@ -213,12 +244,17 @@ const UserViewMedicalExaminationPage: React.FC = () => {
                       data={paginatedPatients}
                       columns={columns}
                       page={page}
-                      pageSize={pageSize}
+                      pageSize={size}
                       totalItems={patients.length}
-                      onPageChange={setPage}
-                      onPageSizeChange={(size) => {
-                        setPageSize(size);
-                        setPage(1);
+                      onPageChange={(p) =>
+                        setRoomPage((prev) => ({ ...prev, [room]: p }))
+                      }
+                      onPageSizeChange={(newSize) => {
+                        setRoomPageSize((prev) => ({
+                          ...prev,
+                          [room]: newSize,
+                        }));
+                        setRoomPage((prev) => ({ ...prev, [room]: 1 })); // reset về trang 1 khi đổi size
                       }}
                       showActions={false}
                       pageSizeOptions={setting?.paginationSizeList

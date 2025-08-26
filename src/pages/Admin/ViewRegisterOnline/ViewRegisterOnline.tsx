@@ -1,7 +1,7 @@
 import { Button, Select, TextInput, Modal, Group, Text } from "@mantine/core";
 import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import { useEffect, useState } from "react";
-import dayjs from "dayjs"; // [ADDED] format ISO 'YYYY-MM-DDTHH:mm:ss'
+import dayjs from "dayjs";
 import { useViewRegisterOnline } from "../../../hooks/ViewRegisterOnline/useViewRegisterOnline";
 import { OnlineRegisteredPatient } from "../../../types/Admin/ViewRegisterOnline/ViewRegisterOnline";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
@@ -11,7 +11,7 @@ const ViewRegisterOnlinePage = () => {
   const {
     fetchOnlinePatients,
     updateConfirmationStatus,
-    updateRegisteredAt, // [ADDED]
+    updateRegisteredAt,
     loading,
   } = useViewRegisterOnline();
 
@@ -28,7 +28,6 @@ const ViewRegisterOnlinePage = () => {
   );
   const [registeredAt, setRegisteredAt] = useState<Date | null>(new Date());
 
-  // [ADDED] state cho modal "Đổi lịch hẹn"
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [rescheduleRow, setRescheduleRow] =
     useState<OnlineRegisteredPatient | null>(null);
@@ -36,7 +35,6 @@ const ViewRegisterOnlinePage = () => {
     null
   );
 
-  // Hàm build filters từ state hiện tại
   const buildFilters = () => {
     const filters: any = {};
     if (searchFullNameInput) filters.fullName = searchFullNameInput;
@@ -253,6 +251,7 @@ const ViewRegisterOnlinePage = () => {
             valueFormat="DD/MM/YYYY HH:mm"
             placeholder="Chọn ngày giờ mới"
             clearable={false}
+            minDate={new Date()}
           />
 
           <Group justify="flex-end" mt="md">

@@ -1,8 +1,21 @@
-import { useEffect } from "react";
-import { Button, Modal, Text, TextInput, Group, Select } from "@mantine/core";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  Button,
+  Modal,
+  Text,
+  TextInput,
+  Group,
+  Select,
+  Paper,
+  Image,
+  Anchor,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import type { Hospital } from "../../types/Admin/LandingPageAdmin/Hospital";
 import useServicePackages from "../../hooks/LangdingPagesAdmin/useServicePackages";
+
+const BANK_CODE = "BIDV"; // ví dụ: "VCB", "MB", "BIDV", ...
+const ACCOUNT_NUMBER = "4271030587"; // số tài khoản nhận tiền
 
 const sanitizeCode = (s: string) =>
   s
@@ -10,6 +23,28 @@ const sanitizeCode = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/g, "");
+
+const formatVND = (n: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    currencyDisplay: "code",
+  }).format(n);
+
+const buildVietQRUrl = (
+  amount: number,
+  addInfo: string,
+  accountName: string
+) => {
+  const base = `https://img.vietqr.io/image/${BANK_CODE}-${ACCOUNT_NUMBER}-compact.png`;
+  const params = new URLSearchParams({
+    amount: String(amount),
+    addInfo,
+    accountName,
+    fixedAmount: "true",
+  });
+  return `${base}?${params.toString()}`;
+};
 
 const RegisterModal = ({
   visible,
@@ -24,7 +59,21 @@ const RegisterModal = ({
   loading: boolean;
   servicePackageId?: string;
 }) => {
-  const { servicePackages, fetchServicePackages } = useServicePackages();
+  const {
+    servicePackages,
+    fetchServicePackages,
+    loading: pkgLoading,
+  } = useServicePackages();
+
+  // Chỉ fetch gói 1 lần mỗi lần mở modal
+  const fetchedThisOpenRef = useRef(false);
+  useEffect(() => {
+    if (visible && !fetchedThisOpenRef.current) {
+      fetchServicePackages();
+      fetchedThisOpenRef.current = true;
+    }
+    if (!visible) fetchedThisOpenRef.current = false;
+  }, [visible, fetchServicePackages]);
 
   const form = useForm<Hospital>({
     initialValues: {
@@ -35,36 +84,42 @@ const RegisterModal = ({
       servicePackageId: servicePackageId || "",
     },
     validate: {
-      name: (value) =>
-        value.trim().length === 0 ? "Vui lòng nhập tên bệnh viện!" : null,
-
-      code: (value) => {
-        if (value.trim().length === 0) return "Vui lòng nhập mã bệnh viện!";
-        return /^[a-z0-9]+$/.test(value)
+      name: (v) =>
+        v.trim().length === 0 ? "Vui lòng nhập tên bệnh viện!" : null,
+      code: (v) =>
+        v.trim().length === 0
+          ? "Vui lòng nhập mã bệnh viện!"
+          : /^[a-z0-9]+$/.test(v)
           ? null
-          : "Mã chỉ gồm chữ thường không dấu và số (a-z, 0-9), không khoảng trắng/ký tự đặc biệt!";
-      },
-
-      email: (value) =>
-        /^\S+@\S+$/.test(value) ? null : "Email không hợp lệ!",
-      phone: (value) =>
-        /^[0-9]{10}$/.test(value) ? null : "Số điện thoại phải có 10 chữ số!",
-      servicePackageId: (value) =>
-        !value || value.trim().length === 0
-          ? "Vui lòng chọn gói dịch vụ!"
-          : null,
+          : "Mã chỉ gồm chữ thường không dấu và số (a-z, 0-9), không khoảng trắng/ký tự đặc biệt!",
+      email: (v) => (/^\S+@\S+$/.test(v) ? null : "Email không hợp lệ!"),
+      phone: (v) =>
+        /^[0-9]{10}$/.test(v) ? null : "Số điện thoại phải có 10 chữ số!",
+      servicePackageId: (v) =>
+        !v || v.trim().length === 0 ? "Vui lòng chọn gói dịch vụ!" : null,
     },
   });
 
-  useEffect(() => {
-    if (visible && servicePackages.length === 0) {
-      fetchServicePackages();
-    }
-  }, [visible, fetchServicePackages, servicePackages.length]);
+  // Lấy gói đã chọn
+  const selectedPackage = useMemo(
+    () => servicePackages.find((p) => p.id === form.values.servicePackageId),
+    [servicePackages, form.values.servicePackageId]
+  );
 
-  const handleSubmit = (values: Hospital) => {
-    onOk(values, form.reset);
-  };
+  // Tạo QR URL khi đã có tên BV và gói
+  const qrUrl = useMemo(() => {
+    if (!form.values.name || !selectedPackage) return "";
+    const amount = Number(selectedPackage.price || 0);
+    if (!amount || Number.isNaN(amount)) return "";
+
+    const addInfo = `Đã thanh toán thành công gói ${
+      selectedPackage.packageName
+    } với giá ${formatVND(amount)} cho bệnh viện ${form.values.name}`;
+
+    return buildVietQRUrl(amount, addInfo, form.values.name);
+  }, [form.values.name, selectedPackage]);
+
+  const handleSubmit = (values: Hospital) => onOk(values, form.reset);
 
   return (
     <Modal opened={visible} onClose={onCancel} title="" centered>
@@ -73,8 +128,8 @@ const RegisterModal = ({
           fontWeight: 700,
           paddingBottom: 8,
           borderBottom: "1px solid #e0e0e0",
-          fontSize: "20px",
-          marginBottom: "12px",
+          fontSize: 20,
+          marginBottom: 12,
         }}
       >
         Đăng ký dùng thử Medsoft
@@ -109,7 +164,7 @@ const RegisterModal = ({
             form.setFieldValue("code", sanitizeCode(e.currentTarget.value))
           }
           onKeyDown={(e) => {
-            if (e.key === " ") e.preventDefault(); // chặn khoảng trắng
+            if (e.key === " ") e.preventDefault();
           }}
           autoComplete="off"
           inputMode="text"
@@ -152,19 +207,32 @@ const RegisterModal = ({
               Gói đăng ký <span style={{ color: "red" }}>*</span>
             </span>
           }
-          placeholder="Chọn gói dịch vụ"
+          placeholder={pkgLoading ? "Đang tải..." : "Chọn gói dịch vụ"}
           data={(servicePackages ?? []).map((pkg) => ({
-            label: `${pkg.packageName} - ${new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-              currencyDisplay: "code",
-            }).format(pkg.price)}`,
+            label: `${pkg.packageName} - ${formatVND(Number(pkg.price || 0))}`,
             value: pkg.id,
           }))}
           {...form.getInputProps("servicePackageId")}
           mb="md"
-          disabled={loading}
+          disabled={loading || pkgLoading}
+          allowDeselect={false}
         />
+
+        {qrUrl && (
+          <Paper withBorder p="md" radius="md" mb="md">
+            <Text fw={600} mb={8}>
+              Mã QR thanh toán gói: {selectedPackage?.packageName} cho bệnh viện{" "}
+              {form.values.name}
+            </Text>
+            <Image src={qrUrl} alt="QR thanh toán VietQR" w={220} />
+            <Text size="sm" mt="xs">
+              Số tiền: <b>{formatVND(Number(selectedPackage?.price || 0))}</b>
+            </Text>
+            <Anchor href={qrUrl} target="_blank" rel="noopener" mt="xs">
+              Mở ảnh QR trong tab mới
+            </Anchor>
+          </Paper>
+        )}
 
         <Group justify="flex-end" gap="xs">
           <Button variant="default" onClick={onCancel} disabled={loading}>

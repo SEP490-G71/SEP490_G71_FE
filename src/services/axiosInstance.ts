@@ -45,7 +45,7 @@ axiosInstance.interceptors.response.use(
     if (status === 401) {
       if (!/\/auth\/login\b/.test(url)) {
         localStorage.removeItem("token");
-        window.location.replace("/signin");
+        window.location.replace("/home/signin");
       }
     }
 
