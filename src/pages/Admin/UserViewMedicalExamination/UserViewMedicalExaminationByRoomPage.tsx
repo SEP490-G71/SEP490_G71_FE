@@ -1,61 +1,53 @@
-import React, { useEffect, useRef, useState } from "react";
-import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExamination/UserViewMedicalExamination";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Title } from "@mantine/core";
 import CustomTable from "../../../components/common/CustomTable";
 import { Column } from "../../../types/table";
 import { useSettingAdminService } from "../../../hooks/setting/useSettingAdminService";
-import { Title } from "@mantine/core";
 import useMyDepartment from "../../../hooks/department-service/useMyDepartment";
 import useQueuePatientsByRoom from "../../../hooks/queue-patients/useQueuePatientsByRoom";
 import { speakWithViettel } from "../../../hooks/tts";
+import { QueuePatientsResponse } from "../../../types/Admin/UserViewMedicalExamination/UserViewMedicalExamination";
 
-const statusColor = (status: string): string => {
-  switch (status) {
-    case "WAITING":
-      return "#FFE082";
-    case "CALLING":
-      return "#FFB74D";
-    case "IN_PROGRESS":
-      return "#64B5F6";
-    case "AWAITING_RESULT":
-      return "#E0B0FF";
-    case "DONE":
-      return "#81C784";
-    case "CANCELED":
-      return "#EF5350";
-    default:
-      return "#E0E0E0";
-  }
-};
-const statusTextColor = (): string => "#000";
-const statusLabel = (status: string): string => {
-  switch (status) {
-    case "WAITING":
-      return "🕐 Chờ khám";
-    case "CALLING":
-      return "📢 Đang gọi";
-    case "IN_PROGRESS":
-      return "🧪 Đang khám";
-    case "AWAITING_RESULT":
-      return "⏳ Chờ kết quả";
-    case "DONE":
-      return "✔️ Đã khám";
-    case "CANCELED":
-      return "🚫 Đã qua lượt";
-    default:
-      return status;
-  }
-};
+const statusColor = (s: string) =>
+  s === "WAITING"
+    ? "#FFE082"
+    : s === "CALLING"
+    ? "#FFB74D"
+    : s === "IN_PROGRESS"
+    ? "#64B5F6"
+    : s === "AWAITING_RESULT"
+    ? "#E0B0FF"
+    : s === "DONE"
+    ? "#81C784"
+    : s === "CANCELED"
+    ? "#EF5350"
+    : "#E0E0E0";
+const statusTextColor = () => "#000";
+const statusLabel = (s: string) =>
+  s === "WAITING"
+    ? "🕐 Chờ khám"
+    : s === "CALLING"
+    ? "📢 Đang gọi"
+    : s === "IN_PROGRESS"
+    ? "🧪 Đang khám"
+    : s === "AWAITING_RESULT"
+    ? "⏳ Chờ kết quả"
+    : s === "DONE"
+    ? "✔️ Đã khám"
+    : s === "CANCELED"
+    ? "🚫 Đã qua lượt"
+    : s;
 
 const columns: Column<QueuePatientsResponse & { index: number }>[] = [
   {
     key: "index",
     label: "STT",
+    align: "left",
     render: (row) => (
       <span className="font-digital text-base font-medium">
         {row.index + 1}
       </span>
     ),
-    align: "left",
   },
   {
     key: "fullName",
@@ -68,10 +60,7 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
     label: "Thứ tự khám",
     align: "left",
     render: (row) => (
-      <span
-        className="font-digital text-base"
-        style={{ textAlign: "left", paddingLeft: "25px" }}
-      >
+      <span className="font-digital text-base" style={{ paddingLeft: 25 }}>
         {row.queueOrder}
       </span>
     ),
@@ -84,8 +73,7 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
       <span
         className="text-base"
         style={{
-          textAlign: "left",
-          paddingLeft: "20px",
+          paddingLeft: 20,
           fontWeight: 600,
           color: row.isPriority ? "green" : "red",
         }}
@@ -94,16 +82,16 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
       </span>
     ),
   },
-
   {
     key: "status",
     label: "Trạng thái",
+    align: "left",
     render: (row) => (
       <span
         style={{
           fontWeight: 600,
           padding: "4px 10px",
-          borderRadius: "6px",
+          borderRadius: 6,
           backgroundColor: statusColor(row.status),
           color: statusTextColor(),
           display: "inline-block",
@@ -112,115 +100,172 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
         {statusLabel(row.status)}
       </span>
     ),
-    align: "left",
   },
 ];
 
 const UserViewMedicalExaminationByRoomPage: React.FC = () => {
   const { department, loading: deptLoading } = useMyDepartment();
   const roomId = department?.id || "";
-  const { queuePatients, loading: queueLoading } =
-    useQueuePatientsByRoom(roomId);
+
+  const {
+    queuePatients,
+    loading: queueLoading,
+    refetch,
+  } = useQueuePatientsByRoom(roomId);
 
   const { setting } = useSettingAdminService();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
   useEffect(() => {
-    if (setting?.paginationSizeList?.length) {
+    if (setting?.paginationSizeList?.length)
       setPageSize(setting.paginationSizeList[0]);
-    }
   }, [setting]);
 
   const loading = deptLoading || queueLoading;
 
-  const announcersRef = useRef<Map<string, { timer: number; count: number }>>(
-    new Map()
+  const processedPatients = useMemo(() => {
+    const pri = (s: string) =>
+      s === "WAITING"
+        ? 0
+        : s === "CALLING"
+        ? 1
+        : s === "IN_PROGRESS"
+        ? 2
+        : s === "AWAITING_RESULT"
+        ? 3
+        : s === "DONE"
+        ? 99
+        : s === "CANCELED"
+        ? 100
+        : 50;
+
+    const normalized = (queuePatients || []).map((p) =>
+      p.status === "WAITING" && p.calledTime
+        ? { ...p, status: "CALLING" as const }
+        : p
+    );
+
+    normalized.sort((a, b) => {
+      const byStatus = pri(a.status) - pri(b.status);
+      if (byStatus) return byStatus;
+      const qa = typeof a.queueOrder === "number" ? a.queueOrder : 1e9;
+      const qb = typeof b.queueOrder === "number" ? b.queueOrder : 1e9;
+      if (qa !== qb) return qa - qb;
+      const ra = a.registeredTime ? new Date(a.registeredTime).getTime() : 9e15;
+      const rb = b.registeredTime ? new Date(b.registeredTime).getTime() : 9e15;
+      return ra - rb;
+    });
+
+    return normalized;
+  }, [queuePatients]);
+
+  const paginatedPatients = useMemo(
+    () =>
+      processedPatients
+        .slice((page - 1) * pageSize, page * pageSize)
+        .map((p, i) => ({ ...p, index: (page - 1) * pageSize + i })),
+    [processedPatients, page, pageSize]
   );
-  const INTERVAL_MS = 10000;
-  const MAX_REPEATS = Infinity;
 
   useEffect(() => {
-    if (!queuePatients?.length) {
-      for (const { timer } of announcersRef.current.values())
-        clearInterval(timer);
-      announcersRef.current.clear();
-      return;
-    }
+    setPage(1);
+  }, [queuePatients]);
 
-    const activeKeys = new Set<string>();
+  // ========== TTS runner duy nhất: đọc 1 vòng → refetch → lặp ==========
+  const latestPatientsRef = useRef<QueuePatientsResponse[]>([]);
+  useEffect(() => {
+    latestPatientsRef.current = queuePatients ?? [];
+  }, [queuePatients]);
 
-    queuePatients.forEach((p) => {
-      const isCalling =
-        p.status === "CALLING" || (p.status === "WAITING" && !!p.calledTime);
-      if (!isCalling) return;
+  const runVersionRef = useRef(0);
+  const LULL_POLL_MS = 5000; // khi không ai CALLING
+  const BETWEEN_PERSON_MS = 800; // nghỉ giữa 2 người
+  const GUARD_MS = 3200; // ước lượng thời lượng 1 câu
 
-      const key = `${p.id || p.fullName}-${p.calledTime || ""}`;
-      activeKeys.add(key);
+  const makeSpeech = (p: QueuePatientsResponse) => {
+    const roomNo = department?.roomNumber
+      ? `phòng ${department.roomNumber}`
+      : "phòng khám";
+    return `Mời bệnh nhân ${p.fullName} vào ${roomNo}.`;
+  };
 
-      if (!announcersRef.current.has(key)) {
-        const entry = { timer: 0 as unknown as number, count: 0 };
-        const roomNo = department?.roomNumber
-          ? `phòng ${department.roomNumber}`
-          : "phòng khám";
-        const text = `Mời bệnh nhân ${p.fullName} vào ${roomNo}.`;
+  useEffect(() => {
+    // khởi động runner mỗi khi room thay đổi
+    runVersionRef.current += 1;
+    const myVersion = runVersionRef.current;
+    let cancelled = false;
 
-        const run = () => {
-          if (entry.count >= MAX_REPEATS) {
-            clearInterval(entry.timer);
-            announcersRef.current.delete(key);
-            return;
-          }
-          entry.count += 1;
-          speakWithViettel(text).catch(() => {});
+    const sleep = (ms: number) =>
+      new Promise<void>((r) => {
+        const t = setTimeout(r, ms);
+        // nếu bị cancel thì kết thúc sớm
+        const stop = () => {
+          clearTimeout(t);
+          r();
         };
+        if (cancelled || myVersion !== runVersionRef.current) stop();
+      });
 
-        run();
-        entry.timer = window.setInterval(run, INTERVAL_MS);
-        announcersRef.current.set(key, entry);
-      }
-    });
+    const getCallers = () => {
+      const list = latestPatientsRef.current || [];
+      return list
+        .filter(
+          (p) =>
+            p.status === "CALLING" || (p.status === "WAITING" && !!p.calledTime)
+        )
+        .sort((a, b) => {
+          const qa = typeof a.queueOrder === "number" ? a.queueOrder : 1e9;
+          const qb = typeof b.queueOrder === "number" ? b.queueOrder : 1e9;
+          return qa - qb;
+        });
+    };
 
-    for (const [key, entry] of announcersRef.current.entries()) {
-      if (!activeKeys.has(key)) {
-        clearInterval(entry.timer);
-        announcersRef.current.delete(key);
+    (async () => {
+      while (!cancelled && myVersion === runVersionRef.current) {
+        if (document.hidden) {
+          await sleep(500);
+          continue;
+        }
+
+        const callers = getCallers();
+
+        if (callers.length === 0) {
+          // không ai CALLING → chờ 5s rồi refetch
+          await sleep(LULL_POLL_MS);
+          if (cancelled || myVersion !== runVersionRef.current) break;
+          try {
+            await refetch?.();
+          } catch {}
+          continue;
+        }
+
+        // có người → đọc 1 vòng snapshot
+        for (const p of callers) {
+          if (cancelled || myVersion !== runVersionRef.current) break;
+          if (document.hidden) break;
+          try {
+            await speakWithViettel(makeSpeech(p));
+          } catch {}
+          await sleep(GUARD_MS);
+          if (cancelled || myVersion !== runVersionRef.current) break;
+          await sleep(BETWEEN_PERSON_MS);
+          if (cancelled || myVersion !== runVersionRef.current) break;
+        }
+
+        if (cancelled || myVersion !== runVersionRef.current) break;
+        // kết thúc 1 vòng → refetch rồi lặp
+        try {
+          await refetch?.();
+        } catch {}
       }
-    }
+    })();
 
     return () => {
-      for (const { timer } of announcersRef.current.values())
-        clearInterval(timer);
-      announcersRef.current.clear();
+      cancelled = true;
+      runVersionRef.current += 1;
     };
-  }, [queuePatients, department?.roomNumber]);
-
-  const processedPatients = (() => {
-    const sorted = [...(queuePatients || [])].sort((a, b) => {
-      const priority = (status: string) => {
-        if (status === "WAITING") return 0;
-        if (status === "CALLING") return 1;
-        if (status === "IN_PROGRESS") return 2;
-        if (status === "AWAITING_RESULT") return 3;
-        if (status === "DONE") return 99;
-        if (status === "CANCELED") return 100;
-        return 50;
-      };
-      return priority(a.status) - priority(b.status);
-    });
-
-    return sorted.map((p) => {
-      const modified = { ...p };
-      if (p.status === "WAITING" && p.calledTime) {
-        modified.status = "CALLING";
-      }
-      return modified;
-    });
-  })();
-
-  const paginatedPatients = processedPatients
-    .slice((page - 1) * pageSize, page * pageSize)
-    .map((p, i) => ({ ...p, index: (page - 1) * pageSize + i }));
+  }, [department?.roomNumber, refetch]);
 
   return (
     <div style={{ minHeight: "100vh", width: "100%", margin: 0, padding: 0 }}>
@@ -240,7 +285,7 @@ const UserViewMedicalExaminationByRoomPage: React.FC = () => {
           maxWidth: 1400,
           margin: "0 auto",
           border: "1px solid #ddd",
-          borderRadius: "12px",
+          borderRadius: 12,
           overflow: "hidden",
           boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
           backgroundColor: "#fff",
@@ -266,7 +311,7 @@ const UserViewMedicalExaminationByRoomPage: React.FC = () => {
               showActions={false}
               pageSizeOptions={setting?.paginationSizeList
                 ?.slice()
-                .sort((a, b) => a - b)}
+                ?.sort((a, b) => a - b)}
             />
           )}
         </div>

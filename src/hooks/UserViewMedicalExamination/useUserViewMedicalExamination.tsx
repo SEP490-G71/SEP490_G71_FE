@@ -26,14 +26,11 @@ const useUserViewMedicalExamination = () => {
 
   const pollUpdates = async () => {
     try {
-      const res = await axiosInstance.get("/queue-patients/polling", {
-        timeout: 30000,
-      });
+      const res = await axiosInstance.get("/queue-patients/polling", {});
       if (res.data) setQueuePatients(res.data);
       pollUpdates(); // tiếp tục gọi lại
     } catch (err: any) {
       console.warn("Long-polling error:", err.message);
-      setTimeout(pollUpdates, 3000); // thử lại sau 3s
     }
   };
 

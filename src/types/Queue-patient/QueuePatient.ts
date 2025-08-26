@@ -19,6 +19,7 @@ export interface QueuePatient {
   specialization: string;
   status: Status;
   isPriority:boolean;
+  calledTime?: string | null;
 }
 
 export interface SearchQueueParams {
