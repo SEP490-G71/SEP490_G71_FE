@@ -6,4 +6,5 @@ export interface QueuePatientsResponse {
   roomNumber?: number;
   type: string;
   calledTime?: string | null;
+  isPriority?:boolean;
 }

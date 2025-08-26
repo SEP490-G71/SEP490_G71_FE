@@ -129,7 +129,7 @@ const navItemsByRole: Record<string, NavItem[]> = {
     {
       name: "Xem hàng chờ",
       icon: <FaClock />,
-      path: "/satff/view-medical-records-by-room",
+      path: "/staff/view-medical-records-by-room",
     },
     {
       name: "Lịch làm việc staff",
