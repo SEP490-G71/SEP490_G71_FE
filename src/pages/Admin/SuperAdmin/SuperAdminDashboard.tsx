@@ -1,3 +1,4 @@
+// src/pages/superadmin/SuperAdminDashboard.tsx
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstanceSuperAdmin from "../../../services/axiosInstanceSuperAdmin";
@@ -31,6 +32,17 @@ type Tenant = {
   createdAt?: string;
   created_at?: string;
   updatedAt?: string;
+};
+
+// [RENEW] kiểu dữ liệu gói dịch vụ (đoán trường phổ biến, vẫn an toàn nếu API trả thêm trường)
+type ServicePackage = {
+  id: string;
+  name?: string;
+  packageName?: string;
+  durationMonths?: number;
+  duration?: number;
+  price?: number;
+  amount?: number;
 };
 
 const toYMD = (d: Date | null) => (d ? dayjs(d).format("YYYY-MM-DD") : "");
@@ -335,6 +347,112 @@ export default function SuperAdminDashboard() {
       fetchTenants();
     }
   }, [activeTab]);
+
+  // =========================
+  // [RENEW] STATE & HELPERS
+  // =========================
+  const [renewModal, setRenewModal] = useState<{
+    open: boolean;
+    tenantCode: string;
+  }>({ open: false, tenantCode: "" });
+
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
+  const [postingRenew, setPostingRenew] = useState(false);
+
+  // [RENEW] mở modal & nạp danh sách gói
+  const openRenewModal = async (tenantCode: string) => {
+    setRenewModal({ open: true, tenantCode });
+    setSelectedPackageId("");
+    setLoadingPackages(true);
+    try {
+      const res = await axiosInstanceSuperAdmin.get("/service-packages");
+      const body = res.data?.result ?? res.data;
+      const list: ServicePackage[] = Array.isArray(body?.content)
+        ? body.content
+        : Array.isArray(body?.items)
+        ? body.items
+        : Array.isArray(body?.data)
+        ? body.data
+        : Array.isArray(body)
+        ? body
+        : [];
+
+      setPackages(
+        list
+          .filter((p) => {
+            if (!p || !(p as any).id) return false;
+
+            // Nếu API có field isTrial
+            if ((p as any).isTrial === true) return false;
+
+            // Nếu API có packageType
+            if ((p as any).packageType?.toUpperCase() === "TRIAL") return false;
+
+            // Nếu chỉ có tên, lọc theo chữ "dùng thử" hoặc "trial"
+            const label = ((p as any).name ?? (p as any).packageName ?? "")
+              .toString()
+              .toLowerCase();
+            if (label.includes("dùng thử") || label.includes("trial"))
+              return false;
+
+            return true;
+          })
+          .map((p) => ({
+            id: (p as any).id,
+            name: (p as any).name ?? (p as any).packageName,
+            packageName: (p as any).packageName ?? (p as any).name,
+            durationMonths:
+              (p as any).durationMonths ?? (p as any).duration ?? undefined,
+            price: (p as any).price ?? (p as any).amount,
+            amount: (p as any).amount ?? (p as any).price,
+          }))
+      );
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Không tải được danh sách gói dịch vụ"
+      );
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const submitRenew = async () => {
+    if (!renewModal.tenantCode) {
+      toast.error("Thiếu tenantCode");
+      return;
+    }
+    if (!selectedPackageId) {
+      toast.error("Vui lòng chọn gói trước khi gia hạn");
+      return;
+    }
+
+    setPostingRenew(true);
+    try {
+      await axiosInstanceSuperAdmin.post("/purchase-packages", {
+        tenantCode: renewModal.tenantCode,
+        packageId: selectedPackageId,
+      });
+      toast.success("Gia hạn thành công");
+      setRenewModal({ open: false, tenantCode: "" });
+      // có thể cập nhật thống kê/lịch sử nếu cần
+      if (activeTab === "tenants") {
+        await fetchTenants();
+      } else {
+        await fetchStats();
+        await fetchData(1, pageSize, filters);
+      }
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Gia hạn thất bại"
+      );
+    } finally {
+      setPostingRenew(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-screen-xl px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
@@ -681,10 +799,8 @@ export default function SuperAdminDashboard() {
                   <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
                     TRẠNG THÁI
                   </th>
-                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                    TẠO LÚC
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap text-right">
+
+                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap text-center">
                     HÀNH ĐỘNG
                   </th>
                 </tr>
@@ -734,14 +850,8 @@ export default function SuperAdminDashboard() {
                             {status || "UNKNOWN"}
                           </span>
                         </td>
-                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                          {t.createdAt
-                            ? formatDateUI(t.createdAt)
-                            : t.created_at
-                            ? formatDateUI(t.created_at)
-                            : ""}
-                        </td>
-                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-right">
+
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-center">
                           <div className="inline-flex gap-2">
                             <button
                               className="px-3 py-1.5 rounded-md border text-xs sm:text-sm hover:bg-gray-50"
@@ -758,6 +868,15 @@ export default function SuperAdminDashboard() {
                               title="Đặt INACTIVE"
                             >
                               {updating[code] ? "..." : "Tạm dừng"}
+                            </button>
+
+                            {/* [RENEW] nút Gia hạn */}
+                            <button
+                              className="px-3 py-1.5 rounded-md border text-xs sm:text-sm hover:bg-gray-50"
+                              onClick={() => openRenewModal(code)}
+                              title="Gia hạn gói"
+                            >
+                              Gia hạn
                             </button>
                           </div>
                         </td>
@@ -795,6 +914,93 @@ export default function SuperAdminDashboard() {
                 onClick={confirmUpdate}
               >
                 Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================
+          [RENEW] Modal Gia hạn
+          ========================= */}
+      {renewModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white w-[92%] max-w-lg rounded-lg shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Gia hạn tenant:{" "}
+              <span className="font-semibold">{renewModal.tenantCode}</span>
+            </h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm mb-1">Chọn gói</label>
+                <div className="border rounded">
+                  {loadingPackages ? (
+                    <div className="p-3 text-sm text-gray-600">Đang tải…</div>
+                  ) : packages.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-600">
+                      Không có gói khả dụng
+                    </div>
+                  ) : (
+                    <ul className="max-h-64 overflow-auto divide-y">
+                      {packages.map((p) => {
+                        const label =
+                          p.packageName ||
+                          p.name ||
+                          `Gói ${p.durationMonths ?? ""} tháng`;
+                        const duration =
+                          p.durationMonths ?? p.duration ?? undefined;
+                        const price = p.amount ?? p.price;
+                        return (
+                          <li
+                            key={p.id}
+                            className={`p-3 cursor-pointer hover:bg-gray-50 ${
+                              selectedPackageId === p.id ? "bg-blue-50" : ""
+                            }`}
+                            onClick={() => setSelectedPackageId(p.id)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium">{label}</div>
+                                <div className="text-xs text-gray-600">
+                                  {duration
+                                    ? `Thời hạn: ${duration} tháng`
+                                    : " "}
+                                </div>
+                              </div>
+                              <div className="text-sm font-semibold tabular-nums">
+                                {price ? formatVND(price) : ""}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded border hover:bg-gray-100"
+                onClick={() => setRenewModal({ open: false, tenantCode: "" })}
+                disabled={postingRenew}
+              >
+                Đóng
+              </button>
+              <button
+                className={`px-4 py-2 rounded text-white ${
+                  postingRenew
+                    ? "bg-blue-400"
+                    : selectedPackageId
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-blue-300 cursor-not-allowed"
+                }`}
+                onClick={submitRenew}
+                disabled={postingRenew || !selectedPackageId}
+              >
+                {postingRenew ? "Đang xử lý…" : "Xác nhận gia hạn"}
               </button>
             </div>
           </div>

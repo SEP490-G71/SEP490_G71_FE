@@ -1,14 +1,19 @@
-import { Button, Select, TextInput } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
+import { Button, Select, TextInput, Modal, Group, Text } from "@mantine/core";
+import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import { useEffect, useState } from "react";
+import dayjs from "dayjs"; // [ADDED] format ISO 'YYYY-MM-DDTHH:mm:ss'
 import { useViewRegisterOnline } from "../../../hooks/ViewRegisterOnline/useViewRegisterOnline";
 import { OnlineRegisteredPatient } from "../../../types/Admin/ViewRegisterOnline/ViewRegisterOnline";
 import { FloatingLabelWrapper } from "../../../components/common/FloatingLabelWrapper";
 import CustomTable from "../../../components/common/CustomTable";
 
 const ViewRegisterOnlinePage = () => {
-  const { fetchOnlinePatients, updateConfirmationStatus, loading } =
-    useViewRegisterOnline();
+  const {
+    fetchOnlinePatients,
+    updateConfirmationStatus,
+    updateRegisteredAt, // [ADDED]
+    loading,
+  } = useViewRegisterOnline();
 
   const [patients, setPatients] = useState<OnlineRegisteredPatient[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -21,7 +26,15 @@ const ViewRegisterOnlinePage = () => {
   const [searchIsConfirmed, setSearchIsConfirmed] = useState<string | null>(
     null
   );
-  const [registeredAt, setRegisteredAt] = useState<Date | null>(new Date()); // Mặc định ngày hôm nay
+  const [registeredAt, setRegisteredAt] = useState<Date | null>(new Date());
+
+  // [ADDED] state cho modal "Đổi lịch hẹn"
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleRow, setRescheduleRow] =
+    useState<OnlineRegisteredPatient | null>(null);
+  const [rescheduleDateTime, setRescheduleDateTime] = useState<Date | null>(
+    null
+  );
 
   // Hàm build filters từ state hiện tại
   const buildFilters = () => {
@@ -65,23 +78,31 @@ const ViewRegisterOnlinePage = () => {
     setSearchIsConfirmed(null);
     setRegisteredAt(null);
     setPage(1);
-
     loadPatients({});
   };
 
+  const openReschedule = (row: OnlineRegisteredPatient) => {
+    setRescheduleRow(row);
+    setRescheduleDateTime(new Date(row.registeredAt));
+    setRescheduleOpen(true);
+  };
+
+  const confirmReschedule = async () => {
+    if (!rescheduleRow || !rescheduleDateTime) return;
+    const iso = dayjs(rescheduleDateTime)
+      .second(0)
+      .millisecond(0)
+      .format("YYYY-MM-DDTHH:mm:ss");
+    await updateRegisteredAt(rescheduleRow.id, iso);
+    setRescheduleOpen(false);
+    setRescheduleRow(null);
+    await loadPatients();
+  };
+
   const columns = [
-    {
-      key: "fullName",
-      label: "Họ tên",
-    },
-    {
-      key: "email",
-      label: "Email",
-    },
-    {
-      key: "phoneNumber",
-      label: "SĐT",
-    },
+    { key: "fullName", label: "Họ tên" },
+    { key: "email", label: "Email" },
+    { key: "phoneNumber", label: "SĐT" },
     {
       key: "registeredAt",
       label: "Thời gian đăng ký",
@@ -99,6 +120,31 @@ const ViewRegisterOnlinePage = () => {
         >
           {row.isConfirmed ? "Đã xác nhận" : "Chưa xác nhận"}
         </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Thao tác",
+
+      render: (row: OnlineRegisteredPatient) => (
+        <div className="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={() =>
+              updateConfirmationStatus(row.id, !row.isConfirmed).then(
+                loadPatients
+              )
+            }
+          >
+            {row.isConfirmed ? "Bỏ xác nhận" : "Xác nhận"}
+          </Button>
+
+          {/* Nút mới: Đổi lịch hẹn */}
+          <Button size="xs" variant="light" onClick={() => openReschedule(row)}>
+            Đổi lịch hẹn
+          </Button>
+        </div>
       ),
     },
   ];
@@ -186,11 +232,39 @@ const ViewRegisterOnlinePage = () => {
         onPageChange={(p) => setPage(p)}
         onPageSizeChange={(s) => setPageSize(s)}
         loading={loading}
-        showActions
-        onEdit={(row) =>
-          updateConfirmationStatus(row.id, !row.isConfirmed).then(loadPatients)
-        }
+        showActions={false}
       />
+
+      <Modal
+        opened={rescheduleOpen}
+        onClose={() => setRescheduleOpen(false)}
+        title="Đổi lịch hẹn"
+        centered
+      >
+        <div className="space-y-3">
+          <Text size="sm" c="dimmed">
+            Chọn ngày & giờ đăng ký mới cho:{" "}
+            <strong>{rescheduleRow?.fullName}</strong>
+          </Text>
+
+          <DateTimePicker
+            value={rescheduleDateTime}
+            onChange={(v) => setRescheduleDateTime(v as Date | null)}
+            valueFormat="DD/MM/YYYY HH:mm"
+            placeholder="Chọn ngày giờ mới"
+            clearable={false}
+          />
+
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={() => setRescheduleOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={confirmReschedule} disabled={!rescheduleDateTime}>
+              Lưu
+            </Button>
+          </Group>
+        </div>
+      </Modal>
     </div>
   );
 };
