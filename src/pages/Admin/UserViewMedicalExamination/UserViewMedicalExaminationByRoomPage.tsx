@@ -66,10 +66,35 @@ const columns: Column<QueuePatientsResponse & { index: number }>[] = [
   {
     key: "queueOrder",
     label: "Thứ tự khám",
+    align: "left",
     render: (row) => (
-      <span className="font-digital text-base">{row.queueOrder}</span>
+      <span
+        className="font-digital text-base"
+        style={{ textAlign: "left", paddingLeft: "25px" }}
+      >
+        {row.queueOrder}
+      </span>
     ),
   },
+  {
+    key: "isPriority",
+    label: "Ưu tiên",
+    align: "left",
+    render: (row) => (
+      <span
+        className="text-base"
+        style={{
+          textAlign: "left",
+          paddingLeft: "20px",
+          fontWeight: 600,
+          color: row.isPriority ? "green" : "red",
+        }}
+      >
+        {row.isPriority ? "✔️" : "--"}
+      </span>
+    ),
+  },
+
   {
     key: "status",
     label: "Trạng thái",

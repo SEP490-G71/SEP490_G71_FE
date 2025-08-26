@@ -96,7 +96,7 @@ export default function App() {
               element={<UserViewMedicalExaminationPage />}
             />
             <Route
-              path="/satff/view-medical-records-by-room"
+              path="/staff/view-medical-records-by-room"
               element={<UserViewMedicalExaminationByRoomPage />}
             />
             <Route
