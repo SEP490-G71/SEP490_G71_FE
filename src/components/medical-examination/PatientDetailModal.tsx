@@ -52,7 +52,7 @@ const PatientDetailSection: React.FC<Props> = ({
   isFinal,
   onAddService,
   onFinalChange,
-
+  summaryValue,
   onEndExamination,
   onOpenTransfer,
   lockedByTransfer = false,
@@ -100,6 +100,10 @@ const PatientDetailSection: React.FC<Props> = ({
     if (uiIsFinal) setHasSavedFinal(false);
     else setHasSavedConclusion(false);
   }, [uiIsFinal]);
+
+  React.useEffect(() => {
+    setSummaryDraft(summaryValue ?? "");
+  }, [summaryValue]);
 
   const DeptCell = ({
     dept,
@@ -416,6 +420,7 @@ const PatientDetailSection: React.FC<Props> = ({
       <Text>
         <b>{uiIsFinal ? "Tổng kết" : "Kết luận"}</b>
       </Text>
+
       <Textarea
         value={summaryDraft}
         onChange={(e) => {
@@ -426,6 +431,7 @@ const PatientDetailSection: React.FC<Props> = ({
         autosize
         minRows={2}
       />
+
       {/* Switch đánh dấu hoàn tất */}
       <Group gap="sm" align="center" mt="xs">
         <Text fw={600}>

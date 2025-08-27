@@ -13,7 +13,7 @@ const useUserViewMedicalExamination = () => {
   const fetchQueuePatients = async () => {
     try {
       const res = await axiosInstance.get("/queue-patients");
-      setQueuePatients(res.data.result);
+      setQueuePatients(res.data.result ?? []);
     } catch (err: any) {
       console.error("Error fetching queue patients", err);
       toast.error(
@@ -24,22 +24,19 @@ const useUserViewMedicalExamination = () => {
     }
   };
 
-  const pollUpdates = async () => {
-    try {
-      const res = await axiosInstance.get("/queue-patients/polling", {});
-      if (res.data) setQueuePatients(res.data);
-      pollUpdates(); // tiếp tục gọi lại
-    } catch (err: any) {
-      console.warn("Long-polling error:", err.message);
-    }
-  };
-
   useEffect(() => {
+    // fetch lần đầu
     fetchQueuePatients();
-    pollUpdates();
+
+    // set interval 5s refetch
+    const interval = setInterval(() => {
+      fetchQueuePatients();
+    }, 5000);
+
+    return () => clearInterval(interval); // cleanup khi unmount
   }, []);
 
-  return { queuePatients, loading };
+  return { queuePatients, loading, refetch: fetchQueuePatients };
 };
 
 export default useUserViewMedicalExamination;

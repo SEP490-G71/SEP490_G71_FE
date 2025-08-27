@@ -31,9 +31,15 @@ const useQueuePatientsByRoom = (roomId: string) => {
     if (!roomId) return;
     setLoading(true);
     fetchQueuePatients();
+
+    // Tạo interval refetch mỗi 2 giây
+    const interval = setInterval(() => {
+      fetchQueuePatients();
+    }, 2000);
+
     return () => {
-      // vô hiệu hoá mọi request cũ
       versionRef.current++;
+      clearInterval(interval);
     };
   }, [roomId, fetchQueuePatients]);
 
@@ -41,3 +47,4 @@ const useQueuePatientsByRoom = (roomId: string) => {
 };
 
 export default useQueuePatientsByRoom;
+
