@@ -82,7 +82,7 @@ export const CreatePatientModal = ({
           label="Họ"
           placeholder="Nhập họ"
           required
-          {...form.getInputProps("lastName")}
+          {...form.getInputProps("firstName")}
           disabled={isViewMode}
         />
         <TextInput
@@ -96,7 +96,7 @@ export const CreatePatientModal = ({
           label="Tên"
           placeholder="Nhập tên"
           required
-          {...form.getInputProps("firstName")}
+          {...form.getInputProps("lastName")}
           mt="sm"
           disabled={isViewMode}
         />
