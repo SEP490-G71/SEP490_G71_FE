@@ -2,12 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
+// import Videos from "./pages/UiElements/Videos";
+// import Images from "./pages/UiElements/Images";
+// import Alerts from "./pages/UiElements/Alerts";
+// import Badges from "./pages/UiElements/Badges";
+// import Avatars from "./pages/UiElements/Avatars";
+// import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
@@ -65,6 +65,7 @@ import SuperAdminSignIn from "./pages/AuthPages/SuperAdminSignIn";
 import SuperAdminDashboard from "./pages/Admin/SuperAdmin/SuperAdminDashboard";
 import { AireportPages } from "./pages/Admin/AiReport/AireportPages";
 import UserViewMedicalExaminationByRoomPage from "./pages/Admin/UserViewMedicalExamination/UserViewMedicalExaminationByRoomPage";
+import ProtectedInShiftOutlet from "./components/common/ProtectedInShiftOutlet";
 
 const theme = createTheme({
   fontFamily: "Poppins, sans-serif",
@@ -78,8 +79,45 @@ export default function App() {
         <Routes>
           <Route path="/home" element={<LandingPageUser />} />
           <Route path="/" element={<LandingPageAdminPage />} />
+
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
+            {/*not in shift*/}
+            <Route element={<ProtectedInShiftOutlet />}>
+              <Route
+                path="/staff/view-medical-records-by-room"
+                element={<UserViewMedicalExaminationByRoomPage />}
+              />
+              {/*RECEPTIONIST*/}
+              <Route
+                path="/admin/register-medical-examination"
+                element={<RegisterMedicalExaminationPage />}
+              />
+              <Route
+                path="/admin/register-online"
+                element={<ViewRegisterOnlinePage />}
+              />
+              <Route
+                path="/admin/view-medical-records"
+                element={<UserViewMedicalExaminationPage />}
+              />
+              {/* Examination Process  Page */}
+              <Route
+                path="/admin/medical-examination"
+                element={<MedicalExaminationPage />}
+              />
+
+              <Route
+                path="/admin/medical-examination/billing"
+                element={<BillingPage />}
+              />
+
+              <Route
+                path="/admin/medical-examination/clinical"
+                element={<ClinicalPage />}
+              />
+            </Route>
+
             <Route index path="/admin/dashboard" element={<Home />} />
             <Route
               path="/admin/medical-service"
@@ -91,14 +129,7 @@ export default function App() {
             <Route path="/admin/departments" element={<DepartmentPage />} />
             <Route path="/admin/invoice" element={<InvoicePage />} />
             <Route path="/admin/patients" element={<PatientManagementPage />} />
-            <Route
-              path="/admin/view-medical-records"
-              element={<UserViewMedicalExaminationPage />}
-            />
-            <Route
-              path="/staff/view-medical-records-by-room"
-              element={<UserViewMedicalExaminationByRoomPage />}
-            />
+
             <Route
               path="/admin/medical-records"
               element={<MedicalRecordPage />}
@@ -107,10 +138,7 @@ export default function App() {
               path="/admin/specializations"
               element={<SpecializationsPages />}
             />
-            <Route
-              path="/admin/register-medical-examination"
-              element={<RegisterMedicalExaminationPage />}
-            />
+
             <Route path="/admin/work-schedule" element={<WorkSchedulePage />} />
             <Route path="/admin/divide-shift" element={<DivideShiftPage />} />
             <Route
@@ -146,10 +174,6 @@ export default function App() {
               path="/admin/medical-templates"
               element={<MedicalTemplatesPage />}
             />
-            <Route
-              path="/admin/register-online"
-              element={<ViewRegisterOnlinePage />}
-            />
 
             <Route path="/admin/settings" element={<SettingAdminPage />} />
 
@@ -166,34 +190,18 @@ export default function App() {
             <Route path="/basic-tables" element={<BasicTables />} />
 
             {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
+            {/* <Route path="/alerts" element={<Alerts />} /> */}
+            {/* <Route path="/avatars" element={<Avatars />} /> */}
+            {/* <Route path="/badge" element={<Badges />} /> */}
+            {/* <Route path="/buttons" element={<Buttons />} /> */}
+            {/* <Route path="/images" element={<Images />} /> */}
+            {/* <Route path="/videos" element={<Videos />} /> */}
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/account-settings" element={<ChangePasswordForm />} />
 
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
-
-            {/* Examination Process  Page */}
-            <Route
-              path="/admin/medical-examination"
-              element={<MedicalExaminationPage />}
-            />
-
-            <Route
-              path="/admin/medical-examination/billing"
-              element={<BillingPage />}
-            />
-
-            <Route
-              path="/admin/medical-examination/clinical"
-              element={<ClinicalPage />}
-            />
 
             <Route path="/staff/leave" element={<LeaveStaffPage />} />
           </Route>
@@ -225,6 +233,7 @@ export default function App() {
           />
         </Routes>
       </Router>
+
       <ToastContainer
         position="top-right"
         autoClose={3000}
