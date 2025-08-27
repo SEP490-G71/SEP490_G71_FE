@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { FaUserPlus, FaFileMedical, FaUsers, FaClock } from "react-icons/fa";
 import { ChevronDownIcon, GridIcon, HorizontaLDots } from "../icons";
@@ -12,6 +12,7 @@ import { TbReportAnalytics } from "react-icons/tb";
 import { IoMdSettings } from "react-icons/io";
 
 import { useUserInfo } from "../hooks/auth/useUserInfo";
+import { useInShift } from "../hooks/workSchedule/useInShift";
 
 type NavItem = {
   name: string;
@@ -206,6 +207,12 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const { userInfo } = useUserInfo();
+  const { inShift, loading: inShiftLoading } = useInShift();
+
+  const isAdmin = useMemo(
+    () => Boolean((userInfo?.roles as string[])?.includes("ADMIN")),
+    [userInfo?.roles]
+  );
 
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -252,6 +259,37 @@ const AppSidebar: React.FC = () => {
   const handleSubmenuToggle = (name: string) => {
     setOpenSubmenu((prevKey) => (prevKey === name ? null : name));
   };
+
+  const allowedWhenOffShift = useMemo(
+    () =>
+      new Set<string>([
+        "/admin/work-schedule-staff",
+        "/edit-profile",
+        "/staff/leave",
+      ]),
+    []
+  );
+
+  const visibleNavItems = useMemo<NavItem[]>(() => {
+    if (isAdmin) return allNavItems;
+
+    if (inShiftLoading || inShift !== false) return allNavItems;
+
+    const filtered: NavItem[] = [];
+    for (const nav of allNavItems) {
+      if (nav.path) {
+        if (allowedWhenOffShift.has(nav.path)) filtered.push(nav);
+        continue;
+      }
+      if (nav.subItems) {
+        const kept = nav.subItems.filter((s) =>
+          allowedWhenOffShift.has(s.path)
+        );
+        if (kept.length > 0) filtered.push({ ...nav, subItems: kept });
+      }
+    }
+    return filtered;
+  }, [allNavItems, inShift, inShiftLoading, allowedWhenOffShift, isAdmin]);
 
   const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-4">
@@ -414,7 +452,7 @@ const AppSidebar: React.FC = () => {
                   !isHovered ||
                   (!isMobileOpen && <HorizontaLDots className="size-6" />)}
               </h2>
-              {renderMenuItems(allNavItems)}
+              {renderMenuItems(visibleNavItems)}
             </div>
           </div>
         </nav>

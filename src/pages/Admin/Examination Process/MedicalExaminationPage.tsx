@@ -419,86 +419,15 @@ const MedicalExaminationPage = () => {
 
   const toNumberOrNull = (v: any) =>
     v === "" || v === null || v === undefined ? null : Number(v);
-
-  // const handleSave = async () => {
-  //   if (saving) return;
-
-  //   const validation = form.validate();
-  //   if (validation.hasErrors) {
-  //     toast.error("Vui lòng kiểm tra lại thông tin nhập vào.");
-  //     return;
-  //   }
-  //   if (!selectedPatientId || !selectedPatient || !form.values.doctor) {
-  //     toast.error("Thiếu thông tin bệnh nhân hoặc bác sĩ");
-  //     return;
-  //   }
-
-  //   const servicesDto = serviceRows
-  //     .filter((r) => r.serviceId && (r.quantity ?? 0) > 0)
-  //     .map((r) => ({
-  //       serviceId: r.serviceId as string,
-  //       quantity: Number(r.quantity || 1),
-  //     }));
-
-  //   if (servicesDto.length === 0) {
-  //     toast.error("Chưa chọn dịch vụ nào.");
-  //     return;
-  //   }
-
-  //   try {
-  //     setSaving(true);
-
-  //     const payload = {
-  //       patientId: selectedPatient.patientId,
-  //       staffId: form.values.doctor,
-  //       visitId: selectedPatient.id,
-  //       diagnosisText:
-  //         form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
-
-  //       temperature: toNumberOrNull(form.values.temperature),
-  //       respiratoryRate: toNumberOrNull(form.values.respiratoryRate),
-  //       bloodPressure: form.values.bloodPressure ?? "",
-  //       heartRate: toNumberOrNull(form.values.heartRate),
-  //       heightCm: toNumberOrNull(form.values.heightCm),
-  //       weightKg: toNumberOrNull(form.values.weightKg),
-  //       bmi: toNumberOrNull(form.values.bmi),
-  //       spo2: toNumberOrNull(form.values.spo2),
-
-  //       notes: form.values.notes ?? "",
-  //       services: servicesDto,
-  //       markFinal: isFinal,
-  //     };
-
-  //     await submitExamination(payload as any);
-  //     await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
-  //     await refetchPatientDetail();
-  //     updateFilters({
-  //       roomNumber: department?.roomNumber,
-  //       registeredTimeFrom: dayjs().format("YYYY-MM-DD"),
-  //       registeredTimeTo: dayjs().format("YYYY-MM-DD"),
-  //     });
-
-  //     setSelectedPatientId(null);
-  //     form.reset();
-  //     setServiceRows([{ id: 1, serviceId: null, quantity: 1 }]);
-  //     setActiveTab("info");
-  //   } catch (e) {
-  //     toast.error("❌ Lưu khám thất bại");
-  //   } finally {
-  //     setSaving(false);
-  //   }
-  // };
   const handleSave = async () => {
     if (saving) return;
 
-    // giữ validate như cũ (nhiệt độ, HA, chẩn đoán, …)
     const validation = form.validate();
     if (validation.hasErrors) {
       toast.error("Vui lòng kiểm tra lại thông tin nhập vào.");
       return;
     }
 
-    // ✅ Resolve doctor/department tại thời điểm lưu
     const resolvedDoctorId =
       form.values.doctor?.trim() || userInfo?.userId || "";
     const resolvedDeptId =
@@ -529,12 +458,17 @@ const MedicalExaminationPage = () => {
       return;
     }
 
+    if (isFinal && (!summary || summary.trim() === "")) {
+      toast.error("❌ Tổng kết không được để trống khi hoàn tất hồ sơ.");
+      return;
+    }
+
     try {
       setSaving(true);
 
-      const payload = {
+      const payload: any = {
         patientId: selectedPatient.patientId,
-        staffId: resolvedDoctorId, //  dùng id đã resolve
+        staffId: resolvedDoctorId,
         visitId: selectedPatient.id,
         diagnosisText:
           form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
@@ -549,10 +483,13 @@ const MedicalExaminationPage = () => {
         notes: form.values.notes ?? "",
         services: servicesDto,
         markFinal: isFinal,
-        // optional: departmentId: resolvedDeptId,
       };
 
-      await submitExamination(payload as any);
+      if (isFinal) {
+        payload.summary = summary.trim();
+      }
+
+      await submitExamination(payload);
       await updatePatientStatus(selectedPatient.id, "AWAITING_RESULT");
       await refetchPatientDetail();
       updateFilters({
