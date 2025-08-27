@@ -59,19 +59,40 @@ const ServiceTable = ({
 }: Props) => {
   const getServiceDetail = (id: string | null) =>
     medicalServices.find((s) => s.id === id);
-  const allServiceRows = medicalServices.map((s) => ({
-    value: s.id,
-    serviceCode: s.serviceCode,
-    name: s.name,
-    roomNumber: s.department?.roomNumber || "",
-    departmentName: s.department?.name || "",
-    specializationName: s.department?.specialization?.name || "",
-  }));
+
+  const buildLabel = (s: MedicalService) => {
+    const room = s.department?.roomNumber
+      ? ` - ${s.department.roomNumber}`
+      : "";
+    return `${s.serviceCode} - ${s.name}${room}`;
+  };
+
+  // const allServiceRows = medicalServices.map((s) => ({
+  //   value: s.id,
+  //   label: buildLabel(s), // ✅ QUAN TRỌNG
+  //   serviceCode: s.serviceCode,
+  //   name: s.name,
+  //   roomNumber: s.department?.roomNumber || "",
+  //   departmentName: s.department?.name || "",
+  //   specializationName: s.department?.specialization?.name || "",
+  // }));
+
+  // const nonDefaultServiceRows = medicalServices
+  //   .filter((s) => !s.defaultService)
+  //   .map((s) => ({
+  //     value: s.id,
+  //     serviceCode: s.serviceCode,
+  //     name: s.name,
+  //     roomNumber: s.department?.roomNumber || "",
+  //     departmentName: s.department?.name || "",
+  //     specializationName: s.department?.specialization?.name || "",
+  //   }));
 
   const nonDefaultServiceRows = medicalServices
     .filter((s) => !s.defaultService)
     .map((s) => ({
       value: s.id,
+      label: buildLabel(s),
       serviceCode: s.serviceCode,
       name: s.name,
       roomNumber: s.department?.roomNumber || "",
@@ -82,8 +103,39 @@ const ServiceTable = ({
   const getNextId = (): number =>
     serviceRows.length > 0 ? Math.max(...serviceRows.map((r) => r.id)) + 1 : 1;
 
+  // const handleSelectService = (index: number, serviceId: string | null) => {
+  //   const selectedService = getServiceDetail(serviceId);
+  //   const updated = serviceRows.map((r, i) => {
+  //     if (i !== index || !selectedService) return r;
+
+  //     return {
+  //       id: typeof r.id === "string" ? getNextId() : r.id,
+  //       serviceId,
+  //       serviceCode: selectedService.serviceCode,
+  //       name: selectedService.name,
+  //       price: selectedService.price,
+  //       discount: selectedService.discount,
+  //       vat: selectedService.vat,
+  //       departmentName: selectedService.department?.name || "",
+  //       quantity: r.quantity ?? 1,
+  //       total: calculateTotal({
+  //         ...r,
+  //         price: selectedService.price,
+  //         discount: selectedService.discount,
+  //         vat: selectedService.vat,
+  //         quantity: r.quantity ?? 1,
+  //       }),
+  //     };
+  //   });
+
   const handleSelectService = (index: number, serviceId: string | null) => {
     const selectedService = getServiceDetail(serviceId);
+
+    // ✅ Chặn chọn dịch vụ default nếu không được phép
+    if (!allowSelectDefaultServices && selectedService?.defaultService) {
+      return; // bỏ qua thay đổi
+    }
+
     const updated = serviceRows.map((r, i) => {
       if (i !== index || !selectedService) return r;
 
@@ -140,7 +192,10 @@ const ServiceTable = ({
     //   allowSelectDefaultServices || index === 0
     //     ? serviceOptions
     //     : nonDefaultServiceOptions;
-
+    // const optionsToUse = allowSelectDefaultServices
+    //   ? allServiceRows
+    //   : nonDefaultServiceRows;
+    const isDefaultRow = !!row.isDefault;
     return (
       <tr
         key={row.id}
@@ -155,22 +210,40 @@ const ServiceTable = ({
         <td style={{ ...cellStyle, ...align.center, width: 120 }}>
           {row.serviceCode || "---"}
         </td>
-        <td style={{ ...cellStyle, ...align.left, minWidth: 320 }}>
+        {/* <td style={{ ...cellStyle, ...align.left, minWidth: 320 }}>
           {editable ? (
             <ServiceSelectTable
               value={row.serviceId}
               onChange={(v) => handleSelectService(index, v)}
-              options={
-                allowSelectDefaultServices || index === 0
-                  ? allServiceRows
-                  : nonDefaultServiceRows
-              }
+              // options={
+              //   allowSelectDefaultServices || index === 0
+              //     ? allServiceRows
+              //     : nonDefaultServiceRows
+              // }
+              options={optionsToUse}
               size="xs"
             />
           ) : (
             row.name || "---"
           )}
+        </td> */}
+
+        {/* Tên DV */}
+        <td style={{ ...cellStyle, ...align.left, minWidth: 320 }}>
+          {editable && !isDefaultRow ? (
+            <ServiceSelectTable
+              value={row.serviceId}
+              onChange={(v) => handleSelectService(index, v)}
+              // ✅ chỉ cho chọn dịch vụ không-default
+              options={nonDefaultServiceRows}
+              size="xs"
+            />
+          ) : (
+            // ✅ Dòng default hiển thị text khóa (hoặc khi không editable)
+            row.name || "---"
+          )}
         </td>
+
         <td style={{ ...cellStyle, ...align.center, width: 80 }}>
           {editable ? (
             <NumberInput
