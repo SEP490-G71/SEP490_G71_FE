@@ -534,7 +534,7 @@ const MedicalExaminationPage = () => {
 
       const payload = {
         patientId: selectedPatient.patientId,
-        staffId: resolvedDoctorId, // ⬅️ dùng id đã resolve
+        staffId: resolvedDoctorId, //  dùng id đã resolve
         visitId: selectedPatient.id,
         diagnosisText:
           form.values.diagnosisText.trim() || "Chẩn đoán: chưa nhập",
@@ -965,7 +965,7 @@ const MedicalExaminationPage = () => {
                       defaultServiceIds={defaultServiceIds}
                       editable={isInProgress && !saving}
                       showDepartment={true}
-                      allowSelectDefaultServices={true}
+                      allowSelectDefaultServices={false}
                     />
                   </div>
                 </>

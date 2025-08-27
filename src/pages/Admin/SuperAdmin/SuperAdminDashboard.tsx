@@ -1,4 +1,3 @@
-// src/pages/superadmin/SuperAdminDashboard.tsx
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import axiosInstanceSuperAdmin from "../../../services/axiosInstanceSuperAdmin";
@@ -218,7 +217,6 @@ export default function SuperAdminDashboard() {
     localStorage.removeItem("token");
     sessionStorage.clear();
 
-    toast.success("Đã đăng xuất");
     setTimeout(() => {
       window.location.href = "/superadmin/signin";
     }, 400);
